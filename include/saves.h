@@ -54,7 +54,6 @@ enum cmd_code_enum
     CMD_CODE_NULL,
 
 // Save commands
-    CMD_DECRYPT_FILE,
     CMD_RESIGN_SAVE,
     CMD_DOWNLOAD_USB,
     CMD_DOWNLOAD_HDD,
@@ -67,6 +66,7 @@ enum cmd_code_enum
     CMD_EXP_FINGERPRINT,
     CMD_CONVERT_TO_PSV,
     CMD_HEX_EDIT_FILE,
+    CMD_EXPORT_DATA_FILE,
     CMD_IMPORT_DATA_FILE,
 
 // Bulk commands

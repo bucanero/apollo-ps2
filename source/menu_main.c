@@ -530,8 +530,8 @@ static void doHexEditor(void)
 		if (show_dialog(DIALOG_TYPE_YESNO, "Save changes to %s?", strrchr(hex_data.filepath, '/') + 1) &&
 			(write_buffer(hex_data.filepath, hex_data.data, hex_data.size) == SUCCESS))
 		{
-			selected_centry->options[option_index].value[menu_sel][1] = CMD_IMPORT_DATA_FILE;
-			execCodeCommand(selected_centry, selected_centry->options[option_index].value[menu_sel]+1);
+//			selected_centry->options[option_index].value[menu_sel][1] = CMD_IMPORT_DATA_FILE;
+//			execCodeCommand(selected_centry, selected_centry->options[option_index].value[menu_sel]+1);
 		}
 		free(hex_data.data);
 
@@ -613,11 +613,11 @@ static void doCodeOptionsMenu()
 		{
 			if (code->options[option_index].value[menu_sel][0] == CMD_HEX_EDIT_FILE)
 			{
-				code->options[option_index].value[menu_sel][1] = CMD_DECRYPT_FILE;
-				execCodeCommand(code, code->options[option_index].value[menu_sel]+1);
+//				code->options[option_index].value[menu_sel][1] = CMD_DECRYPT_FILE;
+//				execCodeCommand(code, code->options[option_index].value[menu_sel]+1);
 
 				memset(&hex_data, 0, sizeof(hex_data));
-				snprintf(hex_data.filepath, sizeof(hex_data.filepath), APOLLO_USER_PATH "%s/%s", selected_entry->dir_name, code->options[0].name[code->options[0].sel]);
+				snprintf(hex_data.filepath, sizeof(hex_data.filepath), "%s%s", selected_entry->path, code->options[0].name[code->options[0].sel]);
 				if (read_buffer(hex_data.filepath, &hex_data.data, &hex_data.size) < 0)
 				{
 					show_message("Unable to load\n%s", hex_data.filepath);

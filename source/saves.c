@@ -224,12 +224,12 @@ static void _addBackupCommands(save_entry_t* item)
 	cmd->options = _createOptions(2, "Export Zip to Backup Storage", CMD_EXPORT_ZIP_USB);
 	list_append(item->codes, cmd);
 
-	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_COPY " Export decrypted save files", CMD_CODE_NULL);
+	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_COPY " Export single save files", CMD_CODE_NULL);
 	cmd->options_count = 1;
-	cmd->options = _getFileOptions(item->path, "*", CMD_DECRYPT_FILE);
+	cmd->options = _getFileOptions(item->path, "*", CMD_EXPORT_DATA_FILE);
 	list_append(item->codes, cmd);
 
-	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_COPY " Import decrypted save files", CMD_CODE_NULL);
+	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_COPY " Import single save files", CMD_CODE_NULL);
 	cmd->options_count = 1;
 	cmd->options = _getFileOptions(item->path, "*", CMD_IMPORT_DATA_FILE);
 	list_append(item->codes, cmd);
@@ -763,7 +763,7 @@ static void read_ps2_savegames(const char* userPath, list_t *list, int flags)
 		if (iconsys.nlOffset)
 		{
 			iconsys.nlOffset /= 2;
-			memmove(&iconsys.title[iconsys.nlOffset+1], &iconsys.title[iconsys.nlOffset], countof(iconsys.title) - iconsys.nlOffset);
+			memmove(&iconsys.title[iconsys.nlOffset+1], &iconsys.title[iconsys.nlOffset], sizeof(iconsys.title) - iconsys.nlOffset*2);
 			iconsys.title[iconsys.nlOffset] = 0x5081;
 		}
 		sjis2ascii((uint8_t*) iconsys.title);

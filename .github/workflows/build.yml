@@ -33,7 +33,7 @@ jobs:
           cmake --toolchain $PS2DEV/ps2sdk/ps2dev.cmake . -DCMAKE_BUILD_TYPE=Release
           make polarssl
           cp library/libpolarssl.a $PS2DEV/ps2sdk/ports/lib
-          cp -R ../include/polarssl $PS2DEV/ps2sdk/ports/include/polarssl
+          cp -R include/polarssl $PS2DEV/ps2sdk/ports/include/polarssl
 
       - name: build apollo lib
         run: |

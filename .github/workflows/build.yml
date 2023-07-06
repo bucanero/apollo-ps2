@@ -1,0 +1,62 @@
+name: PS2 Build
+
+on: [push, pull_request]
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  psp:
+    name: Build (PS2)
+    runs-on: ubuntu-latest
+    container: ps2dev/ps2dev@sha256:96d40a532972fd84f41fd418ef2b51a5dffd444f0bbb4df2fcf4c55ce0af32df
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install build dependencies
+        run: |
+          apk update
+          apk add gmp mpc1 mpfr4 make cmake git
+          git clone https://github.com/bucanero/dbglogger
+          git clone https://github.com/bucanero/apollo-lib
+          git clone https://github.com/bucanero/oosdk_libraries
+
+      - name: build dbglogger
+        run: |
+          cd dbglogger
+          make -f Makefile.ps2 install
+
+      - name: build polarssl
+        run: |
+          cd oosdk_libraries/polarssl-1.3.9
+          cmake --toolchain $PS2DEV/ps2sdk/ps2dev.cmake . -DCMAKE_BUILD_TYPE=Release
+          make polarssl
+          cp library/libpolarssl.a $PS2DEV/ps2sdk/ports/lib
+          cp -R include/polarssl $PS2DEV/ps2sdk/ports/include/polarssl
+
+      - name: build apollo lib
+        run: |
+          cd apollo-lib
+          make -f Makefile.ps2 install
+
+      - name: Configure project
+        run: |
+          cmake -S . \
+                -DCMAKE_TOOLCHAIN_FILE=$PS2DEV/ps2sdk/ps2dev.cmake \
+                -D CMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} \
+
+      - name: Build project
+        run: make
+
+      - name: Compress binary
+        run: |
+          ps2-packer apollo-ps2.elf APOLLO.ELF
+          echo "sha_name=$(echo ${GITHUB_SHA} | cut -c1-8)" >> $GITHUB_ENV
+
+      - name: Upload application
+        uses: actions/upload-artifact@v3
+        with:
+          name: apollo-ps2-build_${{ env.sha_name }}
+          path: APOLLO.ELF
+          if-no-files-found: error

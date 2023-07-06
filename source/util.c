@@ -1,8 +1,6 @@
 #include "utils.h"
 #include "types.h"
 
-#include <polarssl/sha1.h>
-
 void dump_data(const u8 *data, u64 size) {
 	u64 i;
 	for (i = 0; i < size; i++)
@@ -106,51 +104,6 @@ int unmmap_file(u8 *data, u64 size) {
 	free(data);
 //	if (munmap(data, size) < 0)
 //		return -1;
-
-	return 0;
-}
-
-int calculate_hmac_hash(const u8 *data, u64 size, const u8 *key, u32 key_length, u8 output[20]) {
-	sha1_context sha1;
-
-	if (!key_length || !output)
-		return -1;
-
-	memset(&sha1, 0, sizeof(sha1_context));
-
-	sha1_hmac_starts(&sha1, key, key_length);
-	sha1_hmac_update(&sha1, data, size);
-	sha1_hmac_finish(&sha1, output);
-
-	memset(&sha1, 0, sizeof(sha1_context));
-
-	return 0;
-}
-
-int calculate_file_hmac_hash(const char *file_path, const u8 *key, u32 key_length, u8 output[20]) {
-	FILE *fp;
-	u8 buf[512];
-	sha1_context sha1;
-	size_t n;
-
-	if ((fp = fopen(file_path, "rb")) == NULL)
-		return -1;
-
-	memset(&sha1, 0, sizeof(sha1_context));
-
-	sha1_hmac_starts(&sha1, key, key_length);
-	while ((n = fread(buf, 1, sizeof(buf), fp)) > 0)
-		sha1_hmac_update(&sha1, buf, n);
-	sha1_hmac_finish(&sha1, output);
-
-	memset(&sha1, 0, sizeof(sha1_context));
-
-	if (ferror(fp) != 0) {
-		fclose(fp);
-		return -1;
-	}
-
-	fclose(fp);
 
 	return 0;
 }

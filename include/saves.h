@@ -10,16 +10,16 @@
 #define APOLLO_UPDATE_URL		"https://api.github.com/repos/bucanero/apollo-psp/releases/latest"
 
 #define MAX_USB_DEVICES         5
-#define MS0_PATH                "ms0:/"
-#define EF0_PATH                "ef0:/"
-#define USB_PATH                "%s:/"
+#define MC0_PATH                "mc0:/"
+#define MC1_PATH                "mc1:/"
+#define USB_PATH                "mass:/"
 #define USER_PATH_HDD           "PSP/SAVEDATA/"
 
 #define PS2_SAVES_PATH_USB      "PS3/EXPORT/PS2SD/"
 #define PSP_SAVES_PATH_USB      "APOLLO/SAVEDATA/"
 
 #define PS1_SAVES_PATH_HDD      APOLLO_PATH "PS1/"
-#define PSP_SAVES_PATH_HDD      MS0_PATH USER_PATH_HDD
+#define PSP_SAVES_PATH_HDD      MC0_PATH USER_PATH_HDD
 
 #define PS1_IMP_PATH_USB        "PS1/SAVEDATA/"
 
@@ -118,7 +118,7 @@ enum save_type_enum
     FILE_TYPE_PSV,
     FILE_TYPE_TRP,
     FILE_TYPE_MENU,
-    FILE_TYPE_PSP,
+    FILE_TYPE_PS2,
 
     // PS1 File Types
     FILE_TYPE_ZIP,
@@ -234,8 +234,6 @@ void stop_loading_screen(void);
 
 void execCodeCommand(code_entry_t* code, const char* codecmd);
 
-int regMgr_GetUserName(int userNumber, char* outString);
-
 int create_savegame_folder(const char* folder);
 int get_save_details(const save_entry_t *save, char** details);
 
@@ -243,6 +241,7 @@ int read_psp_game_key(const char* fkey, uint8_t* key);
 int psp_DecryptSavedata(const char* fpath, const char* fname, uint8_t* key);
 int psp_EncryptSavedata(const char* fpath, const char* fname, uint8_t* key);
 
+int sjis2ascii(uint8_t* bData);
 int vmp_resign(const char *src_vmp);
 int ps1_mcr2vmp(const char* mcrfile, const char* vmp_path);
 int ps1_vmp2mcr(const char* vmpfile, const char* mcr_path);

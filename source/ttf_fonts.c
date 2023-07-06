@@ -291,9 +291,9 @@ static SDL_Texture* create_texture(const u8* bitmap, u32 rgba)
     u32 buf[TEX_SZ * TEX_SZ];
 
     for (int i = 0; i < TEX_SZ*TEX_SZ; i++)
-        buf[i] = bitmap[i] ? ((rgba & 0xFFFFFF00) | bitmap[i]) : 0;
+        buf[i] = bitmap[i] ? ((rgba & 0x00FFFFFF) | (bitmap[i] << 24)) : 0;
 
-    SDL_Surface* surface = SDL_CreateRGBSurfaceFrom((void*) buf, TEX_SZ, TEX_SZ, 32, 4 * TEX_SZ, 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
+    SDL_Surface* surface = SDL_CreateRGBSurfaceFrom((void*) buf, TEX_SZ, TEX_SZ, 32, 4 * TEX_SZ, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
     SDL_Texture* sdl_tex = SDL_CreateTextureFromSurface(renderer, surface);
     SDL_SetTextureBlendMode(sdl_tex, SDL_BLENDMODE_BLEND);
     SDL_FreeSurface(surface);
@@ -458,7 +458,7 @@ int display_ttf_string(int posx, int posy, const char *string, u32 color, u32 bk
 
                 ww += slot->bitmap.width;
                 }
-                ttf_font_datas[l].text[0] = create_texture(bitmap, 0x000000FF);
+                ttf_font_datas[l].text[0] = create_texture(bitmap, 0xFF000000);
                 ttf_font_datas[l].text[1] = create_texture(bitmap, 0xFFFFFFFF);
             }
             else continue;

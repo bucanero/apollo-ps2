@@ -65,6 +65,7 @@ add_executable(${PROJECT_NAME}
   source/exec_cmd.c
   source/http.c
   source/libfont.c
+  source/lzari.c
   source/main.c
   source/menu_hex.c
   source/menu_about.c
@@ -77,6 +78,8 @@ add_executable(${PROJECT_NAME}
   source/ttf_fonts.c
   source/util.c
   source/psppad.c
+  source/psv_ps2.c
+  source/psv_resign.c
   source/zip_util.c
   source/vmp_resign.c
 )
@@ -101,6 +104,7 @@ target_link_libraries(${PROJECT_NAME}
 #  pthread
 #  unrar
   zip
+  lzma
 #  un7zip
 #  xmp
 #  bz2

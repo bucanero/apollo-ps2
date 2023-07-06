@@ -301,28 +301,28 @@ static void move_selection_fwd(int game_count, int steps)
 
 static int updatePadSelection(int total)
 {
-	if(pspPadGetButtonHold(PAD_UP))
+	if(ps2PadGetButtonHold(PAD_UP))
 		move_selection_back(total, 1);
 
-	else if(pspPadGetButtonHold(PAD_DOWN))
+	else if(ps2PadGetButtonHold(PAD_DOWN))
 		move_selection_fwd(total, 1);
 
-	else if (pspPadGetButtonHold(PAD_LEFT))
+	else if (ps2PadGetButtonHold(PAD_LEFT))
 		move_selection_back(total, 5);
 
-	else if (pspPadGetButtonHold(PAD_L1))
+	else if (ps2PadGetButtonHold(PAD_L1))
 		move_selection_back(total, 25);
 
-	else if (pspPadGetButtonHold(PAD_L2))
+	else if (ps2PadGetButtonHold(PAD_L2))
 		menu_sel = 0;
 
-	else if (pspPadGetButtonHold(PAD_RIGHT))
+	else if (ps2PadGetButtonHold(PAD_RIGHT))
 		move_selection_fwd(total, 5);
 
-	else if (pspPadGetButtonHold(PAD_R1))
+	else if (ps2PadGetButtonHold(PAD_R1))
 		move_selection_fwd(total, 25);
 
-	else if (pspPadGetButtonHold(PAD_R2))
+	else if (ps2PadGetButtonHold(PAD_R2))
 		menu_sel = total - 1;
 
 	else return 0;
@@ -335,12 +335,12 @@ static void doSaveMenu(save_list_t * save_list)
 	if (updatePadSelection(list_count(save_list->list)))
 		(void)0;
 
-	else if (pspPadGetButtonPressed(PAD_CIRCLE))
+	else if (ps2PadGetButtonPressed(PAD_CIRCLE))
 	{
 		SetMenu(MENU_MAIN_SCREEN);
 		return;
 	}
-	else if (pspPadGetButtonPressed(PAD_CROSS))
+	else if (ps2PadGetButtonPressed(PAD_CROSS))
 	{
 		selected_entry = list_get_item(save_list->list, menu_sel);
 
@@ -357,7 +357,7 @@ static void doSaveMenu(save_list_t * save_list)
 		SetMenu(MENU_PATCHES);
 		return;
 	}
-	else if (pspPadGetButtonPressed(PAD_TRIANGLE) && save_list->UpdatePath)
+	else if (ps2PadGetButtonPressed(PAD_TRIANGLE) && save_list->UpdatePath)
 	{
 		selected_entry = list_get_item(save_list->list, menu_sel);
 		if (selected_entry->type != FILE_TYPE_MENU)
@@ -367,14 +367,14 @@ static void doSaveMenu(save_list_t * save_list)
 			return;
 		}
 	}
-	else if (pspPadGetButtonPressed(PAD_SELECT) && 
+	else if (ps2PadGetButtonPressed(PAD_SELECT) && 
 		(save_list->icon_id == cat_hdd_png_index || save_list->icon_id == cat_usb_png_index || save_list->icon_id == cat_warning_png_index))
 	{
 		selected_entry = list_get_item(save_list->list, menu_sel);
 		if (selected_entry->type != FILE_TYPE_MENU)
 			selected_entry->flags ^= SAVE_FLAG_SELECTED;
 	}
-	else if (pspPadGetButtonPressed(PAD_SQUARE))
+	else if (ps2PadGetButtonPressed(PAD_SQUARE))
 	{
 		ReloadUserSaves(save_list);
 	}
@@ -385,20 +385,20 @@ static void doSaveMenu(save_list_t * save_list)
 static void doMainMenu()
 {
 	// Check the pads.
-	if(pspPadGetButtonHold(PAD_LEFT))
+	if(ps2PadGetButtonHold(PAD_LEFT))
 		move_selection_back(MENU_CREDITS-1, 1);
 
-	else if(pspPadGetButtonHold(PAD_RIGHT))
+	else if(ps2PadGetButtonHold(PAD_RIGHT))
 		move_selection_fwd(MENU_CREDITS-1, 1);
 
-	else if (pspPadGetButtonPressed(PAD_CROSS))
+	else if (ps2PadGetButtonPressed(PAD_CROSS))
 	{
 		SetMenu(menu_sel+2);
 		drawScene();
 		return;
 	}
 
-	else if(pspPadGetButtonPressed(PAD_CIRCLE) && show_dialog(DIALOG_TYPE_YESNO, "Exit to XMB?"))
+	else if(ps2PadGetButtonPressed(PAD_CIRCLE) && show_dialog(DIALOG_TYPE_YESNO, "Exit to XMB?"))
 		close_app = 1;
 	
 	Draw_MainMenu();
@@ -407,7 +407,7 @@ static void doMainMenu()
 static void doAboutMenu()
 {
 	// Check the pads.
-	if (pspPadGetButtonPressed(PAD_CIRCLE))
+	if (ps2PadGetButtonPressed(PAD_CIRCLE))
 	{
 		SetMenu(MENU_MAIN_SCREEN);
 		return;
@@ -419,20 +419,20 @@ static void doAboutMenu()
 static void doOptionsMenu()
 {
 	// Check the pads.
-	if(pspPadGetButtonHold(PAD_UP))
+	if(ps2PadGetButtonHold(PAD_UP))
 		move_selection_back(menu_options_maxopt, 1);
 
-	else if(pspPadGetButtonHold(PAD_DOWN))
+	else if(ps2PadGetButtonHold(PAD_DOWN))
 		move_selection_fwd(menu_options_maxopt, 1);
 
-	else if (pspPadGetButtonPressed(PAD_CIRCLE))
+	else if (ps2PadGetButtonPressed(PAD_CIRCLE))
 	{
 		save_app_settings(&apollo_config);
 		set_ttf_window(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, WIN_SKIP_LF);
 		SetMenu(MENU_MAIN_SCREEN);
 		return;
 	}
-	else if (pspPadGetButtonHold(PAD_LEFT))
+	else if (ps2PadGetButtonHold(PAD_LEFT))
 	{
 		if (menu_options[menu_sel].type == APP_OPTION_LIST)
 		{
@@ -447,7 +447,7 @@ static void doOptionsMenu()
 		if (menu_options[menu_sel].type != APP_OPTION_CALL)
 			menu_options[menu_sel].callback(*menu_options[menu_sel].value);
 	}
-	else if (pspPadGetButtonHold(PAD_RIGHT))
+	else if (ps2PadGetButtonHold(PAD_RIGHT))
 	{
 		if (menu_options[menu_sel].type == APP_OPTION_LIST)
 		{
@@ -462,7 +462,7 @@ static void doOptionsMenu()
 		if (menu_options[menu_sel].type != APP_OPTION_CALL)
 			menu_options[menu_sel].callback(*menu_options[menu_sel].value);
 	}
-	else if (pspPadGetButtonPressed(PAD_CROSS))
+	else if (ps2PadGetButtonPressed(PAD_CROSS))
 	{
 		if (menu_options[menu_sel].type == APP_OPTION_BOOL)
 			menu_options[menu_sel].callback(*menu_options[menu_sel].value);
@@ -477,17 +477,17 @@ static void doOptionsMenu()
 static void doHexEditor(void)
 {
 	// Check the pads.
-	if(pspPadGetButtonHold(PAD_UP))
+	if(ps2PadGetButtonHold(PAD_UP))
 	{
 		if (hex_data.pos >= 0x10)
 			hex_data.pos -= 0x10;
 	}
-	else if(pspPadGetButtonHold(PAD_DOWN))
+	else if(ps2PadGetButtonHold(PAD_DOWN))
 	{
 		if (hex_data.pos + 0x10 < hex_data.size)
 			hex_data.pos += 0x10;
 	}
-	else if (pspPadGetButtonHold(PAD_LEFT))
+	else if (ps2PadGetButtonHold(PAD_LEFT))
 	{
 		if (hex_data.low_nibble)
 			hex_data.low_nibble ^= 1;
@@ -498,7 +498,7 @@ static void doHexEditor(void)
 			hex_data.low_nibble ^= 1;
 		}
 	}
-	else if (pspPadGetButtonHold(PAD_RIGHT))
+	else if (ps2PadGetButtonHold(PAD_RIGHT))
 	{
 		if (!hex_data.low_nibble)
 			hex_data.low_nibble ^= 1;
@@ -509,23 +509,23 @@ static void doHexEditor(void)
 			hex_data.low_nibble ^= 1;
 		}
 	}
-	else if (pspPadGetButtonHold(PAD_L1))
+	else if (ps2PadGetButtonHold(PAD_L1))
 	{
 		hex_data.pos -= 0x120;
 		if (hex_data.pos < 0)
 			hex_data.pos = 0;
 	}
-	else if (pspPadGetButtonHold(PAD_R1))
+	else if (ps2PadGetButtonHold(PAD_R1))
 	{
 		if (hex_data.pos + 0x120 < hex_data.size)
 			hex_data.pos += 0x120;
 	}
-	else if (pspPadGetButtonPressed(PAD_L2))
+	else if (ps2PadGetButtonPressed(PAD_L2))
 		hex_data.pos = 0;
-	else if (pspPadGetButtonPressed(PAD_R2))
+	else if (ps2PadGetButtonPressed(PAD_R2))
 		hex_data.pos = hex_data.size - 1;
 
-	else if (pspPadGetButtonPressed(PAD_CIRCLE))
+	else if (ps2PadGetButtonPressed(PAD_CIRCLE))
 	{
 		if (show_dialog(DIALOG_TYPE_YESNO, "Save changes to %s?", strrchr(hex_data.filepath, '/') + 1) &&
 			(write_buffer(hex_data.filepath, hex_data.data, hex_data.size) == SUCCESS))
@@ -538,14 +538,14 @@ static void doHexEditor(void)
 		SetMenu(MENU_PATCHES);
 		return;
 	}
-	else if (pspPadGetButtonPressed(PAD_CROSS))
+	else if (ps2PadGetButtonPressed(PAD_CROSS))
 	{
 		if ((hex_data.data[hex_data.pos] & (0xF0 >> hex_data.low_nibble * 4)) == (0xF0 >> hex_data.low_nibble * 4))
 			hex_data.data[hex_data.pos] &= (0x0F << hex_data.low_nibble * 4);
 		else
 			hex_data.data[hex_data.pos] += (0x10 >> hex_data.low_nibble * 4);
 	}
-	else if (pspPadGetButtonPressed(PAD_SQUARE))
+	else if (ps2PadGetButtonPressed(PAD_SQUARE))
 	{
 		if ((hex_data.data[hex_data.pos] & (0xF0 >> hex_data.low_nibble * 4)) == 0)
 			hex_data.data[hex_data.pos] |= (0xF0 >> hex_data.low_nibble * 4);
@@ -580,7 +580,7 @@ static void doPatchViewMenu()
 	if (updatePadSelection(count_code_lines()))
 		(void)0;
 
-	else if (pspPadGetButtonPressed(PAD_CIRCLE))
+	else if (ps2PadGetButtonPressed(PAD_CIRCLE))
 	{
 		SetMenu(last_menu_id[MENU_PATCH_VIEW]);
 		return;
@@ -593,19 +593,19 @@ static void doCodeOptionsMenu()
 {
     code_entry_t* code = selected_centry;
 	// Check the pads.
-	if(pspPadGetButtonHold(PAD_UP))
+	if(ps2PadGetButtonHold(PAD_UP))
 		move_selection_back(selected_centry->options[option_index].size, 1);
 
-	else if(pspPadGetButtonHold(PAD_DOWN))
+	else if(ps2PadGetButtonHold(PAD_DOWN))
 		move_selection_fwd(selected_centry->options[option_index].size, 1);
 
-	else if (pspPadGetButtonPressed(PAD_CIRCLE))
+	else if (ps2PadGetButtonPressed(PAD_CIRCLE))
 	{
 		code->activated = 0;
 		SetMenu(last_menu_id[MENU_CODE_OPTIONS]);
 		return;
 	}
-	else if (pspPadGetButtonPressed(PAD_CROSS))
+	else if (ps2PadGetButtonPressed(PAD_CROSS))
 	{
 		code->options[option_index].sel = menu_sel;
 
@@ -652,7 +652,7 @@ static void doSaveDetailsMenu()
 	if (updatePadSelection(count_code_lines()))
 		(void)0;
 
-	if (pspPadGetButtonPressed(PAD_CIRCLE))
+	if (ps2PadGetButtonPressed(PAD_CIRCLE))
 	{
 		SetMenu(last_menu_id[MENU_SAVE_DETAILS]);
 		return;
@@ -667,12 +667,12 @@ static void doPatchMenu()
 	if (updatePadSelection(list_count(selected_entry->codes)))
 		(void)0;
 
-	else if (pspPadGetButtonPressed(PAD_CIRCLE))
+	else if (ps2PadGetButtonPressed(PAD_CIRCLE))
 	{
 		SetMenu(last_menu_id[MENU_PATCHES]);
 		return;
 	}
-	else if (pspPadGetButtonPressed(PAD_CROSS))
+	else if (ps2PadGetButtonPressed(PAD_CROSS))
 	{
 		selected_centry = list_get_item(selected_entry->codes, menu_sel);
 
@@ -728,7 +728,7 @@ static void doPatchMenu()
 			}
 		}
 	}
-	else if (pspPadGetButtonPressed(PAD_TRIANGLE))
+	else if (ps2PadGetButtonPressed(PAD_TRIANGLE))
 	{
 		selected_centry = list_get_item(selected_entry->codes, menu_sel);
 

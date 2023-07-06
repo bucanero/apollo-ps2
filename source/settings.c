@@ -8,15 +8,11 @@
 #include "menu.h"
 #include "saves.h"
 #include "common.h"
-#include "icon0.h"
-#include "plugin.h"
+#include "icons.h"
 
-#define PSP_UTILITY_COMMON_RESULT_OK (0)
-#define GAME_PLUGIN_PATH             "ms0:/seplugins/game.txt"
-#define SGKEY_DUMP_PLUGIN_PATH       "ms0:/seplugins/SGKeyDumper.prx"
 
 char *strcasestr(const char *, const char *);
-static char* ext_src[MAX_USB_DEVICES+1] = {"ms0", "ef0", NULL};
+static char* ext_src[MAX_USB_DEVICES+1] = {"mass", "host", "cdfs", NULL};
 static char* sort_opt[] = {"Disabled", "by Name", "by Title ID", NULL};
 
 menu_option_t menu_options[] = {
@@ -203,81 +199,12 @@ void log_callback(int sel)
 	show_message("Debug Logging Enabled!\n\n" APOLLO_PATH "apollo.log");
 }
 
-/*
-static void initSavedata(SceUtilitySavedataParam * savedata, int mode, void* usr_data)
-{
-	memset(savedata, 0, sizeof(SceUtilitySavedataParam));
-	savedata->base.size = sizeof(SceUtilitySavedataParam);
-	savedata->base.language = PSP_SYSTEMPARAM_LANGUAGE_ENGLISH;
-	savedata->base.buttonSwap = PSP_UTILITY_ACCEPT_CROSS;
-	savedata->base.graphicsThread = 0x11;
-	savedata->base.accessThread = 0x13;
-	savedata->base.fontThread = 0x12;
-	savedata->base.soundThread = 0x10;
-	savedata->mode = mode;
-	savedata->overwrite = 1;
-	savedata->focus = PSP_UTILITY_SAVEDATA_FOCUS_LATEST; // Set initial focus to the newest file (for loading)
-
-	strncpy(savedata->key, "bucanero.com.ar", sizeof(savedata->key));
-	strncpy(savedata->gameName, "NP0APOLLO", sizeof(savedata->gameName));	// First part of the save name, game identifier name
-	strncpy(savedata->saveName, "-Settings", sizeof(savedata->saveName));	// Second part of the save name, save identifier name
-	strncpy(savedata->fileName, "SETTINGS.BIN", sizeof(savedata->fileName));	// name of the data file
-
-	// Allocate buffers used to store various parts of the save data
-	savedata->dataBuf = usr_data;
-	savedata->dataBufSize = sizeof(app_config_t);
-	savedata->dataSize = sizeof(app_config_t);
-
-	// Set save data
-	if (mode == PSP_UTILITY_SAVEDATA_AUTOSAVE)
-	{
-		strcpy(savedata->sfoParam.title, "Apollo Save Tool");
-		strcpy(savedata->sfoParam.savedataTitle,"Settings");
-		strcpy(savedata->sfoParam.detail,"www.bucanero.com.ar");
-		savedata->sfoParam.parentalLevel = 1;
-
-		// Set icon0
-		savedata->icon0FileData.buf = icon0;
-		savedata->icon0FileData.bufSize = size_icon0;
-		savedata->icon0FileData.size = size_icon0;
-		savedata->focus = PSP_UTILITY_SAVEDATA_FOCUS_FIRSTEMPTY; // If saving, set inital focus to the first empty slot
-	}
-}
-
-static int runSaveDialog(int mode, void* data)
-{
-	SceUtilitySavedataParam dialog;
-
-	initSavedata(&dialog, mode, data);
-	if (sceUtilitySavedataInitStart(&dialog) < 0)
-		return 0;
-
-	do {
-		mode = sceUtilitySavedataGetStatus();
-		switch(mode)
-		{
-			case PSP_UTILITY_DIALOG_VISIBLE:
-				sceUtilitySavedataUpdate(1);
-				break;
-
-			case PSP_UTILITY_DIALOG_QUIT:
-				sceUtilitySavedataShutdownStart();
-				break;
-		}
-	} while (mode != PSP_UTILITY_DIALOG_FINISHED);
-
-	return (dialog.base.result == PSP_UTILITY_COMMON_RESULT_OK);
-}
-*/
-
 int save_app_settings(app_config_t* config)
 {
 	char filePath[256];
-	Byte dest[4912];
-	uLong destLen = sizeof(dest);
 
 	LOG("Apollo Save Tool v%s - Patch Engine v%s", APOLLO_VERSION, APOLLO_LIB_VERSION);
-	snprintf(filePath, sizeof(filePath), "%s%s%s%s", MS0_PATH, USER_PATH_HDD, "NP0APOLLO-Settings/", "ICON0.PNG");
+	snprintf(filePath, sizeof(filePath), "%s%s%s", MC0_PATH, "APOLLO-99PS2/", "icon.sys");
 	if (mkdirs(filePath) != SUCCESS)
 	{
 		LOG("sceSaveDataMount2 ERROR");
@@ -285,25 +212,31 @@ int save_app_settings(app_config_t* config)
 	}
 
 	LOG("Saving Settings...");
-	write_buffer(filePath, icon0, size_icon0);
+	if (file_exists(filePath) != SUCCESS)
+	{
+		LOG("X");
+		uLong destLen = size_icon_sys;
+		Bytef *dest = malloc(destLen);
 
-	snprintf(filePath, sizeof(filePath), "%s%s%s%s", MS0_PATH, USER_PATH_HDD, "NP0APOLLO-Settings/", "PARAM.SFO");
-	uncompress(dest, &destLen, paramsfo, size_paramsfo);
-	write_buffer(filePath, dest, destLen);
+		uncompress(dest, &destLen, zicon_sys, sizeof(zicon_sys));
+		write_buffer(filePath, dest, destLen);
+		free(dest);
 
-	snprintf(filePath, sizeof(filePath), "%s%s%s%s", MS0_PATH, USER_PATH_HDD, "NP0APOLLO-Settings/", "SETTINGS.BIN");
+		snprintf(filePath, sizeof(filePath), "%s%s%s", MC0_PATH, "APOLLO-99PS2/", "icon.ico");
+		destLen = size_icon_ico;
+		dest = malloc(destLen);
+		uncompress(dest, &destLen, zicon_ico, sizeof(zicon_ico));
+		write_buffer(filePath, dest, destLen);
+		free(dest);
+	}
+
+	snprintf(filePath, sizeof(filePath), "%s%s%s", MC0_PATH, "APOLLO-99PS2/", "SETTINGS.BIN");
 	if (write_buffer(filePath, (uint8_t*) config, sizeof(app_config_t)) < 0)
 	{
 		LOG("Error saving settings!");
 		return 0;
 	}
-/*
-	if (!runSaveDialog(PSP_UTILITY_SAVEDATA_AUTOSAVE, config))
-	{
-		LOG("Save ERROR");
-		return 0;
-	}
-*/
+
 	return 1;
 }
 
@@ -315,14 +248,7 @@ int load_app_settings(app_config_t* config)
 
 	config->user_id = 0;
 
-//	Byte dest[4912];
-//	uLong dlen = sizeof(dest);
-//	snprintf(filePath, sizeof(filePath), "%s%s%s%s", MS0_PATH, USER_PATH_HDD, "NP0APOLLO-Settings/", "PARAM.SFO");
-//	read_buffer(filePath, (uint8_t**) &file_data, &file_size);
-//	compress2(dest, &dlen, (Bytef*) file_data, file_size, 9);
-//	write_buffer(filePath, dest, dlen);
-
-	snprintf(filePath, sizeof(filePath), "%s%s%s%s", MS0_PATH, USER_PATH_HDD, "NP0APOLLO-Settings/", "SETTINGS.BIN");
+	snprintf(filePath, sizeof(filePath), "%s%s%s", MC0_PATH, "APOLLO-99PS2/", "SETTINGS.BIN");
 
 	LOG("Loading Settings...");
 	if (read_buffer(filePath, (uint8_t**) &file_data, &file_size) == SUCCESS && file_size == sizeof(app_config_t))
@@ -349,70 +275,4 @@ int load_app_settings(app_config_t* config)
 */
 
 	return 1;
-}
-
-int install_sgkey_plugin(int install)
-{
-	char* data;
-	size_t size;
-
-	mkdirs(SGKEY_DUMP_PLUGIN_PATH);
-	if (write_buffer(SGKEY_DUMP_PLUGIN_PATH, sgk_plugin, size_sgk_plugin) < 0)
-		return 0;
-
-	if (read_buffer(GAME_PLUGIN_PATH, (uint8_t**) &data, &size) < 0)
-	{
-		LOG("Error reading game.txt");
-		if (!install)
-			return 0;
-
-		if (write_buffer(GAME_PLUGIN_PATH, SGKEY_DUMP_PLUGIN_PATH " 1\n", 33) < 0)
-		{
-			LOG("Error creating game.txt");
-			return 0;
-		}
-
-		return 1;
-	}
-
-	if (install)
-	{
-		char *ptr = strcasestr(data, SGKEY_DUMP_PLUGIN_PATH " ");
-		if (ptr != NULL && (ptr[31] == '1' || ptr[31] == '0'))
-		{
-			LOG("Plugin enabled");
-			ptr[31] = '1';
-			write_buffer(GAME_PLUGIN_PATH, data, size);
-			free(data);
-
-			return 1;
-		}
-		free(data);
-
-		FILE* fp = fopen(GAME_PLUGIN_PATH, "a");
-		if (!fp)
-		{
-			LOG("Error opening game.txt");
-			return 0;
-		}
-
-		fprintf(fp, "%s%s", SGKEY_DUMP_PLUGIN_PATH, " 1\n");
-		fclose(fp);
-		return 1;
-	}
-
-	if (!install)
-	{
-		char *ptr = strcasestr(data, SGKEY_DUMP_PLUGIN_PATH " ");
-		if (ptr != NULL && (ptr[31] == '1' || ptr[31] == '0'))
-		{
-			LOG("Plugin disabled");
-			ptr[31] = '0';
-			write_buffer(GAME_PLUGIN_PATH, data, size);
-		}
-		free(data);
-		return 1;
-	}
-
-	return 0;
 }

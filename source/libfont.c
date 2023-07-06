@@ -143,7 +143,7 @@ u8 * AddFontFromBitmapArray(u8 *font, u8 *texture, u8 first_char, u8 last_char, 
                     //i>>=3;
                     //*((u16 *) texture) = (1<<15) | (i<<10) | (i<<5) | (i);
                     //TINY3D_TEX_FORMAT_A4R4G4B4
-                    buf[a*w + b] = 0x000000FF;
+                    buf[a*w + b] = 0xFF000000;
 //                    i>>=4;
 //                    *((u16 *) texture) = (i<<12) | 0xfff;
                 } else {
@@ -155,7 +155,7 @@ u8 * AddFontFromBitmapArray(u8 *font, u8 *texture, u8 first_char, u8 last_char, 
         }
 
         // Black font texture
-        SDL_Surface* surface = SDL_CreateRGBSurfaceFrom((void*) buf, w, h, 32, 4 * w, 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
+        SDL_Surface* surface = SDL_CreateRGBSurfaceFrom((void*) buf, w, h, 32, 4 * w, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
         *((SDL_Texture**) texture) = SDL_CreateTextureFromSurface(renderer, surface);
         SDL_FreeSurface(surface);
         texture += sizeof(SDL_Texture*);
@@ -164,7 +164,7 @@ u8 * AddFontFromBitmapArray(u8 *font, u8 *texture, u8 first_char, u8 last_char, 
         for (a = 0; a < h*w; a++)
             if (buf[a]) buf[a] = 0xFFFFFFFF;
 
-        surface = SDL_CreateRGBSurfaceFrom((void*) buf, w, h, 32, 4 * w, 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
+        surface = SDL_CreateRGBSurfaceFrom((void*) buf, w, h, 32, 4 * w, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
         *((SDL_Texture**) texture) = SDL_CreateTextureFromSurface(renderer, surface);
         SDL_FreeSurface(surface);
         texture += sizeof(SDL_Texture*);

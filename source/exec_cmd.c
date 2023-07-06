@@ -17,11 +17,11 @@ static int _set_dest_path(char* path, int dest, const char* folder)
 	switch (dest)
 	{
 	case STORAGE_EF0:
-		sprintf(path, "%s%s", EF0_PATH, folder);
+		sprintf(path, "%s%s", MC1_PATH, folder);
 		break;
 
 	case STORAGE_MS0:
-		sprintf(path, "%s%s", MS0_PATH, folder);
+		sprintf(path, "%s%s", MC0_PATH, folder);
 		break;
 
 	default:
@@ -213,7 +213,7 @@ static void copyAllSavesHDD(const save_entry_t* save, int all)
 		if (!all && !(item->flags & SAVE_FLAG_SELECTED))
 			continue;
 
-		if ((item->flags & SAVE_FLAG_PS1) || item->type == FILE_TYPE_PSP)
+		if ((item->flags & SAVE_FLAG_PS1) || item->type == FILE_TYPE_PS2)
 			(_copy_save_psp(item) ? done++ : err_count++);
 	}
 
@@ -324,7 +324,7 @@ static void dumpAllFingerprints(const save_entry_t* save)
 	for (node = list_head(list); (item = list_get(node)); node = list_next(node))
 	{
 		update_progress_bar(progress++, list_count(list), item->name);
-		if (item->type != FILE_TYPE_PSP)
+		if (item->type != FILE_TYPE_PS2)
 			continue;
 
 		pspDumpKey(item, 0) ? count++ : err++;
@@ -585,7 +585,7 @@ static void copyAllSavesUSB(const save_entry_t* save, int dev, int all)
 		snprintf(copy_path, sizeof(copy_path), "%s%s/", dst_path, item->dir_name);
 		LOG("Copying <%s> to %s...", item->path, copy_path);
 
-		if ((item->flags & SAVE_FLAG_PS1) || item->type == FILE_TYPE_PSP)
+		if ((item->flags & SAVE_FLAG_PS1) || item->type == FILE_TYPE_PS2)
 			(copy_directory(item->path, item->path, copy_path) == SUCCESS) ? done++ : err_count++;
 	}
 
@@ -965,7 +965,6 @@ void execCodeCommand(code_entry_t* code, const char* codecmd)
 			break;
 
 		case CMD_SETUP_PLUGIN:
-			show_message(install_sgkey_plugin(codecmd[1]) ? "Plugin successfully %s" : "Error! Plugin couldn't be %s", codecmd[1] ? "installed" : "disabled");
 			code->activated = 0;
 			break;
 

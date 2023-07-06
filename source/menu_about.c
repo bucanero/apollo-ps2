@@ -23,7 +23,7 @@ static void _draw_AboutMenu(u8 alpha)
 	SetCurrentFont(font_adonais_regular);
 	SetFontColor(APP_FONT_MENU_COLOR | alpha, 0);
 	SetFontSize(APP_FONT_SIZE_JARS);
-	DrawStringMono(0, 80, "PlayStation Portable version");
+	DrawStringMono(0, 80, "PlayStation 2 version");
 	DrawStringMono(0, 133, "In memory of");
     
     for (int cnt = 0; menu_about_strings[cnt] != NULL; cnt += 2)

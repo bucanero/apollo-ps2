@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <time.h>
 #include <dirent.h>
+#include <libmc.h>
 
 #include "saves.h"
 #include "common.h"
@@ -108,9 +109,9 @@ static option_entry_t* _createOptions(int count, const char* name, char value)
 {
 	option_entry_t* options = _initOptions(count);
 
-	asprintf(&options->name[0], "%s (%s)", name, MS0_PATH);
+	asprintf(&options->name[0], "%s (%s)", name, MC0_PATH);
 	asprintf(&options->value[0], "%c%c", value, STORAGE_MS0);
-	asprintf(&options->name[1], "%s (%s)", name, EF0_PATH);
+	asprintf(&options->name[1], "%s (%s)", name, MC1_PATH);
 	asprintf(&options->value[1], "%c%c", value, STORAGE_EF0);
 
 	return options;
@@ -464,17 +465,17 @@ list_t * ReadBackupList(const char* userPath)
 	list_t *list = list_alloc();
 
 	item = _createSaveEntry(SAVE_FLAG_ZIP, CHAR_ICON_ZIP " Extract Archives (Zip, 7z)");
-	item->path = strdup(MS0_PATH);
+	item->path = strdup(MC0_PATH);
 	item->type = FILE_TYPE_ZIP;
 	list_append(list, item);
 
 	item = _createSaveEntry(SAVE_FLAG_PSP, CHAR_ICON_COPY " Manage Save-game Key Dumper plugin");
-	item->path = strdup(MS0_PATH);
+	item->path = strdup(MC0_PATH);
 	item->type = FILE_TYPE_PRX;
 	list_append(list, item);
 
 	item = _createSaveEntry(0, CHAR_ICON_NET " Network Tools");
-	item->path = strdup(MS0_PATH);
+	item->path = strdup(MC0_PATH);
 	item->type = FILE_TYPE_NET;
 	list_append(list, item);
 
@@ -734,9 +735,10 @@ static void read_usb_encrypted_saves(const char* userPath, list_t *list, uint64_
 	closedir(d);
 }
 
-static void read_psp_savegames(const char* userPath, list_t *list, int flags)
+static void read_ps2_savegames(const char* userPath, list_t *list, int flags)
 {
 	DIR *d;
+	mcIcon iconsys;
 	struct dirent *dir;
 	save_entry_t *item;
 	char sfoPath[256];
@@ -750,30 +752,34 @@ static void read_psp_savegames(const char* userPath, list_t *list, int flags)
 		if (strcmp(dir->d_name, ".") == 0 || strcmp(dir->d_name, "..") == 0)
 			continue;
 
-		snprintf(sfoPath, sizeof(sfoPath), "%s%s/PARAM.SFO", userPath, dir->d_name);
+		snprintf(sfoPath, sizeof(sfoPath), "%s%s/icon.sys", userPath, dir->d_name);
 
 		LOG("Reading %s...", sfoPath);
-		sfo_context_t* sfo = sfo_alloc();
-		if (sfo_read(sfo, sfoPath) < 0) {
+		if (read_file(sfoPath, (uint8_t*) &iconsys, sizeof(iconsys)) < 0) {
 			LOG("Unable to read from '%s'", sfoPath);
-			sfo_free(sfo);
 			continue;
 		}
 
-		item = _createSaveEntry(SAVE_FLAG_PSP | flags, (char*) sfo_get_param_value(sfo, "TITLE"));
-		item->type = FILE_TYPE_PSP;
-		item->dir_name = strdup((char*) sfo_get_param_value(sfo, "SAVEDATA_DIRECTORY"));
+		if (iconsys.nlOffset)
+		{
+			iconsys.nlOffset /= 2;
+			memmove(&iconsys.title[iconsys.nlOffset+1], &iconsys.title[iconsys.nlOffset], countof(iconsys.title) - iconsys.nlOffset);
+			iconsys.title[iconsys.nlOffset] = 0x5081;
+		}
+		sjis2ascii((uint8_t*) iconsys.title);
+		item = _createSaveEntry(SAVE_FLAG_PS2 | flags, (char*) iconsys.title);
+		item->type = FILE_TYPE_PS2;
+		item->dir_name = strdup(dir->d_name);
 		asprintf(&item->title_id, "%.9s", item->dir_name);
 		asprintf(&item->path, "%s%s/", userPath, dir->d_name);
 
-		if (strcmp((char*) sfo_get_param_value(sfo, "SAVEDATA_FILE_LIST"), "CONFIG.BIN") == 0)
+		if (0) //strcmp((char*) sfo_get_param_value(sfo, "SAVEDATA_FILE_LIST"), "CONFIG.BIN") == 0)
 		{
 			snprintf(sfoPath, sizeof(sfoPath), "%s%s/SCEVMC0.VMP", userPath, dir->d_name);
 			if (file_exists(sfoPath) == SUCCESS)
-				item->flags ^= (SAVE_FLAG_PS1 | SAVE_FLAG_PSP);
+				item->flags ^= (SAVE_FLAG_PS1 | SAVE_FLAG_PS2);
 		}
 
-		sfo_free(sfo);
 		LOG("[%s] F(%X) name '%s'", item->title_id, item->flags, item->name);
 		list_append(list, item);
 	}
@@ -825,7 +831,7 @@ static void read_usb_savegames(const char* userPath, list_t *list)
 //			item->flags |= SAVE_FLAG_OWNER;
 
 		sfo_free(sfo);
-			
+
 		LOG("[%s] F(%X) name '%s'", item->title_id, item->flags, item->name);
 		list_append(list, item);
 	}
@@ -881,7 +887,7 @@ list_t * ReadUsbList(const char* userPath)
 	list_append(list, item);
 
 	read_usb_savegames(userPath, list);
-	read_psp_savegames(userPath, list, 0);
+	read_ps2_savegames(userPath, list, 0);
 
 	return list;
 }
@@ -922,7 +928,7 @@ list_t * ReadUserList(const char* userPath)
 	list_append(item->codes, cmd);
 	list_append(list, item);
 
-	read_psp_savegames(PSP_SAVES_PATH_HDD, list, SAVE_FLAG_HDD);
+	read_ps2_savegames(userPath, list, SAVE_FLAG_HDD);
 
 	return list;
 }

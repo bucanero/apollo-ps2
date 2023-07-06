@@ -6,14 +6,8 @@
 #include <malloc.h>
 #include <string.h>
 #include <unistd.h>
-#include <dirent.h>
-//#include <pspctrl.h>
-//#include <psp/appmgr.h>
-//#include <psp/apputil.h>
-//#include <psp/system_param.h>
-//#include <psp/sysmodule.h>
-//#include <pspaudio.h>
 #include <xmp.h>
+#include <zlib.h>
 
 #include "saves.h"
 #include "sfo.h"
@@ -26,6 +20,7 @@
 #include "ttf_render.h"
 #include "font_adonais.h"
 #include "font-6x10.h"
+#include "zfont.h"
 
 //Menus
 #include "menu.h"
@@ -40,6 +35,7 @@ static int32_t audio = 0;
 extern const uint8_t _binary_data_haiku_s3m_start;
 extern const uint8_t _binary_data_haiku_s3m_size;
 
+void *font_ttf = NULL;
 
 #define load_menu_texture(name, type) \
 	({ extern const uint8_t _binary_data_##name##_##type##_start; \
@@ -159,7 +155,7 @@ save_list_t user_backup = {
 static int initPad()
 {
     // Set sampling mode
-    if (pspPadInit() < 0)
+    if (ps2PadInit() < 0)
     {
         LOG("[ERROR] Failed to open pad!");
         return 0;
@@ -171,18 +167,19 @@ static int initPad()
 // Used only in initialization. Allocates 64 mb for textures and loads the font
 static int LoadTextures_Menu()
 {
+	font_ttf = malloc(size_font_ttf);
 	texture_mem = malloc(256 * 8 * 4);
 	menu_textures = (png_texture *)calloc(TOTAL_MENU_TEXTURES, sizeof(png_texture));
 
-	if(!texture_mem || !menu_textures)
+	if(!texture_mem || !menu_textures || !font_ttf)
 		return 0; // fail!
 
 	ResetFont();
 	free_mem = (u32 *) AddFontFromBitmapArray((u8 *) data_font_Adonais, (u8 *) texture_mem, 0x20, 0x7e, 32, 31, 1, BIT7_FIRST_PIXEL);
 	free_mem = (u32 *) AddFontFromBitmapArray((u8 *) console_font_6x10, (u8 *) free_mem, 0, 0xFF, 6, 10, 1, BIT7_FIRST_PIXEL);
 
-//	if (TTFLoadFont(0, "ms0:/PSP/GAME/APOLLO/DATA/NotoSansJP-Medium.otf", NULL, 0) != SUCCESS)
-	if (TTFLoadFont(0, "host:/DATA/NotoSansJP-Medium.otf", NULL, 0) != SUCCESS)
+	uncompress(font_ttf, &size_font_ttf, (const Bytef *) zfont, sizeof(zfont));
+	if (TTFLoadFont(0, NULL, font_ttf, size_font_ttf) != SUCCESS)
 		return 0;
 
 	free_mem = (u32*) init_ttf_table((u8*) free_mem);
@@ -351,7 +348,7 @@ void update_usb_path(char* path)
 
 void update_hdd_path(char* path)
 {
-	strcpy(path, PSP_SAVES_PATH_HDD);
+	strcpy(path, MC0_PATH);
 }
 
 void update_db_path(char* path)
@@ -364,8 +361,6 @@ static void registerSpecialChars()
 	// Register save tags
 	RegisterSpecialCharacter(CHAR_TAG_PS1, 2, 1.5, &menu_textures[tag_ps1_png_index]);
 	RegisterSpecialCharacter(CHAR_TAG_PS2, 2, 1.5, &menu_textures[tag_ps2_png_index]);
-//	RegisterSpecialCharacter(CHAR_TAG_PS3, 2, 1.5, &menu_textures[tag_ps3_png_index]);
-//	RegisterSpecialCharacter(CHAR_TAG_PS4, 2, 1.5, &menu_textures[tag_ps4_png_index]);
 	RegisterSpecialCharacter(CHAR_TAG_PSP, 2, 1.5, &menu_textures[tag_psp_png_index]);
 //	RegisterSpecialCharacter(CHAR_TAG_PSV, 2, 1.5, &menu_textures[tag_psv_png_index]);
 	RegisterSpecialCharacter(CHAR_TAG_PCE, 2, 1.5, &menu_textures[tag_pce_png_index]);
@@ -507,7 +502,6 @@ int main(int argc, char *argv[])
 
 	dbglogger_init_mode(TTY_LOGGER, "host:/apollo-psp.log", 0);
 #endif
-	dbglogger_init_mode(TTY_LOGGER, "host:/apollo-psp.log", 0);
 
 	// Initialize SDL functions
 	LOG("Initializing SDL");
@@ -563,7 +557,6 @@ int main(int argc, char *argv[])
 		show_dialog(DIALOG_TYPE_YESNO, "Install the Save-game Key dumper plugin?"))
 	{
 		LOG("Installing plugin");
-		install_sgkey_plugin(1);
 	}
 
 	// Unpack application data on first run
@@ -610,16 +603,16 @@ int main(int argc, char *argv[])
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0xFF);
 		SDL_RenderClear(renderer);
 
-		pspPadUpdate();
+		ps2PadUpdate();
 		drawScene();
 
 		//Draw help
 		if (menu_pad_help[menu_id])
 		{
 			u8 alpha = 0xFF;
-			if (pspPadGetConf()->idle > 0x100)
+			if (ps2PadGetConf()->idle > 0x100)
 			{
-				int dec = (pspPadGetConf()->idle - 0x100) * 4;
+				int dec = (ps2PadGetConf()->idle - 0x100) * 4;
 				if (dec > alpha)
 					dec = alpha;
 				alpha -= dec;
@@ -650,7 +643,7 @@ int main(int argc, char *argv[])
 	// Stop all SDL sub-systems
 	SDL_Quit();
 	http_end();
-	pspPadFinish();
+	ps2PadFinish();
 	terminate();
 
 	return 0;

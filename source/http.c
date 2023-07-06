@@ -208,7 +208,7 @@ int http_download(const char* url, const char* filename, const char* local_dst, 
 		init_progress_bar("Downloading...");
 		/* pass the struct pointer into the xferinfo function */
 		curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, &update_progress);
-		curl_easy_setopt(curl, CURLOPT_XFERINFODATA, full_url);
+		curl_easy_setopt(curl, CURLOPT_XFERINFODATA, (void*)&full_url[0]);
 		curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
 	}
 

@@ -141,7 +141,7 @@ enum texture_index
 #define SCREEN_WIDTH						480
 #define SCREEN_HEIGHT						272
 
-//Screen adjustment (VitaRes/Assets)
+//Screen adjustment (PS2 Res/Assets)
 #define SCREEN_W_ADJ 						480/1920
 #define SCREEN_H_ADJ 						272/1080
 
@@ -258,6 +258,5 @@ void drawDialogBackground(void);
 
 int load_app_settings(app_config_t* config);
 int save_app_settings(app_config_t* config);
-int install_sgkey_plugin(int mode);
 
 #endif

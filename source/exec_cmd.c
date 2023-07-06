@@ -149,24 +149,6 @@ static void copySave(const save_entry_t* save, int dev)
 	show_message("Files successfully copied to:\n%s", exp_path);
 }
 
-static int get_psp_save_key(const save_entry_t* entry, uint8_t* key)
-{
-	char path[256];
-
-	snprintf(path, sizeof(path), "ms0:/PSP/SAVEPLAIN/%s/%s.bin", entry->dir_name, entry->title_id);
-if(0)//	if (read_psp_game_key(path, key))
-		return 1;
-
-	snprintf(path, sizeof(path), "ms0:/PSP/SAVEPLAIN/%s/%s.bin", entry->title_id, entry->title_id);
-if(0)//	if (read_psp_game_key(path, key))
-		return 1;
-
-	// SGKeyDumper 1.5+ support
-	snprintf(path, sizeof(path), "ms0:/PSP/GAME/SED/gamekey/%s.bin", entry->title_id);
-//	return (read_psp_game_key(path, key));
-return 0;
-}
-
 static int _copy_save_psp(const save_entry_t* save)
 {
 	char copy_path[256];
@@ -258,80 +240,6 @@ static void extractArchive(const char* file_path)
 		show_message("All files extracted to:\n%s", exp_path);
 	else
 		show_message("Error: %s couldn't be extracted", file_path);
-}
-
-static int pspDumpKey(const save_entry_t* save, int verbose)
-{
-	char fpath[256];
-	uint8_t buffer[0x10];
-
-if(0)//	if (!get_psp_save_key(save, buffer))
-	{
-		if (verbose) show_message("Error! Game Key file is not available:\n%s/%s.bin", save->dir_name, save->title_id);
-		return 0;
-	}
-
-	snprintf(fpath, sizeof(fpath), APOLLO_PATH "gamekeys.txt");
-	FILE *fp = fopen(fpath, "a");
-	if (!fp)
-	{
-		if (verbose) show_message("Error! Can't open file:\n%s", fpath);
-		return 0;
-	}
-
-	fprintf(fp, "%s=", save->title_id);
-	for (size_t i = 0; i < sizeof(buffer); i++)
-		fprintf(fp, "%02X", buffer[i]);
-
-	fprintf(fp, "\n");
-	fclose(fp);
-
-	if (verbose) show_message("%s game key successfully saved to:\n%s", save->title_id, fpath);
-	return 1;
-}
-
-static void pspExportKey(const save_entry_t* save)
-{
-	char fpath[256];
-	uint8_t buffer[0x10];
-
-if(0)//	if (!get_psp_save_key(save, buffer))
-	{
-		show_message("Error! Game Key file is not available:\n%s/%s.bin", save->dir_name, save->title_id);
-		return;
-	}
-
-	snprintf(fpath, sizeof(fpath), APOLLO_USER_PATH "%s/%s.bin", save->dir_name, save->title_id);
-	mkdirs(fpath);
-
-	if (write_buffer(fpath, buffer, sizeof(buffer)) == SUCCESS)
-		show_message("%s game key successfully saved to:\n%s", save->title_id, fpath);
-	else
-		show_message("Error! Can't save file:\n%s", fpath);
-}
-
-static void dumpAllFingerprints(const save_entry_t* save)
-{
-	int count = 0, err = 0;
-	uint64_t progress = 0;
-	list_node_t *node;
-	save_entry_t *item;
-	list_t *list = ((void**)save->dir_name)[0];
-
-	init_progress_bar("Dumping all game keys...");
-
-	LOG("Dumping all fingerprints from '%s'...", save->path);
-	for (node = list_head(list); (item = list_get(node)); node = list_next(node))
-	{
-		update_progress_bar(progress++, list_count(list), item->name);
-		if (item->type != FILE_TYPE_PS2)
-			continue;
-
-		pspDumpKey(item, 0) ? count++ : err++;
-	}
-
-	end_progress_bar();
-	show_message("%d/%d game keys dumped to:\n%sgamekeys.txt", count, count+err, APOLLO_PATH);
 }
 
 /*
@@ -849,7 +757,7 @@ static int _copy_save_file(const char* src_path, const char* dst_path, const cha
 	return (copy_file(src, dst) == SUCCESS);
 }
 
-static void decryptSaveFile(const save_entry_t* entry, const char* filename)
+static void exportSaveFile(const save_entry_t* entry, const char* filename)
 {
 	char path[256];
 	uint8_t key[16];
@@ -877,7 +785,7 @@ if(0)//		if (entry->flags & SAVE_FLAG_PSP && !psp_DecryptSavedata(entry->path, p
 		show_message("Error! File %s couldn't be exported", filename);
 }
 
-static void encryptSaveFile(const save_entry_t* entry, const char* filename)
+static void importSaveFile(const save_entry_t* entry, const char* filename)
 {
 	char path[256];
 	uint8_t key[16];
@@ -929,8 +837,8 @@ void execCodeCommand(code_entry_t* code, const char* codecmd)
 {
 	switch (codecmd[0])
 	{
-		case CMD_DECRYPT_FILE:
-			decryptSaveFile(selected_entry, code->options[0].name[code->options[0].sel]);
+		case CMD_EXPORT_DATA_FILE:
+			exportSaveFile(selected_entry, code->options[0].name[code->options[0].sel]);
 			code->activated = 0;
 			break;
 
@@ -954,20 +862,6 @@ void execCodeCommand(code_entry_t* code, const char* codecmd)
 			code->activated = 0;
 			break;
 
-		case CMD_EXP_PSPKEY:
-			pspExportKey(selected_entry);
-			code->activated = 0;
-			break;
-
-		case CMD_DUMP_PSPKEY:
-			pspDumpKey(selected_entry, 1);
-			code->activated = 0;
-			break;
-
-		case CMD_SETUP_PLUGIN:
-			code->activated = 0;
-			break;
-
 		case CMD_IMP_MCR2VMP0:
 		case CMD_IMP_MCR2VMP1:
 			import_mcr2vmp(selected_entry, code->options[0].name[code->options[0].sel], codecmd[0] == CMD_IMP_MCR2VMP1);
@@ -987,11 +881,6 @@ void execCodeCommand(code_entry_t* code, const char* codecmd)
 		case CMD_COPY_SAVES_USB:
 		case CMD_COPY_ALL_SAVES_USB:
 			copyAllSavesUSB(selected_entry, codecmd[1], codecmd[0] == CMD_COPY_ALL_SAVES_USB);
-			code->activated = 0;
-			break;
-
-		case CMD_DUMP_FINGERPRINTS:
-			dumpAllFingerprints(selected_entry);
 			code->activated = 0;
 			break;
 
@@ -1018,7 +907,7 @@ void execCodeCommand(code_entry_t* code, const char* codecmd)
 			break;
 
 		case CMD_IMPORT_DATA_FILE:
-			encryptSaveFile(selected_entry, code->options[0].name[code->options[0].sel]);
+			importSaveFile(selected_entry, code->options[0].name[code->options[0].sel]);
 			code->activated = 0;
 			break;
 

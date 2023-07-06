@@ -15,7 +15,7 @@
 #include "types.h"
 #include "utils.h"
 #include "ps2mc.h"
-#include "shiftjis.h"
+//#include "shiftjis.h"
 
 #define PSV_SEED_OFFSET 0x8
 #define PSV_HASH_OFFSET 0x1C
@@ -398,6 +398,7 @@ int sjis2ascii(uint8_t* bData)
 }
 
 // PSV files (PS1/PS2) savegame titles are stored in Shift-JIS
+/*
 char* sjis2utf8(char* input)
 {
     // Simplify the input and decode standard ASCII characters
@@ -452,3 +453,4 @@ char* sjis2utf8(char* input)
     output[indexOutput] = 0;
     return output;
 }
+*/

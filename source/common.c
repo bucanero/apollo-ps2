@@ -136,7 +136,11 @@ int copy_file(const char* input, const char* output)
     char* buffer = malloc(TMP_BUFF_SIZE);
 
     if (!buffer)
+    {
+	fclose(fd);
+        fclose(fd2);
         return FAILED;
+    }
 
     do
     {

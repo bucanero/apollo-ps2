@@ -6,7 +6,7 @@
 #include "menu_gui.h"
 #include "libfont.h"
 #include "ttf_render.h"
-#include "psppad.h"
+#include "ps2pad.h"
 #include "common.h"
 #include "utils.h"
 
@@ -89,7 +89,7 @@ static int ReloadUserSaves(save_list_t* save_list)
 	return list_count(save_list->list);
 }
 
-static code_entry_t* LoadRawPatch()
+static code_entry_t* LoadRawPatch(void)
 {
 	char patchPath[256];
 	code_entry_t* centry = calloc(1, sizeof(code_entry_t));
@@ -101,7 +101,7 @@ static code_entry_t* LoadRawPatch()
 	return centry;
 }
 
-static code_entry_t* LoadSaveDetails()
+static code_entry_t* LoadSaveDetails(void)
 {
 	code_entry_t* centry = calloc(1, sizeof(code_entry_t));
 	centry->name = strdup(selected_entry->title_id);
@@ -234,11 +234,11 @@ static void SetMenu(int id)
 //				if (selected_entry->flags & SAVE_FLAG_PSV && file_exists(iconfile) != SUCCESS)
 //					http_download(selected_entry->path, "icon0.png", iconfile, 0);
 			}
-			else if (selected_entry->flags & (SAVE_FLAG_PSP | SAVE_FLAG_PS1))
-				snprintf(iconfile, sizeof(iconfile), "%sICON0.PNG", selected_entry->path);
+			else if (selected_entry->flags & (SAVE_FLAG_PS2 | SAVE_FLAG_PS1))
+				snprintf(iconfile, sizeof(iconfile), "%s%s", selected_entry->path, selected_entry->icon);
 
 			if (file_exists(iconfile) == SUCCESS)
-				LoadFileTexture(iconfile, icon_png_file_index);
+				LoadIconTexture(iconfile, icon_png_file_index);
 			else
 				menu_textures[icon_png_file_index].size = 0;
 

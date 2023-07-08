@@ -179,7 +179,7 @@ typedef struct save_entry
 	char * title_id;
 	char * path;
 	char * dir_name;
-    uint32_t blocks;
+    char * icon;
 	uint16_t flags;
     uint16_t type;
     list_t * codes;

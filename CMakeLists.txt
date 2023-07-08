@@ -77,7 +77,8 @@ add_executable(${PROJECT_NAME}
   source/sfo.c
   source/ttf_fonts.c
   source/util.c
-  source/psppad.c
+  source/ps2pad.c
+  source/ps2icon.c
   source/psv_ps2.c
   source/psv_resign.c
   source/zip_util.c

@@ -1,73 +1,82 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
-//#include <psputility.h>
 
 #include "menu.h"
 #include "libfont.h"
+#include "ps2pad.h"
 
 #define PSP_UTILITY_OSK_MAX_TEXT_LENGTH			(512)
+#define DIALOG_WINDOW_WIDTH						(300)
+#define DIALOG_WINDOW_HEIGHT					(200)
 
 int init_loading_screen(const char* msg);
 void stop_loading_screen(void);
 
 static char progress_bar[128];
 
-/*
-static void ConfigureDialog(pspUtilityDialogCommon *dialog, size_t dialog_size)
+static void drawDialog(const char* msg, const char *dialog_opts[], int selected)
 {
-    memset(dialog, 0, sizeof(pspUtilityDialogCommon));
+    SDL_Rect dialog_rect = {
+        (SCREEN_WIDTH - DIALOG_WINDOW_WIDTH)/2,
+        (SCREEN_HEIGHT - DIALOG_WINDOW_HEIGHT)/2,
+        DIALOG_WINDOW_WIDTH,
+        DIALOG_WINDOW_HEIGHT };
 
-    dialog->size = dialog_size;
-    sceUtilityGetSystemParamInt(PSP_SYSTEMPARAM_ID_INT_LANGUAGE, &dialog->language); // Prompt language
-    sceUtilityGetSystemParamInt(PSP_SYSTEMPARAM_ID_INT_UNKNOWN, &dialog->buttonSwap); // X/O button swap
-    dialog->graphicsThread = 0x11;
-    dialog->accessThread = 0x13;
-    dialog->fontThread = 0x12;
-    dialog->soundThread = 0x10;
+    SDL_SetRenderDrawColor(renderer, 0xA0, 0xA0, 0xA0, SDL_ALPHA_OPAQUE);
+    SDL_RenderFillRect(renderer, &dialog_rect);
+    DrawTexture(&menu_textures[help_png_index], dialog_rect.x +4, dialog_rect.y +4, 0, dialog_rect.w -4, dialog_rect.h -4, 0xFFFFFF00 | 0xFF);
+
+    SetFontSize(APP_FONT_SIZE_DESCRIPTION);
+    SetFontColor(0xFFFFFF00 | 0xFF, 0);
+    SetFontAlign(FONT_ALIGN_SCREEN_CENTER);
+
+    DrawString(0, dialog_rect.y + 0x10, msg);
+
+    if (selected < 0)
+    {
+        DrawString(0, dialog_rect.y + 170, dialog_opts[0]);
+        SetFontAlign(FONT_ALIGN_LEFT);
+        return;
+    }
+
+    for (int i = 0; dialog_opts[i] != NULL; i++)
+    {
+        DrawString(0, dialog_rect.y + 0x30 + (i*16), dialog_opts[i]);
+
+        if (selected == i)
+        {
+            DrawTexture(&menu_textures[mark_line_png_index], dialog_rect.x, dialog_rect.y + 0x30 + (i*16), 0, dialog_rect.w, menu_textures[mark_line_png_index].height, 0xFFFFFF00 | 0xFF);
+//            DrawTextureCenteredX(&menu_textures[mark_arrow_png_index], MENU_ICON_OFF + MENU_TITLE_OFF, y_off, 0, (2 * APP_LINE_OFFSET) / 3, APP_LINE_OFFSET + 2, 0xFFFFFF00 | alpha);
+        }
+    }
+    SetFontAlign(FONT_ALIGN_LEFT);
 }
-*/
 
 int show_dialog(int tdialog, const char * format, ...)
 {
-/*
-    pspUtilityMsgDialogParams dialog;
-    va_list	opt;
-
-    memset(&dialog, 0, sizeof(dialog));
-    ConfigureDialog(&dialog.base, sizeof(dialog));
-    dialog.mode = PSP_UTILITY_MSGDIALOG_MODE_TEXT;
-    dialog.options = PSP_UTILITY_MSGDIALOG_OPTION_TEXT;
-    if(tdialog)
-        dialog.options |= PSP_UTILITY_MSGDIALOG_OPTION_YESNO_BUTTONS|PSP_UTILITY_MSGDIALOG_OPTION_DEFAULT_NO;		
+    va_list opt;
+    char buf[512];
+    const char* ok_opt[] = {"\x10 OK", NULL};
+    const char* yesno_opt[] = {"\x10 Yes   \x13 No", NULL};
 
     va_start(opt, format);
-    vsnprintf(dialog.message, sizeof(dialog.message), format, opt);
+    vsnprintf(buf, sizeof(buf), format, opt);
     va_end(opt);
 
-    if (sceUtilityMsgDialogInitStart(&dialog) < 0)
-        return 0;
-
     do {
-        tdialog = sceUtilityMsgDialogGetStatus();
+        SDL_RenderClear(renderer);
+        DrawBackgroundTexture(0, 0xFF);
 
-        switch(tdialog)
-        {
-            case PSP_UTILITY_DIALOG_VISIBLE:
-                sceUtilityMsgDialogUpdate(1);
-                break;
+        drawDialog(buf, (tdialog == DIALOG_TYPE_YESNO) ? yesno_opt : ok_opt, -1);
+        ps2PadUpdate();
+        if (ps2PadGetButtonPressed(PAD_CIRCLE))
+            return 0;
 
-            case PSP_UTILITY_DIALOG_QUIT:
-                sceUtilityMsgDialogShutdownStart();
-                break;
-        }
+        SDL_RenderPresent(renderer);
+    } while (!ps2PadGetButtonPressed(PAD_CROSS));
 
-        drawDialogBackground();
-    } while (tdialog != PSP_UTILITY_DIALOG_FINISHED);
-
-    return (dialog.buttonPressed == PSP_UTILITY_MSGDIALOG_RESULT_YES);
-*/
-return 0;
+    return (1);
 }
 
 void init_progress_bar(const char* msg)

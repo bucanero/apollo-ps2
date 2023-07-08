@@ -13,7 +13,7 @@
 #include "sfo.h"
 #include "utils.h"
 #include "common.h"
-#include "psppad.h"
+#include "ps2pad.h"
 
 //Font
 #include "libfont.h"
@@ -619,7 +619,7 @@ int main(int argc, char *argv[])
 			}
 			
 			SetFontSize(APP_FONT_SIZE_DESCRIPTION);
-			SetCurrentFont(0);
+			SetCurrentFont(font_adonais_regular);
 			SetFontAlign(FONT_ALIGN_SCREEN_CENTER);
 			SetFontColor(APP_FONT_COLOR | alpha, 0);
 			DrawString(0, SCREEN_HEIGHT - 22, (char *)menu_pad_help[menu_id]);

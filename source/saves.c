@@ -749,7 +749,7 @@ static void read_ps2_savegames(const char* userPath, list_t *list, int flags)
 
 	while ((dir = readdir(d)) != NULL)
 	{
-		if (strcmp(dir->d_name, ".") == 0 || strcmp(dir->d_name, "..") == 0)
+		if (!S_ISDIR(dir->d_stat.st_mode) || strcmp(dir->d_name, ".") == 0 || strcmp(dir->d_name, "..") == 0)
 			continue;
 
 		snprintf(sfoPath, sizeof(sfoPath), "%s%s/icon.sys", userPath, dir->d_name);
@@ -769,9 +769,13 @@ static void read_ps2_savegames(const char* userPath, list_t *list, int flags)
 		sjis2ascii((uint8_t*) iconsys.title);
 		item = _createSaveEntry(SAVE_FLAG_PS2 | flags, (char*) iconsys.title);
 		item->type = FILE_TYPE_PS2;
+		item->icon = strdup(iconsys.copy);
 		item->dir_name = strdup(dir->d_name);
-		asprintf(&item->title_id, "%.9s", item->dir_name);
+		asprintf(&item->title_id, "%.10s", dir->d_name+2);
 		asprintf(&item->path, "%s%s/", userPath, dir->d_name);
+
+		if(item->title_id[4] == '-')
+			memmove(&item->title_id[4], &item->title_id[5], 6);
 
 		if (0) //strcmp((char*) sfo_get_param_value(sfo, "SAVEDATA_FILE_LIST"), "CONFIG.BIN") == 0)
 		{

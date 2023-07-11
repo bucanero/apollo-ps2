@@ -87,7 +87,7 @@ enum cmd_code_enum
     CMD_DUMP_PSPKEY,
 
 // Import commands
-    CMD_IMP_KEYSTONE,
+    CMD_IMP_SAVE_MC,
     CMD_IMP_MCR2VMP0,
     CMD_IMP_MCR2VMP1,
     CMD_EXTRACT_ARCHIVE,
@@ -116,17 +116,19 @@ enum save_type_enum
 {
     FILE_TYPE_NULL,
     FILE_TYPE_PSV,
-    FILE_TYPE_TRP,
     FILE_TYPE_MENU,
     FILE_TYPE_PS2,
 
     // PS1 File Types
+    FILE_TYPE_MCS,
+    FILE_TYPE_PSX,
     FILE_TYPE_ZIP,
 
     // License Files
-    FILE_TYPE_PRX,
-    FILE_TYPE_RAP,
-    FILE_TYPE_ACT,
+    FILE_TYPE_MAX,
+    FILE_TYPE_CBS,
+    FILE_TYPE_XPS,
+    FILE_TYPE_PSU,
 
     // ISO Files
     FILE_TYPE_ISO,
@@ -176,11 +178,11 @@ enum code_type_enum
 typedef struct save_entry
 {
     char * name;
-	char * title_id;
-	char * path;
-	char * dir_name;
+    char * title_id;
+    char * path;
+    char * dir_name;
     char * icon;
-	uint16_t flags;
+    uint16_t flags;
     uint16_t type;
     list_t * codes;
 } save_entry_t;
@@ -237,7 +239,12 @@ void execCodeCommand(code_entry_t* code, const char* codecmd);
 int create_savegame_folder(const char* folder);
 int get_save_details(const save_entry_t *save, char** details);
 
-int read_psp_game_key(const char* fkey, uint8_t* key);
+int importCBS(const char *save, const char *mc_path);
+int importPSU(const char *save, const char *mc_path);
+int importXPS(const char *save, const char *mc_path);
+int importMAX(const char *save, const char *mc_path);
+int importPSV(const char *save, const char *mc_path);
+
 int psp_DecryptSavedata(const char* fpath, const char* fname, uint8_t* key);
 int psp_EncryptSavedata(const char* fpath, const char* fname, uint8_t* key);
 

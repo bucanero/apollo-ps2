@@ -339,7 +339,7 @@ static int LoadSounds(void* data)
 
 void update_usb_path(char* path)
 {
-	sprintf(path, USB_PATH PSP_SAVES_PATH_USB, menu_options[3].options[apollo_config.storage]);
+	sprintf(path, "%s", menu_options[3].options[apollo_config.storage]);
 	if (dir_exists(path) == SUCCESS)
 		return;
 
@@ -356,7 +356,7 @@ void update_db_path(char* path)
 	strcpy(path, apollo_config.save_db);
 }
 
-static void registerSpecialChars()
+static void registerSpecialChars(void)
 {
 	// Register save tags
 	RegisterSpecialCharacter(CHAR_TAG_PS1, 2, 1.5, &menu_textures[tag_ps1_png_index]);
@@ -551,13 +551,11 @@ int main(int argc, char *argv[])
 		LOG("Failed to load menu textures!");
 		return (-1);
 	}
+	registerSpecialChars();
+	initMenuOptions();
 
 	// Load application settings
-	if (!load_app_settings(&apollo_config) &&
-		show_dialog(DIALOG_TYPE_YESNO, "Install the Save-game Key dumper plugin?"))
-	{
-		LOG("Installing plugin");
-	}
+	load_app_settings(&apollo_config);
 
 	// Unpack application data on first run
 	if (file_exists(APOLLO_LOCAL_CACHE "appdata.zip") == SUCCESS)
@@ -577,9 +575,6 @@ int main(int argc, char *argv[])
 	// Setup font
 	SetExtraSpace(-10);
 	SetCurrentFont(font_adonais_regular);
-
-	registerSpecialChars();
-	initMenuOptions();
 
 	// Splash screen logo (fade-out)
 	drawSplashLogo(-1);

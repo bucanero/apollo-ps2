@@ -464,6 +464,39 @@ static void enableWebServer(dWebReqHandler_t handler, void* data, int port)
 */
 }
 
+static void importSave(const save_entry_t* save, const char* mc_path)
+{
+	int ret = 0;
+
+	LOG("Importing save game '%s'... {%s}", save->path, mc_path);
+
+	switch (save->type)
+	{
+	case FILE_TYPE_CBS:
+		ret = importCBS(save->path, mc_path);
+		break;
+
+	case FILE_TYPE_MAX:
+		ret = importMAX(save->path, mc_path);
+		break;
+
+	case FILE_TYPE_XPS:
+		ret = importXPS(save->path, mc_path);
+		break;
+
+	case FILE_TYPE_PSU:
+		ret = importPSU(save->path, mc_path);
+		break;
+
+	case FILE_TYPE_PSV:
+		ret = importPSV(save->path, mc_path);
+		break;
+
+	default:
+		break;
+	}
+}
+
 static void copyAllSavesUSB(const save_entry_t* save, int dev, int all)
 {
 	char dst_path[256];
@@ -881,6 +914,11 @@ void execCodeCommand(code_entry_t* code, const char* codecmd)
 		case CMD_COPY_SAVES_USB:
 		case CMD_COPY_ALL_SAVES_USB:
 			copyAllSavesUSB(selected_entry, codecmd[1], codecmd[0] == CMD_COPY_ALL_SAVES_USB);
+			code->activated = 0;
+			break;
+
+		case CMD_IMP_SAVE_MC:
+			importSave(selected_entry, codecmd[1] ? MC1_PATH : MC0_PATH);
 			code->activated = 0;
 			break;
 

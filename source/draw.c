@@ -187,6 +187,13 @@ int LoadIconTexture(const char* fname, int idx)
 	if (read_buffer(fname, (uint8_t**) &raw.datap, &len) < 0)
 		return 0;
 
+	if (raw.datap[0] != 0x00010000)
+	{
+		LOG("Invalid icon file!");
+		free(raw.datap);
+		return 0;
+	}
+
 	icon = iconInit(raw.datap);
 	free(raw.datap);
 

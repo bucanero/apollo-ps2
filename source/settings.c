@@ -12,8 +12,8 @@
 
 
 char *strcasestr(const char *, const char *);
-static char* ext_src[MAX_USB_DEVICES+1] = {"mass", "host", "cdfs", NULL};
-static char* sort_opt[] = {"Disabled", "by Name", "by Title ID", NULL};
+static const char* ext_src[MAX_USB_DEVICES+1] = {"mass:/", "host:/", "cdfs:/", NULL};
+static const char* sort_opt[] = {"Disabled", "by Name", "by Title ID", NULL};
 
 menu_option_t menu_options[] = {
 	{ .name = "\nBackground Music", 

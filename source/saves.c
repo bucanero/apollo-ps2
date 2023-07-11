@@ -471,7 +471,7 @@ list_t * ReadBackupList(const char* userPath)
 
 	item = _createSaveEntry(SAVE_FLAG_PSP, CHAR_ICON_COPY " Manage Save-game Key Dumper plugin");
 	item->path = strdup(MC0_PATH);
-	item->type = FILE_TYPE_PRX;
+//	item->type = FILE_TYPE_PRX;
 	list_append(list, item);
 
 	item = _createSaveEntry(0, CHAR_ICON_NET " Network Tools");
@@ -499,7 +499,7 @@ int ReadBackupCodes(save_entry_t * bup)
 		cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_NET " Local Web Server (full system access)", CMD_NET_WEBSERVER);
 		list_append(bup->codes, cmd);
 		return list_count(bup->codes);
-
+/*
 	case FILE_TYPE_PRX:
 		bup->codes = list_alloc();
 
@@ -511,7 +511,7 @@ int ReadBackupCodes(save_entry_t * bup)
 		list_append(bup->codes, cmd);
 
 		return list_count(bup->codes);
-
+*/
 	default:
 		return 0;
 	}
@@ -843,6 +843,113 @@ static void read_usb_savegames(const char* userPath, list_t *list)
 	closedir(d);
 }
 
+static int set_psx_import_codes(save_entry_t* item)
+{
+	code_entry_t* cmd;
+	item->codes = list_alloc();
+
+	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_USER " View Save Details", CMD_VIEW_DETAILS);
+	list_append(item->codes, cmd);
+
+	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_COPY " Import to Memory Card", CMD_CODE_NULL);
+	cmd->options_count = 1;
+	cmd->options = _createOptions(2, "Import to MC", CMD_IMP_SAVE_MC);
+	list_append(item->codes, cmd);
+
+	return list_count(item->codes);
+}
+
+static void read_psx_savegames(const char* userPath, const char* folder, list_t *list)
+{
+	DIR *d;
+	struct dirent *dir;
+	save_entry_t *item;
+	char psvPath[256];
+	char data[64];
+	int type, toff;
+
+	snprintf(psvPath, sizeof(psvPath), "%s%s", userPath, folder);
+	d = opendir(psvPath);
+
+	if (!d)
+		return;
+
+	while ((dir = readdir(d)) != NULL)
+	{
+		if (!S_ISREG(dir->d_stat.st_mode))
+			continue;
+
+		if (endsWith(dir->d_name, ".PSX"))
+		{
+			toff = 0;
+			type = FILE_TYPE_PSX;
+		}
+		else if (endsWith(dir->d_name, ".MCS"))
+		{
+			toff = 0x0A;
+			type = FILE_TYPE_MCS;
+		}
+		else if (endsWith(dir->d_name, ".MAX"))
+		{
+			toff = 0x10;
+			type = FILE_TYPE_MAX;
+		}
+		else if (endsWith(dir->d_name, ".CBS"))
+		{
+			toff = 0x14;
+			type = FILE_TYPE_CBS;
+		}
+		else if (endsWith(dir->d_name, ".PSU"))
+		{
+			toff = 0x40;
+			type = FILE_TYPE_PSU;
+		}
+		else if (endsWith(dir->d_name, ".PSV"))
+		{
+			toff = 0x80;
+			type = FILE_TYPE_PSV;
+		}
+		else if (endsWith(dir->d_name, ".XPS") || endsWith(dir->d_name, ".SPS"))
+		{
+			toff = 0x04;
+			type = FILE_TYPE_XPS;
+		}
+		else
+			continue;
+
+		snprintf(psvPath, sizeof(psvPath), "%s%s%s", userPath, folder, dir->d_name);
+		LOG("Reading %s...", psvPath);
+
+		FILE *fp = fopen(psvPath, "rb");
+		if (!fp) {
+			LOG("Unable to open '%s'", psvPath);
+			continue;
+		}
+
+		fseek(fp, toff, SEEK_SET);
+		fread(data, 1, sizeof(data), fp);
+		fclose(fp);
+
+		item = _createSaveEntry(SAVE_FLAG_PS2, dir->d_name);
+		set_psx_import_codes(item);
+
+		if (type == FILE_TYPE_PSX || type == FILE_TYPE_MCS)
+			item->flags = SAVE_FLAG_PS1;
+
+		item->type = type;
+		item->path = strdup(psvPath);
+		asprintf(&item->title_id, "%.10s", data+2);
+
+		if(item->title_id[4] == '-')
+			memmove(&item->title_id[4], &item->title_id[5], 6);
+
+		LOG("[%s] F(%X) name '%s'", item->title_id, item->flags, item->name);
+		list_append(list, item);
+	}
+
+	closedir(d);
+}
+
 /*
  * Function:		ReadUserList()
  * File:			saves.c
@@ -891,6 +998,7 @@ list_t * ReadUsbList(const char* userPath)
 	list_append(list, item);
 
 	read_usb_savegames(userPath, list);
+	read_psx_savegames(userPath, "PS2/SAVEDATA/", list);
 	read_ps2_savegames(userPath, list, 0);
 
 	return list;

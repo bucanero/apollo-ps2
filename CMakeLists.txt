@@ -79,7 +79,7 @@ add_executable(${PROJECT_NAME}
   source/util.c
   source/ps2pad.c
   source/ps2icon.c
-  source/psv_ps2.c
+  source/import_ps2.c
   source/psv_resign.c
   source/zip_util.c
   source/vmp_resign.c

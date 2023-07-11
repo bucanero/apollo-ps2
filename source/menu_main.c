@@ -234,7 +234,7 @@ static void SetMenu(int id)
 //				if (selected_entry->flags & SAVE_FLAG_PSV && file_exists(iconfile) != SUCCESS)
 //					http_download(selected_entry->path, "icon0.png", iconfile, 0);
 			}
-			else if (selected_entry->flags & (SAVE_FLAG_PS2 | SAVE_FLAG_PS1))
+			else if (selected_entry->flags & (SAVE_FLAG_PS2 | SAVE_FLAG_PS1) && selected_entry->icon)
 				snprintf(iconfile, sizeof(iconfile), "%s%s", selected_entry->path, selected_entry->icon);
 
 			if (file_exists(iconfile) == SUCCESS)

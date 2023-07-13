@@ -19,10 +19,13 @@
 
 #define  xps_mode_swap(M)   ((M & 0x00FF) << 8) + ((M & 0xFF00) >> 8)
 
+// flag value used for mcSetFileInfo at MC file restoration
+#define  MC_SFI             0xFEED
+
 // This is the initial permutation state ("S") for the RC4 stream cipher
 // algorithm used to encrypt and decrypt Codebreaker saves.
 // Source: https://github.com/ps2dev/mymc/blob/master/ps2save.py#L36
-const uint8_t cbsKey[256] = {
+static const uint8_t cbsKey[256] = {
     0x5f, 0x1f, 0x85, 0x6f, 0x31, 0xaa, 0x3b, 0x18,
     0x21, 0xb9, 0xce, 0x1c, 0x07, 0x4c, 0x9c, 0xb4,
     0x81, 0xb8, 0xef, 0x98, 0x59, 0xae, 0xf9, 0x26,
@@ -141,6 +144,30 @@ static void set_ps2header_values(ps2_header_t *ps2h, const ps2_FileInfo_t *ps2fi
     }
 }
 
+static int setMcTblEntryInfo(const char* dstName, const McFsEntry *entry)
+{
+    int val;
+    sceMcTblGetDir dinfo;
+
+    memset(&dinfo, 0, sizeof(sceMcTblGetDir));
+    dinfo.AttrFile = entry->mode;
+    dinfo.FileSizeByte = entry->length;
+    dinfo._Create = entry->created;
+    dinfo._Modify = entry->modified;
+    dinfo.Reserve1 = entry->unused;
+    dinfo.Reserve2 = entry->attr;
+    dinfo.PdaAplNo = entry->unused2[0];
+    memcpy(dinfo.EntryName, entry->name, sizeof(dinfo.EntryName));
+
+    mcGetInfo(dstName[2] - '0', 0, &val, &val, &val);  // Wakeup call
+    mcSync(0, NULL, &val);
+    val = mcSetFileInfo(dstName[2] - '0', 0, &dstName[4], &dinfo, MC_SFI);  // Fix file stats
+    LOG("mcSetInfo(%s): %X", dstName, val);
+    val = mcSync(0, NULL, &val);
+
+    return val;
+}
+
 int importMAX(const char *save, const char* mc_path)
 {
     FILE* out;
@@ -217,19 +244,18 @@ int importMAX(const char *save, const char* mc_path)
 int importPSU(const char *save, const char* mc_path)
 {
     FILE *psuFile, *outFile;
-    char dstName[128], dirName[32];
+    char dstName[128];
     uint8_t *data;
-    McFsEntry entry;
+    McFsEntry entry, dirEntry;
 
     psuFile = fopen(save, "rb");
     if(!psuFile)
         return 0;
     
     // Read main directory entry
-    fread(&entry, 1, sizeof(McFsEntry), psuFile);
-    memcpy(dirName, entry.name, sizeof(dirName));
+    fread(&dirEntry, 1, sizeof(McFsEntry), psuFile);
 
-    snprintf(dstName, sizeof(dstName), "%s%s", mc_path, dirName);
+    snprintf(dstName, sizeof(dstName), "%s%s", mc_path, dirEntry.name);
     mkdir(dstName, 0777);
 
     // Skip "." and ".."
@@ -237,7 +263,7 @@ int importPSU(const char *save, const char* mc_path)
 
     LOG("Save contents:\n");
     // Copy each file entry
-    for(int next, numFiles = entry.length - 2; numFiles > 0; numFiles--)
+    for(int next, numFiles = dirEntry.length - 2; numFiles > 0; numFiles--)
     {
         fread(&entry, 1, sizeof(McFsEntry), psuFile);
         data = malloc(entry.length);
@@ -245,13 +271,15 @@ int importPSU(const char *save, const char* mc_path)
 
         LOG(" %8d bytes  : %s", entry.length, entry.name);
 
-        snprintf(dstName, sizeof(dstName), "%s%s/%s", mc_path, dirName, entry.name);
+        snprintf(dstName, sizeof(dstName), "%s%s/%s", mc_path, dirEntry.name, entry.name);
         if(!(outFile = fopen(dstName, "wb")))
             LOG("[!] Error writing %s", dstName);
         else
         {
             fwrite(data, 1, entry.length, outFile);
             fclose(outFile);
+
+            setMcTblEntryInfo(dstName, &entry);
         }
         free(data);
 
@@ -261,7 +289,10 @@ int importPSU(const char *save, const char* mc_path)
     }
 
     fclose(psuFile);
-    
+
+    snprintf(dstName, sizeof(dstName), "%s%s", mc_path, dirEntry.name);
+    setMcTblEntryInfo(dstName, &dirEntry);
+
     return 1;
 }
 
@@ -276,29 +307,12 @@ static void cbsCrypt(uint8_t *buf, size_t bufLen)
 
 static int isCBSFile(const char *path)
 {
-    if(!path)
-        return 0;
-    
-    FILE *f = fopen(path, "rb");
-    if(!f)
+    cbsHeader_t hdr;
+
+    if(read_file(path, (uint8_t*) &hdr, sizeof(cbsHeader_t)) < 0)
         return 0;
 
-    // Verify file size
-    fseek(f, 0, SEEK_END);
-    int len = ftell(f);
-    fseek(f, 0, SEEK_SET);
-    if(len < sizeof(cbsHeader_t))
-    {
-        fclose(f);
-        return 0;
-    }
-
-    // Verify header magic
-    char magic[4];
-    fread(magic, 1, 4, f);
-    fclose(f);
-
-    if(memcmp(magic, CBS_HEADER_MAGIC, 4) != 0)
+    if(memcmp(hdr.magic, CBS_HEADER_MAGIC, 4) != 0 || hdr.dataOffset != sizeof(cbsHeader_t))
         return 0;
 
     return 1;
@@ -312,9 +326,10 @@ int importCBS(const char *save, const char *mc_path)
     uint8_t *decompressed;
     cbsHeader_t *header;
     cbsEntry_t entryHeader;
-    unsigned long decompressedSize;
+    uLong decompressedSize;
     size_t cbsLen;
     char dstName[256];
+    McFsEntry mcEntry;
 
     if(!isCBSFile(save))
         return 0;
@@ -364,10 +379,27 @@ int importCBS(const char *save, const char *mc_path)
         {
             fwrite(&decompressed[offset], 1, entryHeader.length, dstFile);
             fclose(dstFile);
+
+            memset(&mcEntry, 0, sizeof(McFsEntry));
+            mcEntry.mode = entryHeader.mode;
+            mcEntry.length = entryHeader.length;
+            mcEntry.created = entryHeader.created;
+            mcEntry.modified = entryHeader.modified;
+            memcpy(mcEntry.name, entryHeader.name, sizeof(mcEntry.name));
+
+            setMcTblEntryInfo(dstName, &mcEntry);
         }
     }
-
     free(decompressed);
+
+    memset(&mcEntry, 0, sizeof(McFsEntry));
+    mcEntry.mode = header->mode;
+    mcEntry.created = header->created;
+    mcEntry.modified = header->modified;
+    memcpy(mcEntry.name, header->name, sizeof(mcEntry.name));
+
+    snprintf(dstName, sizeof(dstName), "%s%s", mc_path, header->name);
+    setMcTblEntryInfo(dstName, &mcEntry);
     free(cbsData);
 
     return 1;
@@ -490,92 +522,187 @@ int importPSV(const char *save, const char* mc_path)
     return 1;
 }
 
-int ps2_psv2psu(const char *save, const char* psu_path)
+static void setMcFsEntryValues(McFsEntry *entry, sceMcTblGetDir *mcDir)
 {
-    uint32_t dataPos = 0;
-    FILE *psuFile, *psvFile;
-    int numFiles, next;
-    char dstName[256];
-    uint8_t *data;
-    McFsEntry entry;
-    ps2_MainDirInfo_t ps2md;
-    ps2_FileInfo_t ps2fi;
-    
-    psvFile = fopen(save, "rb");
-    if(!psvFile)
-        return 0;
+    entry->mode = mcDir->AttrFile;
+    entry->length = mcDir->FileSizeByte;
+    entry->created = mcDir->_Create;
+    entry->modified = mcDir->_Modify;
 
-    snprintf(dstName, sizeof(dstName), "%s%s.psu", psu_path, strrchr(save, '/')+1);
-    psuFile = fopen(dstName, "wb");
-    
+    entry->unused = mcDir->Reserve1;
+    entry->attr = mcDir->Reserve2;
+    entry->unused2[0] = mcDir->PdaAplNo;
+
+    memcpy(entry->name, mcDir->EntryName, sizeof(entry->name));
+}
+
+int exportPSU(const char *save, const char* psu_path)
+{
+    FILE *psuFile;
+    sceMcTblGetDir mcDir[64] __attribute__((aligned(64)));
+    McFsEntry mcEntry;
+    char mcPath[100];
+    char filePath[150];
+    char *data;
+    int ret;
+
+    LOG("Export %s -> %s ...", save, psu_path);
+    psuFile = fopen(psu_path, "wb");
     if(!psuFile)
+        return 0;
+
+    strcpy(mcPath, strchr(save, '/')+1);
+    *strrchr(mcPath, '/') = 0;
+    mcGetDir(save[2] - '0', 0, mcPath, 0, 1, mcDir);
+    mcSync(0, NULL, &ret);
+    LOG("mcGetDir(%s) %d", mcPath, ret);
+
+    memset(&mcEntry, 0, sizeof(McFsEntry));
+    setMcFsEntryValues(&mcEntry, &mcDir[0]);
+
+    snprintf(mcPath, sizeof(mcPath), "%s*", save + 5);
+    mcGetDir(save[2] - '0', 0, mcPath, 0, countof(mcDir), mcDir);
+    mcSync(0, NULL, &ret);
+    LOG("mcGetDir(%s) %d", mcPath, ret);
+
+    // root directory
+    mcEntry.length = ret;
+    fwrite(&mcEntry, 1, sizeof(McFsEntry), psuFile);
+
+    setMcFsEntryValues(&mcEntry, &mcDir[0]);
+    fwrite(&mcEntry, 1, sizeof(McFsEntry), psuFile);
+    setMcFsEntryValues(&mcEntry, &mcDir[1]);
+    fwrite(&mcEntry, 1, sizeof(McFsEntry), psuFile);
+
+    for(int i = 0, padding; i < ret; i++)
     {
-        fclose(psvFile);
+        if(!(mcDir[i].AttrFile & sceMcFileAttrFile))
+            continue;
+
+        LOG("(%d/%d) Add '%s'", i+1, ret, mcDir[i].EntryName);
+        setMcFsEntryValues(&mcEntry, &mcDir[i]);
+
+        snprintf(filePath, sizeof(filePath), "%s%s", save, mcEntry.name);
+        data = malloc(mcEntry.length);
+        read_file(filePath, data, mcEntry.length);
+        
+        fwrite(&mcEntry, 1, sizeof(McFsEntry), psuFile);
+        fwrite(data, 1, mcEntry.length, psuFile);
+        free(data);
+        
+        padding = 1024 - (mcEntry.length % 1024);
+        if(padding < 1024)
+        {
+            while(padding--)
+                fputc(0xFF, psuFile);
+        }
+    }
+    fclose(psuFile);
+
+    return 1;
+}
+
+int exportCBS(const char *save, const char* cbs_path)
+{
+    FILE *cbsFile, *mcFile;
+    sceMcTblGetDir mcDir[64] __attribute__((aligned(64)));
+    cbsHeader_t header;
+    cbsEntry_t entryHeader;
+    uint8_t *dataBuff;
+    uint8_t *dataCompressed;
+    uLong compressedSize;
+    uint32_t dataOffset = 0;
+    char mcPath[100];
+    char filePath[150];
+    int i, ret;
+
+    LOG("Export %s -> %s ...", save, cbs_path);
+    cbsFile = fopen(cbs_path, "wb");
+    if(!cbsFile)
+        return 0;
+
+    // Get root directory entry
+    strcpy(mcPath, strchr(save, '/')+1);
+    *strrchr(mcPath, '/') = 0;
+    mcGetDir(save[2] - '0', 0, mcPath, 0, 1, mcDir);
+    mcSync(0, NULL, &ret);
+    LOG("mcGetDir (%s) %d", mcPath, ret);
+
+    memset(&header, 0, sizeof(cbsHeader_t));
+    memset(&entryHeader, 0, sizeof(cbsEntry_t));
+    memcpy(header.magic, "CFU\0", 4);
+    header.unk1 = 0x1F40;
+    header.dataOffset = sizeof(cbsHeader_t); // 0x128
+    header.created = mcDir[0]._Create;
+    header.modified = mcDir[0]._Modify;
+    header.mode = mcDir[0].AttrFile; // 0x8427
+    memcpy(header.name, mcDir[0].EntryName, sizeof(header.name));
+    strncpy(header.title, strrchr(cbs_path, '/') + 1, sizeof(header.title)-1);
+
+    snprintf(mcPath, sizeof(mcPath), "%s*", save + 5);
+    mcGetDir(save[2] - '0', 0, mcPath, 0, countof(mcDir), mcDir);
+    mcSync(0, NULL, &ret);
+    LOG("mcGetDir (%s) %d", mcPath, ret);
+
+    for(i = 0; i < ret; i++)
+    {
+        if(mcDir[i].AttrFile & sceMcFileAttrFile)
+            header.decompressedSize += mcDir[i].FileSizeByte + sizeof(cbsEntry_t);
+    }
+    dataBuff = malloc(header.decompressedSize);
+
+    for(i = 0; i < ret; i++)
+    {
+        if(!(mcDir[i].AttrFile & sceMcFileAttrFile))
+            continue;
+
+        LOG("(%d/%d) Add '%s'", i+1, ret, mcDir[i].EntryName);
+
+        entryHeader.created = mcDir[i]._Create;
+        entryHeader.modified = mcDir[i]._Modify;
+        entryHeader.length = mcDir[i].FileSizeByte;
+        entryHeader.mode = mcDir[i].AttrFile;
+        memcpy(entryHeader.name, mcDir[i].EntryName, sizeof(entryHeader.name));
+        
+        memcpy(&dataBuff[dataOffset], &entryHeader, sizeof(cbsEntry_t));
+        dataOffset += sizeof(cbsEntry_t);
+
+        snprintf(filePath, sizeof(filePath), "%s%s", save, entryHeader.name);
+        mcFile = fopen(filePath, "rb");
+        fread(&dataBuff[dataOffset], 1, entryHeader.length, mcFile);
+        fclose(mcFile);
+
+        dataOffset += entryHeader.length;
+    }
+
+    compressedSize = compressBound(header.decompressedSize);
+    dataCompressed = malloc(compressedSize);
+    if(!dataCompressed)
+    {
+        LOG("malloc failed");
+        free(dataBuff);
+        fclose(cbsFile);
         return 0;
     }
 
-    // Read main directory entry
-    fseek(psvFile, 0x68, SEEK_SET);
-    fread(&ps2md, sizeof(ps2_MainDirInfo_t), 1, psvFile);
-    numFiles = ES32(ps2md.numberOfFilesInDir);
-
-    memset(&entry, 0, sizeof(entry));
-    memcpy(&entry.created, &ps2md.created, sizeof(sceMcStDateTime));
-    memcpy(&entry.modified, &ps2md.modified, sizeof(sceMcStDateTime));
-    memcpy(entry.name, ps2md.filename, sizeof(entry.name));
-    entry.mode = ps2md.attribute;
-    entry.length = ps2md.numberOfFilesInDir;
-    fwrite(&entry, sizeof(entry), 1, psuFile);
-
-    // "."
-    memset(entry.name, 0, sizeof(entry.name));
-    strcpy(entry.name, ".");
-    entry.length = 0;
-    fwrite(&entry, sizeof(entry), 1, psuFile);
-    numFiles--;
-
-    // ".."
-    strcpy(entry.name, "..");
-    fwrite(&entry, sizeof(entry), 1, psuFile);
-    numFiles--;
-
-    while (numFiles > 0)
+    ret = compress2(dataCompressed, &compressedSize, dataBuff, header.decompressedSize, Z_BEST_COMPRESSION);
+    if(ret != Z_OK)
     {
-        fread(&ps2fi, sizeof(ps2_FileInfo_t), 1, psvFile);
-        dataPos = ftell(psvFile);
-
-        memset(&entry, 0, sizeof(entry));
-        memcpy(&entry.created, &ps2fi.created, sizeof(sceMcStDateTime));
-        memcpy(&entry.modified, &ps2fi.modified, sizeof(sceMcStDateTime));
-        memcpy(entry.name, ps2fi.filename, sizeof(entry.name));
-        entry.mode = ps2fi.attribute;
-        entry.length = ps2fi.filesize;
-        fwrite(&entry, sizeof(entry), 1, psuFile);
-
-        ps2fi.positionInFile = ES32(ps2fi.positionInFile);
-        ps2fi.filesize = ES32(ps2fi.filesize);
-        data = malloc(ps2fi.filesize);
-
-        fseek(psvFile, ps2fi.positionInFile, SEEK_SET);
-        fread(data, 1, ps2fi.filesize, psvFile);
-        fwrite(data, 1, ps2fi.filesize, psuFile);
-        free(data);
-
-        next = 1024 - (ps2fi.filesize % 1024);
-        if(next < 1024)
-        {
-            data = malloc(next);
-            memset(data, 0xFF, next);
-            fwrite(data, 1, next, psuFile);
-            free(data);
-        }
-
-        fseek(psvFile, dataPos, SEEK_SET);
-        numFiles--;
+        LOG("compress2 failed");
+        free(dataBuff);
+        free(dataCompressed);
+        fclose(cbsFile);
+        return 0;
     }
 
-    fclose(psvFile);
-    fclose(psuFile);
-    
+    header.compressedSize = compressedSize + header.dataOffset; //0x128
+    fwrite(&header, 1, sizeof(cbsHeader_t), cbsFile);
+    cbsCrypt(dataCompressed, compressedSize);
+    fwrite(dataCompressed, 1, compressedSize, cbsFile);
+    fclose(cbsFile);
+
+    free(dataBuff);
+    free(dataCompressed);
+
     return 1;
 }

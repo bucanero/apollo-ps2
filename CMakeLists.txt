@@ -106,6 +106,7 @@ target_link_libraries(${PROJECT_NAME}
 #  unrar
   zip
   lzma
+  mc
 #  un7zip
 #  xmp
 #  bz2

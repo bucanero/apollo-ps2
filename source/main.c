@@ -8,6 +8,9 @@
 #include <unistd.h>
 #include <xmp.h>
 #include <zlib.h>
+#include <sifrpc.h>
+#include <loadfile.h>
+#include <libmc.h>
 
 #include "saves.h"
 #include "sfo.h"
@@ -390,39 +393,37 @@ static void terminate()
 //	sceAudioChRelease(audio);
 }
 
-static int initInternal()
-{/*
+static int initInternal(void)
+{
 	// load common modules
-	int ret = sceSysmoduleLoadModule(SCE_SYSMODULE_SQLITE);
-	if (ret != SUCCESS) {
-		LOG("load module failed: SQLITE (0x%08x)\n", ret);
-		return 0;
+	int ret;
+
+	// Initialise
+	SifInitRpc(0);
+
+	ret = SifLoadModule("rom0:XSIO2MAN", 0, NULL);
+	if (ret < 0) {
+		LOG("Failed to load module: SIO2MAN");
+		return(0);
 	}
 
-	ret = sceSysmoduleLoadModule(SCE_SYSMODULE_NOTIFICATION_UTIL);
-	if (ret != SUCCESS) {
-		LOG("load module failed: NOTIFICATION (0x%08x)\n", ret);
-		return 0;
+	ret = SifLoadModule("rom0:XMCMAN", 0, NULL);
+	if (ret < 0) {
+		LOG("Failed to load module: MCMAN");
+		return(0);
 	}
 
-	ret = sceSysmoduleLoadModule(SCE_SYSMODULE_APPUTIL);
-	if (ret != SUCCESS) {
-		LOG("load module failed: APPUTIL (0x%08x)\n", ret);
-		return 0;
+	ret = SifLoadModule("rom0:XMCSERV", 0, NULL);
+	if (ret < 0) {
+		LOG("Failed to load module: MCSERV");
+		return(0);
 	}
 
-	SceAppUtilInitParam initParam;
-	SceAppUtilBootParam bootParam;
-
-	memset(&initParam, 0, sizeof(SceAppUtilInitParam));
-	memset(&bootParam, 0, sizeof(SceAppUtilBootParam));
-
-	/* Initialize the application utility library *
-	ret = sceAppUtilInit(&initParam, &bootParam);
-	if (ret == SUCCESS) {
-		sceAppUtilSystemParamGetString(SCE_SYSTEM_PARAM_ID_USERNAME, user_id_str, SCE_SYSTEM_PARAM_USERNAME_MAXSIZE);
+	if(mcInit(MC_TYPE_XMC) < 0) {
+		LOG("Failed to initialise memcard server!");
+		return(0);
 	}
-*/
+
 	return 1;
 }
 

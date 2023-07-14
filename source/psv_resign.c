@@ -384,7 +384,7 @@ int exportPSV(const char *save, const char* psv_path)
 	mcSync(0, NULL, &ret);
 	LOG("mcGetDir(%s) %d", mcPath, ret);
 
-	ps2md.attribute = (mcDir[0].AttrFile << 16);
+	ps2md.attribute = mcDir[0].AttrFile;
 	ps2md.created = mcDir[0]._Create;
 	ps2md.modified = mcDir[0]._Modify;
 	memcpy(ps2md.filename, mcDir[0].EntryName, sizeof(ps2md.filename));
@@ -408,7 +408,7 @@ int exportPSV(const char *save, const char* psv_path)
 		if(!(mcDir[i].AttrFile & sceMcFileAttrFile))
 			continue;
 
-		ps2fi[j].attribute = (mcDir[i].AttrFile << 16);
+		ps2fi[j].attribute = mcDir[i].AttrFile;
 		ps2fi[j].positionInFile = dataPos;
 		ps2fi[j].filesize = mcDir[i].FileSizeByte;
 		ps2fi[j].created = mcDir[i]._Create;

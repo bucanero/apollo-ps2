@@ -60,10 +60,6 @@ static const uint8_t cbsKey[256] = {
     0x6b, 0x93, 0x32, 0x48, 0xb6, 0x30, 0x43, 0xa5
 }; 
 
-int psv_resign(const char *src_psv);
-void write_psvheader(FILE *fp, uint32_t type);
-void get_psv_filename(char* psvName, const char* path, const char* dirName);
-
 static void printMAXHeader(const maxHeader_t *header)
 {
     if(!header)
@@ -85,27 +81,11 @@ static int roundUp(int i, int j)
 
 static int isMAXFile(const char *path)
 {
-    if(!path)
-        return 0;
-
-    FILE *f = fopen(path, "rb");
-    if(!f)
-        return 0;
-
-    // Verify file size
-    fseek(f, 0, SEEK_END);
-    int len = ftell(f);
-    fseek(f, 0, SEEK_SET);
-    if(len < sizeof(maxHeader_t))
-    {
-        fclose(f);
-        return 0;
-    }
+    maxHeader_t header;
 
     // Verify header
-    maxHeader_t header;
-    fread(&header, 1, sizeof(maxHeader_t), f);
-    fclose(f);
+    if(read_file(path, (uint8_t*) &header, sizeof(maxHeader_t)) < 0)
+        return 0;
 
     printMAXHeader(&header);
 
@@ -115,33 +95,6 @@ static int isMAXFile(const char *path)
            strncmp(header.magic, MAX_HEADER_MAGIC, sizeof(header.magic)) == 0 &&
            strlen(header.dirName) > 0 &&
            strlen(header.iconSysName) > 0;
-}
-
-static void set_ps2header_values(ps2_header_t *ps2h, const ps2_FileInfo_t *ps2fi, const mcIcon *ps2sys)
-{
-    if (strcmp(ps2fi->filename, ps2sys->view) == 0)
-    {
-        ps2h->icon1Size = ps2fi->filesize;
-        ps2h->icon1Pos = ps2fi->positionInFile;
-    }
-
-    if (strcmp(ps2fi->filename, ps2sys->copy) == 0)
-    {
-        ps2h->icon2Size = ps2fi->filesize;
-        ps2h->icon2Pos = ps2fi->positionInFile;
-    }
-
-    if (strcmp(ps2fi->filename, ps2sys->del) == 0)
-    {
-        ps2h->icon3Size = ps2fi->filesize;
-        ps2h->icon3Pos = ps2fi->positionInFile;
-    }
-
-    if(strcmp(ps2fi->filename, "icon.sys") == 0)
-    {
-        ps2h->sysSize = ps2fi->filesize;
-        ps2h->sysPos = ps2fi->positionInFile;
-    }
 }
 
 static int setMcTblEntryInfo(const char* dstName, const McFsEntry *entry)
@@ -174,7 +127,6 @@ int importMAX(const char *save, const char* mc_path)
     maxEntry_t *entry;
     maxHeader_t header;
     char dstName[256];
-    struct stat st;
 
     if (!isMAXFile(save))
         return 0;
@@ -182,8 +134,6 @@ int importMAX(const char *save, const char* mc_path)
     FILE *f = fopen(save, "rb");
     if(!f)
         return 0;
-
-    fstat(fileno(f), &st);
 
     fread(&header, 1, sizeof(maxHeader_t), f);
     snprintf(dstName, sizeof(dstName), "%s%s", mc_path, header.dirName);
@@ -205,16 +155,15 @@ int importMAX(const char *save, const char* mc_path)
     uint8_t *decompressed = malloc(header.decompressedSize);
 
     ret = unlzari(compressed, header.compressedSize, decompressed, header.decompressedSize);
+    free(compressed);
+
     // As with other save formats, decompressedSize isn't acccurate.
     if(ret == 0)
     {
         LOG("Decompression failed.\n");
         free(decompressed);
-        free(compressed);
         return 0;
     }
-
-    free(compressed);
 
     LOG("Save contents:\n");
     // Write the file's data
@@ -222,7 +171,7 @@ int importMAX(const char *save, const char* mc_path)
     {
         entry = (maxEntry_t*) &decompressed[offset];
         offset += sizeof(maxEntry_t);
-        LOG(" %8d bytes  : %s\n", entry->length, entry->name);
+        LOG(" %8d bytes  : %s", entry->length, entry->name);
 
         snprintf(dstName, sizeof(dstName), "%s%s/%s", mc_path, header.dirName, entry->name);
         if (!(out = fopen(dstName, "wb")))
@@ -413,6 +362,7 @@ int importXPS(const char *save, const char *mc_path)
     char tmp[100];
     uint8_t *data;
     xpsEntry_t entry;
+    McFsEntry mcEntry, dirEntry;
 
     xpsFile = fopen(save, "rb");
     if(!xpsFile)
@@ -435,14 +385,18 @@ int importXPS(const char *save, const char *mc_path)
 
     // Read main directory entry
     fread(&entry, 1, sizeof(xpsEntry_t), xpsFile);
-    // Keep the file position (start of file entries)
-    len = ftell(xpsFile);
 
     snprintf(tmp, sizeof(tmp), "%s%s", mc_path, entry.name);
     mkdir(tmp, 0777);
 
-    // Rewind
-    fseek(xpsFile, len, SEEK_SET);
+    // Root dir
+    memset(&mcEntry, 0, sizeof(McFsEntry));
+    memset(&dirEntry, 0, sizeof(McFsEntry));
+    dirEntry.mode = ES16(entry.mode);
+    dirEntry.created = entry.created;
+    dirEntry.modified = entry.modified;
+    dirEntry.length = entry.length;
+    memcpy(dirEntry.name, entry.name, sizeof(dirEntry.name));
 
     LOG("Save contents:\n");
     // Copy each file entry
@@ -461,19 +415,28 @@ int importXPS(const char *save, const char *mc_path)
         {
             fwrite(data, 1, entry.length, outFile);
             fclose(outFile);
+
+            mcEntry.mode = ES16(entry.mode);
+            mcEntry.created = entry.created;
+            mcEntry.modified = entry.modified;
+            mcEntry.length = entry.length;
+            memcpy(mcEntry.name, entry.name, sizeof(mcEntry.name));
+
+            setMcTblEntryInfo(dstName, &mcEntry);
         }
 
         free(data);
     }
 
     fclose(xpsFile);
+    setMcTblEntryInfo(tmp, &dirEntry);
 
     return 1;
 }
 
 int importPSV(const char *save, const char* mc_path)
 {
-    uint32_t dataPos = 0;
+    uint32_t dataPos;
     FILE *outFile, *psvFile;
     char dstName[256];
     uint8_t *data;
@@ -485,6 +448,13 @@ int importPSV(const char *save, const char* mc_path)
     if(!psvFile)
         return 0;
 
+    fread(&dataPos, 1, sizeof(uint32_t), psvFile);
+    if (dataPos != 0x50535600)
+    {
+        fclose(psvFile);
+        return 0;
+    }
+
     // Read main directory entry
     fseek(psvFile, 0x68, SEEK_SET);
     fread(&ps2md, sizeof(ps2_MainDirInfo_t), 1, psvFile);
@@ -493,6 +463,7 @@ int importPSV(const char *save, const char* mc_path)
     mkdir(dstName, 0777);
 
     LOG("Save contents:\n");
+    memset(&entry, 0, sizeof(McFsEntry));
 
     for (int numFiles = (ps2md.numberOfFilesInDir - 2); numFiles > 0; numFiles--)
     {
@@ -511,6 +482,14 @@ int importPSV(const char *save, const char* mc_path)
         {
             fwrite(data, 1, ps2fi.filesize, outFile);
             fclose(outFile);
+
+            entry.mode = ps2fi.attribute;
+            entry.created = ps2fi.created;
+            entry.modified = ps2fi.modified;
+            entry.length = ps2fi.filesize;
+            memcpy(entry.name, ps2fi.filename, sizeof(entry.name));
+
+            setMcTblEntryInfo(dstName, &entry);
         }
 
         free(data);
@@ -518,6 +497,15 @@ int importPSV(const char *save, const char* mc_path)
     }
 
     fclose(psvFile);
+
+    entry.mode = ps2md.attribute;
+    entry.created = ps2md.created;
+    entry.modified = ps2md.modified;
+    entry.length = ps2md.numberOfFilesInDir;
+    memcpy(entry.name, ps2md.filename, sizeof(entry.name));
+
+    snprintf(dstName, sizeof(dstName), "%s%s", mc_path, ps2md.filename);
+    setMcTblEntryInfo(dstName, &entry);
 
     return 1;
 }

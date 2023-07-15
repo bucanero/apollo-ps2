@@ -313,7 +313,7 @@ void DrawGameList(int selIndex, list_t * games, u8 alpha)
     
     list_node_t *node;
     save_entry_t *item;
-    char tmp[2] = "";
+    char tmp[3] = {0};
     int game_y = help_png_y, y_inc = APP_LINE_OFFSET;
     int maxPerPage = (SCREEN_HEIGHT - (game_y * 1) - 30) / y_inc;
     
@@ -358,8 +358,7 @@ void DrawGameList(int selIndex, list_t * games, u8 alpha)
 			if (item->flags & SAVE_FLAG_PSP) tmp[0] = CHAR_TAG_PSP;
 			if (item->flags & SAVE_FLAG_PS1) tmp[0] = CHAR_TAG_PS1;
 //			if (item->flags & SAVE_FLAG_PSV) tmp[0] = CHAR_TAG_PSV;
-//			tmp[1] = (item->flags & SAVE_FLAG_OWNER) ? CHAR_TAG_OWNER : ' ';
-//			tmp[2] = (item->flags & SAVE_FLAG_LOCKED) ? CHAR_TAG_LOCKED : ' ';
+			tmp[1] = (item->flags & SAVE_FLAG_LOCKED) ? CHAR_TAG_LOCKED : ' ';
 
 			DrawString(SCREEN_WIDTH - (MENU_ICON_OFF * 2), game_y, tmp);
 skip_draw:

@@ -13,13 +13,13 @@
 #define MC0_PATH                "mc0:/"
 #define MC1_PATH                "mc1:/"
 #define USB_PATH                "mass:/"
-#define USER_PATH_HDD           "PSP/SAVEDATA/"
+#define USER_PATH_USB           "PS2/SAVEDATA/"
 
 #define PS2_SAVES_PATH_USB      "PS3/EXPORT/PS2SD/"
 #define PSP_SAVES_PATH_USB      "APOLLO/SAVEDATA/"
 
 #define PS1_SAVES_PATH_HDD      APOLLO_PATH "PS1/"
-#define PSP_SAVES_PATH_HDD      MC0_PATH USER_PATH_HDD
+#define PSP_SAVES_PATH_HDD      USB_PATH USER_PATH_USB
 
 #define PS1_IMP_PATH_USB        "PS1/SAVEDATA/"
 
@@ -37,9 +37,10 @@
 
 enum storage_enum
 {
-    STORAGE_MS0,
-    STORAGE_EF0,
-    STORAGE_MS0_PSP,
+    STORAGE_MC0,
+    STORAGE_MC1,
+    STORAGE_MASS,
+    STORAGE_HOST,
 };
 
 enum save_sort_enum
@@ -83,7 +84,7 @@ enum cmd_code_enum
     CMD_EXP_KEYSTONE,
     CMD_SETUP_PLUGIN,
     CMD_EXP_VMP2MCR,
-    CMD_EXP_PSPKEY,
+    CMD_EXP_PS2SAVE,
     CMD_DUMP_PSPKEY,
 
 // Import commands
@@ -102,14 +103,14 @@ enum cmd_code_enum
 };
 
 // Save flags
-#define SAVE_FLAG_HDD           1
+#define SAVE_FLAG_MEMCARD       1
 #define SAVE_FLAG_SELECTED      2
 #define SAVE_FLAG_ZIP           4
 #define SAVE_FLAG_PS1           8
 #define SAVE_FLAG_PS2           16
 #define SAVE_FLAG_PSP           32
 #define SAVE_FLAG_ISO           64
-#define SAVE_FLAG_CSO           128
+#define SAVE_FLAG_LOCKED        128
 #define SAVE_FLAG_ONLINE        256
 
 enum save_type_enum

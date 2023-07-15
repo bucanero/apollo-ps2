@@ -105,14 +105,26 @@ static option_entry_t* _initOptions(int count)
 	return options;
 }
 
-static option_entry_t* _createOptions(int count, const char* name, char value)
+static option_entry_t* _createMcOptions(int count, const char* name, char value)
 {
 	option_entry_t* options = _initOptions(count);
 
 	asprintf(&options->name[0], "%s (%s)", name, MC0_PATH);
-	asprintf(&options->value[0], "%c%c", value, STORAGE_MS0);
+	asprintf(&options->value[0], "%c%c", value, STORAGE_MC0);
 	asprintf(&options->name[1], "%s (%s)", name, MC1_PATH);
-	asprintf(&options->value[1], "%c%c", value, STORAGE_EF0);
+	asprintf(&options->value[1], "%c%c", value, STORAGE_MC1);
+
+	return options;
+}
+
+static option_entry_t* _createExtOptions(int count, const char* name, char value)
+{
+	option_entry_t* options = _initOptions(count);
+
+	asprintf(&options->name[0], "%s (%s)", name, USB_PATH);
+	asprintf(&options->value[0], "%c%c", value, STORAGE_MASS);
+	asprintf(&options->name[1], "%s (%s)", name, "host:/");
+	asprintf(&options->value[1], "%c%c", value, STORAGE_HOST);
 
 	return options;
 }
@@ -211,17 +223,14 @@ static void _addBackupCommands(save_entry_t* item)
 
 	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_COPY " Copy save game", CMD_CODE_NULL);
 	cmd->options_count = 1;
-	cmd->options = _createOptions((item->flags & SAVE_FLAG_HDD) ? 2 : 3, "Copy Save to Backup Storage", CMD_COPY_SAVE_USB);
-	if (!(item->flags & SAVE_FLAG_HDD))
-	{
-		asprintf(&cmd->options->name[2], "Copy Save to Memory Stick (ms0:/%s)", "PSP");
-		asprintf(&cmd->options->value[2], "%c", CMD_COPY_SAVE_HDD);
-	}
+	cmd->options = (item->flags & SAVE_FLAG_MEMCARD) ?
+		_createExtOptions(2, "Copy Save to Mass Storage", CMD_COPY_SAVE_USB) :
+		_createMcOptions(2, "Copy Save to Memory Card", CMD_COPY_SAVE_HDD);
 	list_append(item->codes, cmd);
 
 	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_ZIP " Export save game to Zip", CMD_CODE_NULL);
 	cmd->options_count = 1;
-	cmd->options = _createOptions(2, "Export Zip to Backup Storage", CMD_EXPORT_ZIP_USB);
+	cmd->options = _createExtOptions(2, "Export Zip to Mass Storage", CMD_EXPORT_ZIP_USB);
 	list_append(item->codes, cmd);
 
 	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_COPY " Export single save files", CMD_CODE_NULL);
@@ -309,17 +318,29 @@ static void add_ps1_commands(save_entry_t* save)
 	return;
 }
 
-static void add_psp_commands(save_entry_t* item)
+static void add_ps2_commands(save_entry_t* item)
 {
 	code_entry_t* cmd;
 
-	cmd = _createCmdCode(PATCH_NULL, "----- " UTF8_CHAR_STAR " Game Key Backup " UTF8_CHAR_STAR " -----", CMD_CODE_NULL);
+	cmd = _createCmdCode(PATCH_NULL, "----- " UTF8_CHAR_STAR " Save Game Exports " UTF8_CHAR_STAR " -----", CMD_CODE_NULL);
 	list_append(item->codes, cmd);
 
-	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_LOCK " Export binary Game Key", CMD_EXP_PSPKEY);
+	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_COPY " Export save to .PSU format", CMD_CODE_NULL);
+	cmd->options_count = 1;
+	cmd->options = _createExtOptions(2, "Export .PSU to Storage", CMD_EXP_PS2SAVE);
+	cmd->options[0].id = FILE_TYPE_PSU;
 	list_append(item->codes, cmd);
 
-	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_LOCK " Dump Game Key (text file)", CMD_DUMP_PSPKEY);
+	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_COPY " Export save to .PSV format", CMD_CODE_NULL);
+	cmd->options_count = 1;
+	cmd->options = _createExtOptions(2, "Export .PSV to Storage", CMD_EXP_PS2SAVE);
+	cmd->options[0].id = FILE_TYPE_PSV;
+	list_append(item->codes, cmd);
+
+	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_COPY " Export save to .CBS format", CMD_CODE_NULL);
+	cmd->options_count = 1;
+	cmd->options = _createExtOptions(2, "Export .CBS to Storage", CMD_EXP_PS2SAVE);
+	cmd->options[0].id = FILE_TYPE_CBS;
 	list_append(item->codes, cmd);
 
 	return;
@@ -352,7 +373,7 @@ int ReadCodes(save_entry_t * save)
 	if (save->flags & SAVE_FLAG_PS1)
 		add_ps1_commands(save);
 	else
-		add_psp_commands(save);
+		add_ps2_commands(save);
 
 	snprintf(filePath, sizeof(filePath), APOLLO_DATA_PATH "%s.savepatch", save->title_id);
 	if ((buffer = readTextFile(filePath, NULL)) == NULL)
@@ -434,9 +455,9 @@ int ReadOnlineSaves(save_entry_t * game)
 			asprintf(&item->file, "%.12s", content);
 
 			item->options_count = 1;
-			item->options = _createOptions(3, "Download to Backup Storage", CMD_DOWNLOAD_USB);
-			asprintf(&item->options->name[2], "Download to Memory Stick (ms0:/PSP)");
-			asprintf(&item->options->value[2], "%c%c", CMD_DOWNLOAD_USB, STORAGE_MS0_PSP);
+			item->options = _createMcOptions(3, "Download to Memory Card", CMD_DOWNLOAD_USB);
+			asprintf(&item->options->name[2], "Download to Mass Storage (mass:/)");
+			asprintf(&item->options->value[2], "%c%c", CMD_DOWNLOAD_USB, STORAGE_MASS);
 			list_append(game->codes, item);
 
 			LOG("[%s%s] %s", game->path, item->file, item->name + 1);
@@ -465,13 +486,8 @@ list_t * ReadBackupList(const char* userPath)
 	list_t *list = list_alloc();
 
 	item = _createSaveEntry(SAVE_FLAG_ZIP, CHAR_ICON_ZIP " Extract Archives (Zip, 7z)");
-	item->path = strdup(MC0_PATH);
+	item->path = strdup(USB_PATH);
 	item->type = FILE_TYPE_ZIP;
-	list_append(list, item);
-
-	item = _createSaveEntry(SAVE_FLAG_PSP, CHAR_ICON_COPY " Manage Save-game Key Dumper plugin");
-	item->path = strdup(MC0_PATH);
-//	item->type = FILE_TYPE_PRX;
 	list_append(list, item);
 
 	item = _createSaveEntry(0, CHAR_ICON_NET " Network Tools");
@@ -853,7 +869,7 @@ static int set_psx_import_codes(save_entry_t* item)
 
 	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_COPY " Import to Memory Card", CMD_CODE_NULL);
 	cmd->options_count = 1;
-	cmd->options = _createOptions(2, "Import to MC", CMD_IMP_SAVE_MC);
+	cmd->options = _createMcOptions(2, "Import to MemCard", CMD_IMP_SAVE_MC);
 	list_append(item->codes, cmd);
 
 	return list_count(item->codes);
@@ -970,31 +986,26 @@ list_t * ReadUsbList(const char* userPath)
 
 	list = list_alloc();
 
-	item = _createSaveEntry(SAVE_FLAG_PSP, CHAR_ICON_COPY " Bulk Save Management");
+	item = _createSaveEntry(SAVE_FLAG_PS2, CHAR_ICON_COPY " Bulk Save Management");
 	item->type = FILE_TYPE_MENU;
 	item->codes = list_alloc();
 	item->path = strdup(userPath);
 	//bulk management hack
 	item->dir_name = malloc(sizeof(void**));
 	((void**)item->dir_name)[0] = list;
-/*
-	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_SIGN " Resign selected Saves", CMD_RESIGN_SAVES);
+
+	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_COPY " Copy selected Saves to Memory Card", CMD_CODE_NULL);
+	cmd->options_count = 1;
+	cmd->options = _createMcOptions(2, "Copy Saves to MemCard", CMD_COPY_SAVES_HDD);
 	list_append(item->codes, cmd);
 
-	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_SIGN " Resign all decrypted Saves", CMD_RESIGN_ALL_SAVES);
-	list_append(item->codes, cmd);
-*/
-	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_COPY " Copy selected Saves to Memory Stick (ms0:/PSP)", CMD_COPY_SAVES_HDD);
-	list_append(item->codes, cmd);
-
-	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_COPY " Copy all Saves to Memory Stick (ms0:/PSP)", CMD_COPY_ALL_SAVES_HDD);
+	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_COPY " Copy all Saves to Memory Card", CMD_CODE_NULL);
+	cmd->options_count = 1;
+	cmd->options = _createMcOptions(2, "Copy Saves to MemCard", CMD_COPY_ALL_SAVES_HDD);
 	list_append(item->codes, cmd);
 
-	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_NET " Start local Web Server", CMD_SAVE_WEBSERVER);
-	list_append(item->codes, cmd);
-
-	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_LOCK " Export all Save-game Keys", CMD_DUMP_FINGERPRINTS);
-	list_append(item->codes, cmd);
+//	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_NET " Start local Web Server", CMD_SAVE_WEBSERVER);
+//	list_append(item->codes, cmd);
 	list_append(list, item);
 
 	read_usb_savegames(userPath, list);
@@ -1025,22 +1036,19 @@ list_t * ReadUserList(const char* userPath)
 
 	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_COPY " Copy selected Saves to Backup Storage", CMD_CODE_NULL);
 	cmd->options_count = 1;
-	cmd->options = _createOptions(2, "Copy Saves to Backup Storage", CMD_COPY_SAVES_USB);
+	cmd->options = _createExtOptions(2, "Copy Saves to Backup Storage", CMD_COPY_SAVES_USB);
 	list_append(item->codes, cmd);
 
 	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_COPY " Copy all Saves to Backup Storage", CMD_CODE_NULL);
 	cmd->options_count = 1;
-	cmd->options = _createOptions(2, "Copy Saves to Backup Storage", CMD_COPY_ALL_SAVES_USB);
+	cmd->options = _createExtOptions(2, "Copy Saves to Backup Storage", CMD_COPY_ALL_SAVES_USB);
 	list_append(item->codes, cmd);
 
-	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_NET " Start local Web Server", CMD_SAVE_WEBSERVER);
-	list_append(item->codes, cmd);
-
-	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_LOCK " Export all Save-game Keys", CMD_DUMP_FINGERPRINTS);
-	list_append(item->codes, cmd);
+//	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_NET " Start local Web Server", CMD_SAVE_WEBSERVER);
+//	list_append(item->codes, cmd);
 	list_append(list, item);
 
-	read_ps2_savegames(userPath, list, SAVE_FLAG_HDD);
+	read_ps2_savegames(userPath, list, SAVE_FLAG_MEMCARD);
 
 	return list;
 }
@@ -1124,15 +1132,9 @@ list_t * ReadOnlineList(const char* urlPath)
 	snprintf(url, sizeof(url), "%s" "PS1/", urlPath);
 	_ReadOnlineListEx(url, SAVE_FLAG_PS1, list);
 
-	// PSP save-games (Zip folder)
-	snprintf(url, sizeof(url), "%sPSP/", urlPath);
-	_ReadOnlineListEx(url, SAVE_FLAG_PSP, list);
-
-/*
-	// PS1 save-games (Zip PSV)
-	//snprintf(url, sizeof(url), "%s" "PS1/", urlPath);
-	//_ReadOnlineListEx(url, SAVE_FLAG_PS1, list);
-*/
+	// PS2 save-games (Zip folder)
+	snprintf(url, sizeof(url), "%sPS2/", urlPath);
+	_ReadOnlineListEx(url, SAVE_FLAG_PS2, list);
 
 	if (!list_count(list))
 	{

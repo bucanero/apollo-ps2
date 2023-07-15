@@ -428,7 +428,6 @@ static void doOptionsMenu()
 	else if (ps2PadGetButtonPressed(PAD_CIRCLE))
 	{
 		save_app_settings(&apollo_config);
-		set_ttf_window(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, WIN_SKIP_LF);
 		SetMenu(MENU_MAIN_SCREEN);
 		return;
 	}

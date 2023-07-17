@@ -16,6 +16,8 @@ static FT_Library freetype;
 static FT_Face face[4];
 static int f_face[4] = {0, 0, 0, 0};
 
+int skip_icon(int x, int y, char c);
+
 int TTFLoadFont(int set, const char * path, void * from_memory, int size_from_memory)
 {
    
@@ -269,21 +271,6 @@ static void DrawBox_ttf(float x, float y, float z, float w, float h, u32 rgba)
 
     SDL_SetRenderDrawColor(renderer, RGBA_R(rgba), RGBA_G(rgba), RGBA_B(rgba), RGBA_A(rgba));
     SDL_RenderFillRectF(renderer, &rect);
-/*
-    tiny3d_SetPolygon(TINY3D_QUADS);
-    
-   
-    tiny3d_VertexPos(x    , y    , z);
-    tiny3d_VertexColor(rgba);
-
-    tiny3d_VertexPos(x + w, y    , z);
-
-    tiny3d_VertexPos(x + w, y + h, z);
-
-    tiny3d_VertexPos(x    , y + h, z);
-
-    tiny3d_End();
-*/
 }
 
 static SDL_Texture* create_texture(const u8* bitmap, u32 rgba)
@@ -500,5 +487,5 @@ int display_ttf_string(int posx, int posy, const char *string, u32 color, u32 bk
 
 int width_ttf_string(const char *string, int sw, int sh)
 {
-    return (display_ttf_string(0, 0, string, 0, 0, sw, sh, NULL));
+    return (display_ttf_string(0, 0, string, 0, 0, sw, sh, &skip_icon));
 }

@@ -94,7 +94,7 @@ const char * menu_pad_help[TOTAL_MENU_IDS] = { NULL,												//Main
 */
 save_list_t hdd_saves = {
     .icon_id = cat_hdd_png_index,
-    .title = "Internal Saves",
+    .title = "MemCard Saves",
     .list = NULL,
     .path = "",
     .ReadList = &ReadUserList,
@@ -351,7 +351,23 @@ void update_usb_path(char* path)
 
 void update_hdd_path(char* path)
 {
-	strcpy(path, MC0_PATH);
+	int sel;
+	const char* memcard_opt[] = {"Memory Card 1", "Memory Card 2", NULL};
+
+	path[0] = 0;
+	if (dir_exists(MC0_PATH) == SUCCESS && dir_exists(MC1_PATH) == SUCCESS)
+	{
+		if ((sel = show_multi_dialog(memcard_opt, "Select Memory Card")) < 0)
+			return;
+
+		strcpy(path, sel ? MC1_PATH : MC0_PATH);
+		return;
+	}
+	else if (dir_exists(MC0_PATH) == SUCCESS)
+		strcpy(path, MC0_PATH);
+
+	else if (dir_exists(MC1_PATH) == SUCCESS)
+		strcpy(path, MC1_PATH);
 }
 
 void update_db_path(char* path)

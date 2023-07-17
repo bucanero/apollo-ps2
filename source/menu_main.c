@@ -61,8 +61,6 @@ static void LoadFileTexture(const char* fname, int idx)
 
 static int ReloadUserSaves(save_list_t* save_list)
 {
-    init_loading_screen("Loading saves...");
-
 	if (save_list->list)
 	{
 		UnloadGameList(save_list->list);
@@ -71,6 +69,8 @@ static int ReloadUserSaves(save_list_t* save_list)
 
 	if (save_list->UpdatePath)
 		save_list->UpdatePath(save_list->path);
+
+	init_loading_screen("Loading saves...");
 
 	save_list->list = save_list->ReadList(save_list->path);
 	if (apollo_config.doSort == SORT_BY_NAME)
@@ -183,9 +183,9 @@ static void SetMenu(int id)
 			break;
 
 		case MENU_HDD_SAVES: //HDD saves Menu
-			if (!hdd_saves.list)
-				ReloadUserSaves(&hdd_saves);
-			
+			if (!hdd_saves.list && !ReloadUserSaves(&hdd_saves))
+				return;
+
 			if (apollo_config.doAni)
 				Draw_UserCheatsMenu_Ani(&hdd_saves);
 			break;
@@ -374,9 +374,10 @@ static void doSaveMenu(save_list_t * save_list)
 		if (selected_entry->type != FILE_TYPE_MENU)
 			selected_entry->flags ^= SAVE_FLAG_SELECTED;
 	}
-	else if (ps2PadGetButtonPressed(PAD_SQUARE))
+	else if (ps2PadGetButtonPressed(PAD_SQUARE) && !ReloadUserSaves(save_list))
 	{
-		ReloadUserSaves(save_list);
+		SetMenu(MENU_MAIN_SCREEN);
+		return;
 	}
 
 	Draw_UserCheatsMenu(save_list, menu_sel, 0xFF);

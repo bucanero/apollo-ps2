@@ -31,15 +31,21 @@ static void drawDialog(const char* msg, const char *dialog_opts[], int selected)
     SetFontColor(0xFFFFFF00 | 0xFF, 0);
     SetFontAlign(FONT_ALIGN_SCREEN_CENTER);
 
-    DrawString(0, dialog_rect.y + 0x10, msg);
-
     if (selected < 0)
     {
-        DrawString(0, dialog_rect.y + 170, dialog_opts[0]);
+        char *tmp = strdup(msg);
+        dialog_rect.h = dialog_rect.y + 70;
+
+        for (char *line = strtok(tmp, "\n"); line != NULL; line = strtok(NULL, "\n"), dialog_rect.h += 16)
+            DrawString(0, dialog_rect.h, line);
+
+        DrawString(0, dialog_rect.y + DIALOG_WINDOW_HEIGHT - 30, dialog_opts[0]);
         SetFontAlign(FONT_ALIGN_LEFT);
+        free(tmp);
         return;
     }
 
+    DrawString(0, dialog_rect.y + 0x10, msg);
     for (int i = 0; dialog_opts[i] != NULL; i++)
     {
         DrawString(0, dialog_rect.y + 0x30 + (i*16), dialog_opts[i]);
@@ -50,6 +56,8 @@ static void drawDialog(const char* msg, const char *dialog_opts[], int selected)
 //            DrawTextureCenteredX(&menu_textures[mark_arrow_png_index], MENU_ICON_OFF + MENU_TITLE_OFF, y_off, 0, (2 * APP_LINE_OFFSET) / 3, APP_LINE_OFFSET + 2, 0xFFFFFF00 | alpha);
         }
     }
+
+    DrawString(0, dialog_rect.y + DIALOG_WINDOW_HEIGHT - 30, "\x10 OK   \x13 Cancel");
     SetFontAlign(FONT_ALIGN_LEFT);
 }
 
@@ -77,6 +85,31 @@ int show_dialog(int tdialog, const char * format, ...)
     } while (!ps2PadGetButtonPressed(PAD_CROSS));
 
     return (1);
+}
+
+int show_multi_dialog(const char** options, const char * msg)
+{
+    int sel = 0;
+
+    do {
+        SDL_RenderClear(renderer);
+        DrawBackgroundTexture(0, 0xFF);
+
+        drawDialog(msg, options, sel);
+        ps2PadUpdate();
+        if (ps2PadGetButtonPressed(PAD_CIRCLE))
+            return (-1);
+
+        if (ps2PadGetButtonPressed(PAD_UP) && sel > 0)
+            sel--;
+
+        if (ps2PadGetButtonPressed(PAD_DOWN) && options[sel+1] != NULL)
+            sel++;
+
+        SDL_RenderPresent(renderer);
+    } while (!ps2PadGetButtonPressed(PAD_CROSS));
+
+    return (sel);
 }
 
 void init_progress_bar(const char* msg)

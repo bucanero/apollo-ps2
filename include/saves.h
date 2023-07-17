@@ -226,6 +226,7 @@ int zip_directory(const char* basedir, const char* inputdir, const char* output_
 int zip_append_directory(const char* basedir, const char* inputdir, const char* output_filename);
 
 int show_dialog(int dialog_type, const char * format, ...);
+int show_multi_dialog(const char** options, const char * msg);
 int osk_dialog_get_text(const char* title, char* text, uint32_t size);
 void init_progress_bar(const char* msg);
 void update_progress_bar(uint64_t progress, const uint64_t total_size, const char* msg);

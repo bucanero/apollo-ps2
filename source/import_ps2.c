@@ -144,15 +144,14 @@ int importMAX(const char *save, const char* mc_path)
 
     fseek(f, sizeof(maxHeader_t) - 4, SEEK_SET); // Seek to beginning of LZARI stream.
     uint32_t ret = fread(compressed, 1, header.compressedSize, f);
+    fclose(f);
     if(ret != header.compressedSize)
     {
         LOG("Compressed size: actual=%d, expected=%d\n", ret, header.compressedSize);
-        fclose(f);
         free(compressed);
         return 0;
     }
 
-    fclose(f);
     uint8_t *decompressed = malloc(header.decompressedSize);
 
     ret = unlzari(compressed, header.compressedSize, decompressed, header.decompressedSize);

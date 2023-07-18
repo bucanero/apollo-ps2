@@ -58,7 +58,7 @@ static const uint8_t cbsKey[256] = {
     0x88, 0x69, 0xc9, 0x2a, 0xab, 0xfd, 0x5b, 0x1b,
     0x8a, 0xd9, 0xec, 0x27, 0x44, 0x0e, 0x33, 0xc8,
     0x6b, 0x93, 0x32, 0x48, 0xb6, 0x30, 0x43, 0xa5
-}; 
+};
 
 static void printMAXHeader(const maxHeader_t *header)
 {
@@ -130,7 +130,7 @@ int importMAX(const char *save, const char* mc_path)
 
     if (!isMAXFile(save))
         return 0;
-    
+
     FILE *f = fopen(save, "rb");
     if(!f)
         return 0;
@@ -144,6 +144,7 @@ int importMAX(const char *save, const char* mc_path)
 
     fseek(f, sizeof(maxHeader_t) - 4, SEEK_SET); // Seek to beginning of LZARI stream.
     uint32_t ret = fread(compressed, 1, header.compressedSize, f);
+    fclose(f);
     if(ret != header.compressedSize)
     {
         LOG("Compressed size: actual=%d, expected=%d\n", ret, header.compressedSize);
@@ -151,7 +152,6 @@ int importMAX(const char *save, const char* mc_path)
         return 0;
     }
 
-    fclose(f);
     uint8_t *decompressed = malloc(header.decompressedSize);
 
     ret = unlzari(compressed, header.compressedSize, decompressed, header.decompressedSize);
@@ -200,7 +200,7 @@ int importPSU(const char *save, const char* mc_path)
     psuFile = fopen(save, "rb");
     if(!psuFile)
         return 0;
-    
+
     // Read main directory entry
     fread(&dirEntry, 1, sizeof(McFsEntry), psuFile);
 
@@ -573,11 +573,11 @@ int exportPSU(const char *save, const char* psu_path)
         snprintf(filePath, sizeof(filePath), "%s%s", save, mcEntry.name);
         data = malloc(mcEntry.length);
         read_file(filePath, data, mcEntry.length);
-        
+
         fwrite(&mcEntry, 1, sizeof(McFsEntry), psuFile);
         fwrite(data, 1, mcEntry.length, psuFile);
         free(data);
-        
+
         padding = 1024 - (mcEntry.length % 1024);
         if(padding < 1024)
         {
@@ -651,7 +651,7 @@ int exportCBS(const char *save, const char* cbs_path, const char* title)
         entryHeader.length = mcDir[i].FileSizeByte;
         entryHeader.mode = mcDir[i].AttrFile;
         memcpy(entryHeader.name, mcDir[i].EntryName, sizeof(entryHeader.name));
-        
+
         memcpy(&dataBuff[dataOffset], &entryHeader, sizeof(cbsEntry_t));
         dataOffset += sizeof(cbsEntry_t);
 

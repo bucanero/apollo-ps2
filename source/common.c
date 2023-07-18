@@ -100,7 +100,7 @@ int mkdirs(const char* dir)
             else
                 chmod(path, 0777);
         }
-        
+
         *ptr++ = last;
         if (last == 0)
             break;
@@ -130,7 +130,11 @@ int copy_file(const char* input, const char* output)
     char* buffer = malloc(TMP_BUFF_SIZE);
 
     if (!buffer)
+    {
+	fclose(fd);
+        fclose(fd2);
         return FAILED;
+    }
 
     do
     {
@@ -154,7 +158,7 @@ uint32_t file_crc32(const char* input)
     size_t read;
 
     FILE* in = fopen(input, "rb");
-    
+
     if (!in)
         return FAILED;
 
@@ -229,9 +233,9 @@ int clean_directory(const char* inputdir)
 //----------------------------------------
 
 int sys_shutdown()
-{   
+{
     unlink_secure("/dev_hdd0/tmp/turnoff");
-    
+
     lv2syscall4(379,0x1100,0,0,0);
     return_to_user_prog(int);
 }

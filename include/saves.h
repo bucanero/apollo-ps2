@@ -249,7 +249,7 @@ int importPSV(const char *save, const char *mc_path);
 
 int exportPSU(const char *mc_save, const char* out_path);
 int exportPSV(const char *mc_save, const char* out_path);
-int exportCBS(const char *mc_save, const char* out_path);
+int exportCBS(const char *mc_save, const char* out_path, const char* title);
 
 int psp_DecryptSavedata(const char* fpath, const char* fname, uint8_t* key);
 int psp_EncryptSavedata(const char* fpath, const char* fname, uint8_t* key);

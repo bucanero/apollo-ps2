@@ -177,33 +177,31 @@ static void rawImageTexture(const rawImage_t *img, png_texture *tex)
 int LoadIconTexture(const char* fname, int idx)
 {
 	rawImage_t raw;
-	IconPtr* icon;
+	uint8_t* icon;
 	size_t len;
 
 	LOG("Loading '%s'", fname);
 	if (menu_textures[idx].texture)
 		SDL_DestroyTexture(menu_textures[idx].texture);
 
-	if (read_buffer(fname, (uint8_t**) &raw.datap, &len) < 0)
+	if (read_buffer(fname, &icon, &len) < 0)
 		return 0;
 
-	if (raw.datap[0] != 0x00010000)
+	raw.datap = (uint32_t*) ps2IconTexture(icon);
+	free(icon);
+
+	if (!raw.datap)
 	{
 		LOG("Invalid icon file!");
-		free(raw.datap);
 		return 0;
 	}
 
-	icon = iconInit(raw.datap);
-	free(raw.datap);
-
-	raw.datap = (uint32_t*) icon->ip_texture;
 	raw.width = 128;
 	raw.height = 128;
 	menu_textures[idx].size = 1;
 
 	rawImageTexture(&raw, &menu_textures[idx]);
-	iconDestroy(icon);
+	free(raw.datap);
 	return 1;
 }
 

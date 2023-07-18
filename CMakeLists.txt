@@ -87,15 +87,6 @@ add_executable(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
   ${SDL2_LIBRARIES}
-#  SDL2main
-#  SDL2
-#  ps2_drivers
-#  patches
-#  pad
-#  gskit
-#  dmakit
-#  curl
-#  ps2ip
   CURL::libcurl
   apollo
   polarssl

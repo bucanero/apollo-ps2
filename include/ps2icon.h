@@ -1,7 +1,5 @@
 /*
-* ps2icon 0.7.0 - PS2 savegame icon library
-*
-* Copyright (c) 2002 Martin Akesson <ma@placid.tv>
+* Copyright (c) 2008 Andreas Weis (http://www.ghulbus-inc.de/)
 *
 * Permission is hereby granted, free of charge, to any person obtaining a
 * copy  of  this   software  and  associated   documentation  files  (the
@@ -27,76 +25,62 @@
 //   Typedefs and Defines
 //================================================================================================
 
-#define MAX_FRAMES	8
+/** File header
+ */
+typedef struct Icon_Header_t {
+	uint32_t file_id;						///< reserved; should be: 0x010000 (but does not have to ;) )
+	uint32_t animation_shapes;				///< number of animation shapes per vertex
+	uint32_t texture_type;					///< texture type - 0x07: uncompressed, 0x06: uncompresses, 0x0f: RLE compression
+	uint32_t reserved;						///< reserved; should be: 0x3F800000 (but does not have to ;) )
+	uint32_t n_vertices;					///< number of vertices; must be a multiple of 3
+} Icon_Header;
 
-typedef struct _IconHdr
-{	// Icon header
-	uint32_t	ih_id;				// PS2 Icon ID
-	uint32_t	ih_shapes;			// Number of shapes
-	uint32_t	ih_comp;			// 0x07 = uncompressed, 0x0F = compressed textures
-	uint32_t	ih_unk1;			// UNKNOWN
-	uint32_t	ih_vertices;		// Number of vertices in icon. Always multiple of 3
-} IconHdr;
+/** Set of vertex coordinates
+ * @note The f16_* fields indicate float16 data; divide by 4096.0f to convert to float32;
+ */
+typedef struct Vertex_Coord_t {
+	short f16_x;								///< vertex x coordinate in float16
+	short f16_y;								///< vertex y coordinate in float16
+	short f16_z;								///< vertex z coordinate in float16
+	short f16_unknown;							///< unknown; seems to influence lightning?
+} Vertex_Coord;
 
-typedef struct _IconVertex
-{	// Icon coordinates describing each vertex
-	int16_t	iv_x,
-			iv_y,
-			iv_z;	// X, Y & Z coordinates
-	uint16_t	iv_unk1;	// UNKNOWN, Lighting ??
-} IconVertex;
+/** Set of texture coordinates
+ * @note The f16_* fields indicate float16 data; divide by 4096.0f to convert to float32;
+ */
+typedef struct Texture_Data_t {
+	short        f16_u;							///< vertex u texture coordinate in float16
+	short        f16_v;							///< vertex v texture coordinate in float16
+	uint32_t     color;							///< vertex color (32 bit RGBA)
+} Texture_Data;
 
-typedef struct _IconTextureXY
-{	// Texture coordinates
-	int16_t	it_x,
-			it_y;
-	uint32_t	it_rgba;
-} IconTextureXY;
+/** Animation header
+ */
+typedef struct Animation_Header_t {
+	uint32_t id_tag;						///< ???
+	uint32_t frame_length;					///< ???
+	float    anim_speed;					///< ???
+	uint32_t play_offset;					///< ???
+	uint32_t n_frames;						///< number of frames in the animation
+} Animation_Header;
 
-typedef struct _AnimHdr
-{
-	uint32_t	ah_id,
-				ah_frameLen,
-				ah_animSpeed,
-				ah_playOffset,
-				ah_frames;
-} AnimHdr;
+/** Per-frame animation data
+ */
+typedef struct Frame_Data_t {
+	uint32_t shape_id;						///< shape used for this frame
+	uint32_t n_keys;						///< number of keys corresponding to this frame
+} Frame_Data;
 
-typedef struct _AnimFrame
-{
-	uint32_t	af_shapeId,
-				af_frameKeys,
-				af_unk1,
-				af_unk2;
-} AnimFrame;
+/** Per-key animation data
+ */
+typedef struct Frame_Key_t {
+	float time;									///< ???
+	float value;								///< ???
+} Frame_Key;
 
-typedef struct _Vertex
-{	// Vertex coordinates
-	float	v_x,
-			v_y,
-			v_z;
-} Vertex;
-
-typedef struct _TextureXY
-{	// Texture coordinates
-	float	t_x,
-			t_y;
-} TextureXY;
-
-typedef struct _IconPtr
-{	// Icon ptr structure
-	int32_t		ip_shapes;		// Number of animation frames
-	int32_t		ip_curFrame;	// Use this to keep track of anims
-	int32_t		ip_vertices;	// Number of vertices
-	Vertex		*ip_vertex;		// Vertex coordinates
-	Vertex		*ip_normal;		// Normal coordinates
-	TextureXY	*ip_textureXY;	// Texture coordinates
-	uint8_t	*ip_texture;	// Pointer to texture data
-} IconPtr;
 
 //================================================================================================
 //   Prototypes
 //================================================================================================
 
-IconPtr *iconInit(void *iIconData);
-void iconDestroy(IconPtr *iIcon);
+void *ps2IconTexture(const uint8_t *iconData);

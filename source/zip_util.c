@@ -11,7 +11,7 @@
 #include "saves.h"
 #include "common.h"
 
-#define UNZIP_BUF_SIZE 0x20000
+#define UNZIP_BUF_SIZE 0x10000
 
 static inline uint64_t min64(uint64_t a, uint64_t b)
 {
@@ -70,18 +70,38 @@ void walk_zip_directory(const char* startdir, const char* inputdir, struct zip *
 int zip_directory(const char* basedir, const char* inputdir, const char* output_filename)
 {
     int ret;
+	zip_int64_t sz;
+	uint8_t* outbuf;
+	struct zip* archive;
+	zip_source_t *zsmem = zip_source_buffer_create(0, 0, 0, NULL);
 
-	unlink_secure(output_filename);
-    struct zip* archive = zip_open(output_filename, ZIP_CREATE | ZIP_EXCL, &ret);
+	zip_source_keep(zsmem); // zip_close will free source, but we want to use its content
+	archive = zip_open_from_source(zsmem, ZIP_TRUNCATE, NULL);
 
     LOG("Zipping <%s> to %s...", inputdir, output_filename);
     if (!archive) {
+		zip_source_free(zsmem);
         LOG("Failed to open output file '%s'", output_filename);
         return 0;
     }
 
     walk_zip_directory(basedir, inputdir, archive);
     ret = zip_close(archive);
+
+	zip_source_open(zsmem);
+	zip_source_seek(zsmem, 0, SEEK_END);
+	sz = zip_source_tell(zsmem);
+	zip_source_seek(zsmem, 0, SEEK_SET);
+	outbuf = malloc(sz);
+
+	zip_source_read(zsmem, outbuf, sz);
+	zip_source_close(zsmem);
+	zip_source_free(zsmem);
+
+	if (write_buffer(output_filename, outbuf, sz) < 0)
+		ret = ZIP_ER_WRITE;
+
+	free(outbuf);
 
     return (ret == ZIP_ER_OK);
 }

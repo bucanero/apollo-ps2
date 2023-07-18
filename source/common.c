@@ -7,7 +7,6 @@
 #include <sys/stat.h>
 #include <dirent.h>
 #include <zlib.h>
-//#include <pspiofilemgr.h>
 
 #include "types.h"
 #include "common.h"
@@ -47,16 +46,11 @@ int file_exists(const char *path)
 
 int dir_exists(const char *path)
 {
-//    SceIoStat stat;
-//    if (sceIoGetstat(path, &stat) < 0)
-//    if (FIO_S_ISDIR(stat.st_mode))
+    struct stat s;
 
-    DIR* d;
-    if ((d = opendir(path)) != NULL)
-    {
-        closedir(d);
+    if (stat(path, &s) == SUCCESS && S_ISDIR(s.st_mode))
         return SUCCESS;
-    }
+
     return FAILED;
 }
 

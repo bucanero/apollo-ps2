@@ -590,7 +590,7 @@ int exportPSU(const char *save, const char* psu_path)
     return 1;
 }
 
-int exportCBS(const char *save, const char* cbs_path)
+int exportCBS(const char *save, const char* cbs_path, const char* title)
 {
     FILE *cbsFile, *mcFile;
     sceMcTblGetDir mcDir[64] __attribute__((aligned(64)));
@@ -625,7 +625,7 @@ int exportCBS(const char *save, const char* cbs_path)
     header.modified = mcDir[0]._Modify;
     header.mode = mcDir[0].AttrFile; // 0x8427
     memcpy(header.name, mcDir[0].EntryName, sizeof(header.name));
-    strncpy(header.title, strrchr(cbs_path, '/') + 1, sizeof(header.title)-1);
+    strncpy(header.title, title, sizeof(header.title)-1);
 
     snprintf(mcPath, sizeof(mcPath), "%s*", save + 5);
     mcGetDir(save[2] - '0', 0, mcPath, 0, countof(mcDir), mcDir);

@@ -751,17 +751,24 @@ static void resignAllSaves(const save_entry_t* save, int all)
 static void export_ps2save(const save_entry_t* save, int type, int dst_id)
 {
 	int ret = 0;
-	char mcrPath[256], outPath[256];
+	char outPath[256];
+	struct tm t;
 
 	_set_dest_path(outPath, dst_id, USER_PATH_USB);
+	mkdirs(outPath);
 	if (type != FILE_TYPE_PSV)
-		sprintf(strrchr(outPath, '/'), "/%s_%d.", save->title_id, ret);
+	{
+		// build file path
+		gmtime_r(&(time_t){time(NULL)}, &t);
+		sprintf(strrchr(outPath, '/'), "/%s_%d-%02d-%02d_%02d%02d%02d.", save->title_id,
+			t.tm_year+1900, t.tm_mon+1, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec);
+	}
 
 	switch (type)
 	{
 	case FILE_TYPE_CBS:
 		strcat(outPath, "cbs");
-		ret = exportCBS(save->path, outPath);
+		ret = exportCBS(save->path, outPath, save->name);
 		break;
 
 	case FILE_TYPE_PSV:

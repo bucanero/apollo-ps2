@@ -21,7 +21,7 @@ LDFLAGS += -L$(PS2DEV)/gsKit/lib -L$(PS2SDK)/ports/lib -L.
 LIBS += -lSDL2main -lSDL2 -lnetman -lcurl -lps2ip -lpatches -lpad -lgskit -ldmakit -lps2_drivers -lpolarssl -lfreetype -lpng -lz -lzip -lapollo -ldbglogger
 
 SRC = $(wildcard ./source/*.c)
-#EXCLUDE = 
+#EXCLUDE =
 SRC := $(filter-out $(EXCLUDE),$(SRC))
 OBJS = $(SRC:.c=.o)
 OBJS += $(wildcard ./data/*.o)

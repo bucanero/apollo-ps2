@@ -42,7 +42,7 @@ static void XorWithIv(uint8_t* buf, const uint8_t* Iv)
 	for (uint8_t i = 0; i < 16; ++i)
 		buf[i] ^= Iv[i];
 }
- 
+
 static void generateHash(const uint8_t *input, uint8_t *dest, size_t sz)
 {
 	aes_context aes_ctx;
@@ -69,7 +69,7 @@ static void generateHash(const uint8_t *input, uint8_t *dest, size_t sz)
 	memcpy(work_buf, salt_seed + 0x10, 0x4);
 
 	XorWithIv(salt + 0x10, work_buf);
-	
+
 	memset(salt + 0x14, 0, sizeof(salt) - 0x14);
 	memset(dest, 0, 0x14);
 

@@ -80,7 +80,7 @@ void* ps2IconTexture(const uint8_t* icon_data)
 		iData += 4;
 		do
 		{
-			j = ((*(int16_t *) iData)); 
+			j = ((*(int16_t *) iData));
 			if (0XFF00 == (j & 0xFF00))
 			{
 				for (j = (0x0000 - j) & 0xFFFF; j > 0; j--)

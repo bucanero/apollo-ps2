@@ -1,4 +1,4 @@
-/* 
+/*
    TINY3D - font library / (c) 2010 Hermes  <www.elotrolado.net>
 
 */
@@ -16,12 +16,12 @@
 struct t_font_description
 {
     int w, h, bh;
-    
+
     u8 first_char;
     u8 last_char;
-    
+
     u8* rsx_text_offset;
-    u32 rsx_bytes_per_char; 
+    u32 rsx_bytes_per_char;
     u32 color_format;
 
     short fw[256]; // chr width
@@ -92,7 +92,7 @@ u8 * AddFontFromBitmapArray(u8 *font, u8 *texture, u8 first_char, u8 last_char, 
     int n, a, b;
     u32 buf[w*h];
     u8 i;
-    
+
     if(font_datas.number_of_fonts >= 8) return texture;
 
     font_datas.fonts[font_datas.number_of_fonts].w = w;
@@ -112,7 +112,7 @@ u8 * AddFontFromBitmapArray(u8 *font, u8 *texture, u8 first_char, u8 last_char, 
     font_datas.Z = 0.0f;
 
     for(n = 0; n < 256; n++) {
-        font_datas.fonts[font_datas.number_of_fonts].fw[n] = 0; 
+        font_datas.fonts[font_datas.number_of_fonts].fw[n] = 0;
         font_datas.fonts[font_datas.number_of_fonts].fy[n] = 0;
     }
 
@@ -129,14 +129,14 @@ u8 * AddFontFromBitmapArray(u8 *font, u8 *texture, u8 first_char, u8 last_char, 
 
         for(a = 0; a < h; a++) {
             for(b = 0; b < w; b++) {
-                
+
                 i = font[(b * bits_per_pixel)/8];
 
-                if(byte_order) 
+                if(byte_order)
                     i= (i << ((b & (7/bits_per_pixel)) * bits_per_pixel))>> (8-bits_per_pixel);
                 else
                     i >>= (b & (7/bits_per_pixel)) * bits_per_pixel;
-                
+
                 i = (i & ((1 << bits_per_pixel)-1)) * 255 / ((1 << bits_per_pixel)-1);
 
                 if(i) {//TINY3D_TEX_FORMAT_A1R5G5B5
@@ -178,16 +178,16 @@ u8 * AddFontFromBitmapArray(u8 *font, u8 *texture, u8 first_char, u8 last_char, 
 }
 
 /*
-u8 * AddFontFromTTF(u8 *texture, u8 first_char, u8 last_char, int w, int h, 
+u8 * AddFontFromTTF(u8 *texture, u8 first_char, u8 last_char, int w, int h,
     void (* ttf_callback) (u8 chr, u8 * bitmap, short *w, short *h, short *y_correction))
 {
     int n, a, b;
     u8 i;
     u8 *font;
     static u8 letter_bitmap[257 * 256];
-    
+
     int bits_per_pixel = 8;
-    
+
     if(font_datas.number_of_fonts >= 8) return texture;
 
     if(h < 8) h = 8;
@@ -212,23 +212,23 @@ u8 * AddFontFromTTF(u8 *texture, u8 first_char, u8 last_char, int w, int h,
     font_datas.Z = 0.0f;
 
     for(n = 0; n < 256; n++) {
-        font_datas.fonts[font_datas.number_of_fonts].fw[n] = 0; 
+        font_datas.fonts[font_datas.number_of_fonts].fw[n] = 0;
         font_datas.fonts[font_datas.number_of_fonts].fy[n] = 0;
     }
 
-       
+
     for(n = first_char; n <= last_char; n++) {
-        
+
         short hh = h;
 
         font = letter_bitmap;
 
         font_datas.fonts[font_datas.number_of_fonts].fw[n] = (short) w;
-		
+
 		ttf_callback((u8) (n & 255), letter_bitmap, &font_datas.fonts[font_datas.number_of_fonts].fw[n], &hh,  &font_datas.fonts[font_datas.number_of_fonts].fy[n]);
 
         // letter background correction
-        if((hh + font_datas.fonts[font_datas.number_of_fonts].fy[n]) > font_datas.fonts[font_datas.number_of_fonts].bh) 
+        if((hh + font_datas.fonts[font_datas.number_of_fonts].fy[n]) > font_datas.fonts[font_datas.number_of_fonts].bh)
             font_datas.fonts[font_datas.number_of_fonts].bh = hh + font_datas.fonts[font_datas.number_of_fonts].fy[n];
 
         texture = (u8 *) ((((long) texture) + 15) & ~15);
@@ -240,29 +240,29 @@ u8 * AddFontFromTTF(u8 *texture, u8 first_char, u8 last_char, int w, int h,
 
         for(a = 0; a < h; a++) {
             for(b = 0; b < w; b++) {
-                
+
                 i = font[(b * bits_per_pixel)/8];
 
                 i >>= (b & (7/bits_per_pixel)) * bits_per_pixel;
-                
+
                 i = (i & ((1 << bits_per_pixel)-1)) * 255 / ((1 << bits_per_pixel)-1);
 
                 if(i) {//TINY3D_TEX_FORMAT_A4R4G4B4
                     i>>=4;
                     *((u16 *) texture) = (i<<12) | 0xfff;
                 } else {
-              
+
                     texture[0] = texture[1] = 0x0; //texture[2] = 0x0;
                     //texture[3] = 0x0; // alpha
-                } 
+                }
                 texture+=2;
-               
+
             }
 
             font += (w * bits_per_pixel) / 8;
-                
+
         }
-    
+
     }
 
     texture = (u8 *) ((((long) texture) + 15) & ~15);
@@ -338,7 +338,7 @@ void RegisterSpecialCharacter(char value, short fy, float scale, png_texture* im
 		return;
 	if (image->width == 0 || image->height == 0)
 		return;
-	
+
 	// Verify value is not in use
 	if (GetSpecialCharFromValue(value))
 		return;
@@ -388,7 +388,7 @@ int DrawCharSpecial(float x, float y, float z, const special_char* schr, uint8_t
 		y += (float)schr->fy;
 	else
 		y += ((float)font_datas.sy - dy)/2;
-	
+
 	// Load sprite texture
     DrawTexture(schr->image, x, y, z, dx, dy, 0xFFFFFF00 | RGBA_A(font_datas.color));
 
@@ -484,7 +484,7 @@ static int i_must_break_line(const char *str, float x)
 {
     int xx =0;
 	int dx = (font_datas.sx+font_datas.extra);
-	
+
     while(*str) {
         if(((u8)*str) <= 32) break;
         xx += dx * font_datas.fonts[font_datas.current_font].fw[((u8)*str)] / font_datas.fonts[font_datas.current_font].w;
@@ -501,7 +501,7 @@ float DrawStringMono(float x, float y, const char *str)
 	float initX = x;
 	int dx = font_datas.sx;
     font_datas.mono = font_datas.fonts[font_datas.current_font].w;
-	
+
     switch (font_datas.align)
     {
     case FONT_ALIGN_SCREEN_CENTER:
@@ -521,22 +521,22 @@ float DrawStringMono(float x, float y, const char *str)
     }
 
     while (*str) {
-        
+
         if(*str == '\n') {
-            x = initX; 
+            x = initX;
             y += font_datas.sy * font_datas.fonts[font_datas.current_font].bh / font_datas.fonts[font_datas.current_font].h;
             str++;
             continue;
         } else {
             if(font_datas.autonewline && i_must_break_line(str, x)) {
-                x = initX; 
+                x = initX;
                 y += font_datas.sy * font_datas.fonts[font_datas.current_font].bh / font_datas.fonts[font_datas.current_font].h;
             }
         }
 
         DrawChar(x, y, font_datas.Z, (u8) *str);
 		x += (dx * font_datas.mono) / font_datas.fonts[font_datas.current_font].w + font_datas.extra;
-        str++; 
+        str++;
     }
 
     font_datas.X = x; font_datas.Y = y;

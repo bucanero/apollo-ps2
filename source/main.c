@@ -1,4 +1,4 @@
-/* 
+/*
 	Apollo PSP main.c
 */
 
@@ -588,7 +588,7 @@ int main(int argc, char *argv[])
 	// Splash screen logo (fade-in)
 	drawSplashLogo(1);
 	sleep(2);
- 
+
 	// Setup font
 	SetExtraSpace(-10);
 	SetCurrentFont(font_adonais_regular);
@@ -596,7 +596,7 @@ int main(int argc, char *argv[])
 	// Splash screen logo (fade-out)
 	drawSplashLogo(-1);
 	SDL_DestroyTexture(menu_textures[buk_scr_png_index].texture);
-	
+
 	//Set options
 	update_callback(!apollo_config.update);
 
@@ -629,7 +629,7 @@ int main(int argc, char *argv[])
 					dec = alpha;
 				alpha -= dec;
 			}
-			
+
 			SetFontSize(APP_FONT_SIZE_DESCRIPTION);
 			SetCurrentFont(font_adonais_regular);
 			SetFontAlign(FONT_ALIGN_SCREEN_CENTER);

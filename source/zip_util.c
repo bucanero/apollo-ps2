@@ -20,7 +20,7 @@ static inline uint64_t min64(uint64_t a, uint64_t b)
 
 void walk_zip_directory(const char* startdir, const char* inputdir, struct zip *zipper)
 {
-	char fullname[256];	
+	char fullname[256];
 	struct dirent *dirp;
 	int len = strlen(startdir) + 1;
 	DIR *dp = opendir(inputdir);

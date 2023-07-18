@@ -302,7 +302,7 @@ int osk_dialog_get_text(const char* title, char* text, uint32_t size)
             case PSP_UTILITY_DIALOG_VISIBLE:
                 sceUtilityOskUpdate(1);
                 break;
-            
+
             case PSP_UTILITY_DIALOG_QUIT:
                 sceUtilityOskShutdownStart();
                 break;

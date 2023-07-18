@@ -77,19 +77,19 @@ Ps2PadConfig *ps2PadGetConf(void)
 	{
 		return (&ps2PadConf);
 	}
-	
-	return NULL; 
+
+	return NULL;
 }
 
 static int ps2PadInitConf(void)
-{	
+{
 	if(orbispad_initialized)
 	{
 		return orbispad_initialized;
 	}
 
 	memset(&ps2PadConf, 0, sizeof(Ps2PadConfig));
-	
+
 	return 0;
 }
 

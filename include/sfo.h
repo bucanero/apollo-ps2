@@ -48,7 +48,7 @@ typedef struct sdslot_item
     uint32_t unk1;              // 0
     char title[0x40];
     char subtitle[0x80];
-    char description[0x200];    
+    char description[0x200];
     char icon[0x48];
     uint16_t year;
     uint16_t month;

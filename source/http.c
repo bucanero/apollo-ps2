@@ -122,7 +122,7 @@ int http_init(void)
 /*
 	sceUtilityLoadNetModule(PSP_NET_MODULE_COMMON);
 	sceUtilityLoadNetModule(PSP_NET_MODULE_INET);
-	
+
 	if ((ret = sceNetInit(128 * 1024, 42, 4 * 1024, 42, 4 * 1024)) < 0) {
 		LOG("sceNetInit() failed: 0x%08x\n", ret);
 		return HTTP_FAILED;
@@ -192,7 +192,7 @@ int http_download(const char* url, const char* filename, const char* local_dst, 
 	curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10L);
 	// Follow redirects (?)
 	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-	// The function that will be used to write the data 
+	// The function that will be used to write the data
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, fwrite);
 	// The data filedescriptor which will be written to
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, fd);

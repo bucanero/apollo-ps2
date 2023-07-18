@@ -99,7 +99,7 @@ int parse_config_file(const char *file_path, int (*handler)(void *, const char *
 				error_line = line;
 			}
 		}
-	}	
+	}
 
 	fclose(fp);
 

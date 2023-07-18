@@ -200,7 +200,7 @@ enum texture_index
 #define app_ver_png_y						67 * SCREEN_H_ADJ
 
 
-typedef struct 
+typedef struct
 {
 	uint8_t* data;
 	size_t size;
@@ -227,7 +227,7 @@ extern png_texture * menu_textures;				// png_texture array for main menu, initi
 extern int idle_time;							// Set by readPad
 extern int menu_id;
 extern int menu_sel;
-extern int menu_old_sel[]; 
+extern int menu_old_sel[];
 extern int last_menu_id[];
 extern const char * menu_pad_help[];
 

@@ -14,8 +14,8 @@ const char * menu_about_strings[] = { "Bucanero", "Developer",
 
 static void _draw_AboutMenu(u8 alpha)
 {
-	u8 alp2 = ((alpha*2) > 0xFF) ? 0xFF : (alpha * 2); 
-    
+	u8 alp2 = ((alpha*2) > 0xFF) ? 0xFF : (alpha * 2);
+
     //------------- About Menu Contents
 	DrawTextureCenteredX(&menu_textures[logo_text_png_index], SCREEN_WIDTH/2, 35, 0, menu_textures[logo_text_png_index].width * 3/4, menu_textures[logo_text_png_index].height * 3/4, 0xFFFFFF00 | alp2);
 
@@ -25,12 +25,12 @@ static void _draw_AboutMenu(u8 alpha)
 	SetFontSize(APP_FONT_SIZE_JARS);
 	DrawStringMono(0, 80, "PlayStation 2 version");
 	DrawStringMono(0, 133, "In memory of");
-    
+
     for (int cnt = 0; menu_about_strings[cnt] != NULL; cnt += 2)
     {
         SetFontAlign(FONT_ALIGN_RIGHT);
 		DrawStringMono((SCREEN_WIDTH / 2) - 20, 110 + (cnt * 12), menu_about_strings[cnt]);
-        
+
 		SetFontAlign(FONT_ALIGN_LEFT);
 		DrawStringMono((SCREEN_WIDTH / 2) + 20, 110 + (cnt * 12), menu_about_strings[cnt + 1]);
     }

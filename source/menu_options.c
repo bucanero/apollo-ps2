@@ -45,13 +45,13 @@ static void _draw_OptionsMenu(u8 alpha)
 				SetFontAlign(FONT_ALIGN_LEFT);
 				break;
 		}
-        
+
         if (menu_sel == ind)
         {
             DrawTexture(&menu_textures[mark_line_png_index], 0, y_off, 0, SCREEN_WIDTH, menu_textures[mark_line_png_index].height, 0xFFFFFF00 | alpha);
             DrawTextureCenteredX(&menu_textures[mark_arrow_png_index], MENU_ICON_OFF + MENU_TITLE_OFF, y_off, 0, (2 * APP_LINE_OFFSET) / 3, APP_LINE_OFFSET + 2, 0xFFFFFF00 | alpha);
         }
-        
+
         y_off += APP_LINE_OFFSET;
         ind++;
     }
@@ -64,18 +64,18 @@ void Draw_OptionsMenu_Ani()
     {
         SDL_RenderClear(renderer);
         DrawHeader_Ani(cat_opt_png_index, "Settings", NULL, APP_FONT_TITLE_COLOR, 0xffffffff, ani, 12);
-        
+
 		u8 icon_a = (u8)(((ani * 2) > 0xFF) ? 0xFF : (ani * 2));
         int _game_a = (int)(icon_a - (MENU_ANI_MAX / 2)) * 2;
         if (_game_a > 0xFF)
             _game_a = 0xFF;
         u8 game_a = (u8)(_game_a < 0 ? 0 : _game_a);
-        
+
         if (game_a > 0)
         	_draw_OptionsMenu(game_a);
-        
+
         SDL_RenderPresent(renderer);
-        
+
         if (game_a == 0xFF)
             return;
     }

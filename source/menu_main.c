@@ -36,9 +36,9 @@ void initMenuOptions()
 	menu_options_maxopt = 0;
 	while (menu_options[menu_options_maxopt].name)
 		menu_options_maxopt++;
-	
+
 	menu_options_maxsel = (int *)calloc(menu_options_maxopt, sizeof(int));
-	
+
 	for (int i = 0; i < menu_options_maxopt; i++)
 	{
 		if (menu_options[i].type == APP_OPTION_LIST)
@@ -158,7 +158,7 @@ static void SetMenu(int id)
 			last_menu_id[menu_id] = id;
 			break;
 	}
-	
+
 	switch (id) //going to menu
 	{
 		case MENU_MAIN_SCREEN: //Main Menu
@@ -177,7 +177,7 @@ static void SetMenu(int id)
 		case MENU_USB_SAVES: //USB saves Menu
 			if (!usb_saves.list && !ReloadUserSaves(&usb_saves))
 				return;
-			
+
 			if (apollo_config.doAni)
 				Draw_UserCheatsMenu_Ani(&usb_saves);
 			break;
@@ -272,12 +272,12 @@ static void SetMenu(int id)
 				Draw_HexEditor_Ani(&hex_data);
 			break;
 	}
-	
+
 	menu_old_sel[menu_id] = menu_sel;
 	if (last_menu_id[menu_id] != id)
 		last_menu_id[id] = menu_id;
 	menu_id = id;
-	
+
 	menu_sel = menu_old_sel[menu_id];
 }
 
@@ -350,7 +350,7 @@ static void doSaveMenu(save_list_t * save_list)
 			return;
 		}
 
-		if (apollo_config.doSort && 
+		if (apollo_config.doSort &&
 			((save_list->icon_id == cat_bup_png_index) || (save_list->icon_id == cat_db_png_index)))
 			list_bubbleSort(selected_entry->codes, &sortCodeList_Compare);
 
@@ -367,7 +367,7 @@ static void doSaveMenu(save_list_t * save_list)
 			return;
 		}
 	}
-	else if (ps2PadGetButtonPressed(PAD_SELECT) && 
+	else if (ps2PadGetButtonPressed(PAD_SELECT) &&
 		(save_list->icon_id == cat_hdd_png_index || save_list->icon_id == cat_usb_png_index || save_list->icon_id == cat_warning_png_index))
 	{
 		selected_entry = list_get_item(save_list->list, menu_sel);
@@ -401,7 +401,7 @@ static void doMainMenu()
 
 	else if(ps2PadGetButtonPressed(PAD_CIRCLE) && show_dialog(DIALOG_TYPE_YESNO, "Exit to XMB?"))
 		close_app = 1;
-	
+
 	Draw_MainMenu();
 }
 
@@ -443,7 +443,7 @@ static void doOptionsMenu()
 		}
 		else if (menu_options[menu_sel].type == APP_OPTION_INC)
 			(*menu_options[menu_sel].value)--;
-		
+
 		if (menu_options[menu_sel].type != APP_OPTION_CALL)
 			menu_options[menu_sel].callback(*menu_options[menu_sel].value);
 	}
@@ -470,7 +470,7 @@ static void doOptionsMenu()
 		else if (menu_options[menu_sel].type == APP_OPTION_CALL)
 			menu_options[menu_sel].callback(0);
 	}
-	
+
 	Draw_OptionsMenu();
 }
 
@@ -585,7 +585,7 @@ static void doPatchViewMenu()
 		SetMenu(last_menu_id[MENU_PATCH_VIEW]);
 		return;
 	}
-	
+
 	Draw_CheatsMenu_View("Patch view");
 }
 
@@ -633,7 +633,7 @@ static void doCodeOptionsMenu()
 		}
 
 		option_index++;
-		
+
 		if (option_index >= code->options_count)
 		{
 			SetMenu(last_menu_id[MENU_CODE_OPTIONS]);
@@ -642,7 +642,7 @@ static void doCodeOptionsMenu()
 		else
 			menu_sel = 0;
 	}
-	
+
 	Draw_CheatsMenu_Options();
 }
 
@@ -657,7 +657,7 @@ static void doSaveDetailsMenu()
 		SetMenu(last_menu_id[MENU_SAVE_DETAILS]);
 		return;
 	}
-	
+
 	Draw_CheatsMenu_View(selected_entry->name);
 }
 
@@ -703,7 +703,7 @@ static void doPatchMenu()
 				selected_entry->codes[menu_sel].options_count = size;
 			}
 			*/
-			
+
 			if (selected_centry->options)
 			{
 				option_index = 0;
@@ -739,7 +739,7 @@ static void doPatchMenu()
 			return;
 		}
 	}
-	
+
 	Draw_CheatsMenu_Selection(menu_sel, 0xFFFFFFFF);
 }
 

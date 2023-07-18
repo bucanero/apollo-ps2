@@ -52,7 +52,7 @@ On first run, the application will detect and setup the required user settings.
 
 # Usage
 
-Using the application is simple and straight-forward: 
+Using the application is simple and straight-forward:
 
  - Move <kbd>UP</kbd>/<kbd>DOWN</kbd> to select the save-game file you want to patch, and press ![X button](https://github.com/bucanero/pkgi-ps3/raw/master/data/CROSS.png). The patch screen will show the available fixes for the file. Select the patches and click `Apply`.
  - To view the item's details, press ![Triangle](https://github.com/bucanero/pkgi-ps3/raw/master/data/TRIANGLE.png).
@@ -70,13 +70,13 @@ The Online Database project aims to [add more save-games](https://github.com/buc
 # FAQs
 
  1. Where I can get a save-game for *XYZ game*?
-    
+
     You can check sites like [Brewology.com](https://ps3.brewology.com/gamesaves/savedgames.php?page=savedgames&system=psp), and [GameFAQs](https://gamefaqs.gamespot.com/psp/). Also, searching on [Google](http://www.google.com) might help.
  1. I have a save-game file that I want to share. How can I upload it?
-    
+
     If you have a save file that is not currently available on the Online Database and want to share it, please check [this link](https://github.com/bucanero/apollo-saves) for instructions.
  1. Why is it called **Apollo**?
-    
+
     [Apollo](https://en.wikipedia.org/wiki/Apollo) was the twin brother of [Artemis](https://en.wikipedia.org/wiki/Artemis), goddess of the hunt. Since this project was born using the [Artemis-GUI](https://github.com/Dnawrkshp/ArtemisPS3/) codebase, I decided to respect that heritage by calling it Apollo.
 
 # Credits

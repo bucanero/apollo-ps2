@@ -36,7 +36,7 @@
 static char* endsWith(const char * a, const char * b)
 {
 	int al = strlen(a), bl = strlen(b);
-    
+
 	if (al < bl)
 		return NULL;
 
@@ -140,7 +140,7 @@ static save_entry_t* _createSaveEntry(uint16_t flag, const char* name)
 
 static void _walk_dir_list(const char* startdir, const char* inputdir, const char* mask, list_t* list)
 {
-	char fullname[256];	
+	char fullname[256];
 	struct dirent *dirp;
 	int len = strlen(startdir);
 	DIR *dp = opendir(inputdir);
@@ -379,7 +379,7 @@ int ReadCodes(save_entry_t * save)
 	if ((buffer = readTextFile(filePath, NULL)) == NULL)
 		goto skip_end;
 
-	code = _createCmdCode(PATCH_NULL, "----- " UTF8_CHAR_STAR " Cheats " UTF8_CHAR_STAR " -----", CMD_CODE_NULL);	
+	code = _createCmdCode(PATCH_NULL, "----- " UTF8_CHAR_STAR " Cheats " UTF8_CHAR_STAR " -----", CMD_CODE_NULL);
 	list_append(save->codes, code);
 
 	code = _createCmdCode(PATCH_COMMAND, CHAR_ICON_USER " View Raw Patch File", CMD_VIEW_RAW_PATCH);
@@ -432,7 +432,7 @@ int ReadOnlineSaves(save_entry_t * game)
 
 	long fsize;
 	char *data = readTextFile(path, &fsize);
-	
+
 	char *ptr = data;
 	char *end = data + fsize;
 
@@ -610,7 +610,7 @@ void UnloadGameList(list_t * list)
 			free(item->title_id);
 			item->title_id = NULL;
 		}
-		
+
 		if (item->codes)
 		{
 			for (nc = list_head(item->codes); (code = list_get(nc)); nc = list_next(nc))
@@ -641,18 +641,18 @@ void UnloadGameList(list_t * list)
 						if (code->options[z].value)
 							free(code->options[z].value);
 					}
-					
+
 					free (code->options);
 				}
 			}
-			
+
 			list_free(item->codes);
 			item->codes = NULL;
 		}
 	}
 
 	list_free(list);
-	
+
 	LOG("UnloadGameList() :: Successfully unloaded game list");
 }
 
@@ -736,7 +736,7 @@ static void read_usb_encrypted_saves(const char* userPath, list_t *list, uint64_
 //				item->flags |= SAVE_FLAG_OWNER;
 
 			snprintf(savePath, sizeof(savePath), "%s%s/%s", userPath, dir->d_name, dir2->d_name);
-			
+
 			uint64_t size = 0;
 			get_file_size(savePath, &size);
 //			item->blocks = size / ORBIS_SAVE_DATA_BLOCK_SIZE;
@@ -1082,10 +1082,10 @@ static void _ReadOnlineListEx(const char* urlPath, uint16_t flag, list_t *list)
 		if (!http_download(urlPath, "games.txt", path, 0))
 			return;
 	}
-	
+
 	long fsize;
 	char *data = readTextFile(path, &fsize);
-	
+
 	char *ptr = data;
 	char *end = data + fsize;
 

@@ -16,23 +16,23 @@ static const char* ext_src[MAX_USB_DEVICES+1] = {"mass:/", "host:/", "cdfs:/", N
 static const char* sort_opt[] = {"Disabled", "by Name", "by Title ID", NULL};
 
 menu_option_t menu_options[] = {
-	{ .name = "\nBackground Music", 
-		.options = NULL, 
-		.type = APP_OPTION_BOOL, 
-		.value = &apollo_config.music, 
-		.callback = music_callback 
+	{ .name = "\nBackground Music",
+		.options = NULL,
+		.type = APP_OPTION_BOOL,
+		.value = &apollo_config.music,
+		.callback = music_callback
 	},
-	{ .name = "Menu Animations", 
-		.options = NULL, 
-		.type = APP_OPTION_BOOL, 
-		.value = &apollo_config.doAni, 
-		.callback = ani_callback 
+	{ .name = "Menu Animations",
+		.options = NULL,
+		.type = APP_OPTION_BOOL,
+		.value = &apollo_config.doAni,
+		.callback = ani_callback
 	},
-	{ .name = "Sort Saves", 
+	{ .name = "Sort Saves",
 		.options = (char**) sort_opt,
 		.type = APP_OPTION_LIST,
-		.value = &apollo_config.doSort, 
-		.callback = sort_callback 
+		.value = &apollo_config.doSort,
+		.callback = sort_callback
 	},
 	{ .name = "External Saves Source",
 		.options = (char**) ext_src,
@@ -40,29 +40,29 @@ menu_option_t menu_options[] = {
 		.value = &apollo_config.storage,
 		.callback = owner_callback
 	},
-	{ .name = "Version Update Check", 
-		.options = NULL, 
-		.type = APP_OPTION_BOOL, 
-		.value = &apollo_config.update, 
-		.callback = update_callback 
+	{ .name = "Version Update Check",
+		.options = NULL,
+		.type = APP_OPTION_BOOL,
+		.value = &apollo_config.update,
+		.callback = update_callback
 	},
-	{ .name = "Update Application Data", 
-		.options = NULL, 
-		.type = APP_OPTION_CALL, 
-		.value = NULL, 
-		.callback = upd_appdata_callback 
+	{ .name = "Update Application Data",
+		.options = NULL,
+		.type = APP_OPTION_CALL,
+		.value = NULL,
+		.callback = upd_appdata_callback
 	},
-	{ .name = "Clear Local Cache", 
-		.options = NULL, 
-		.type = APP_OPTION_CALL, 
-		.value = NULL, 
-		.callback = clearcache_callback 
+	{ .name = "Clear Local Cache",
+		.options = NULL,
+		.type = APP_OPTION_CALL,
+		.value = NULL,
+		.callback = clearcache_callback
 	},
 	{ .name = "Enable Debug Log",
 		.options = NULL,
 		.type = APP_OPTION_CALL,
 		.value = NULL,
-		.callback = log_callback 
+		.callback = log_callback
 	},
 	{ .name = NULL }
 };

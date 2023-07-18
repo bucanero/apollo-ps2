@@ -23,7 +23,7 @@
 #define PSV_HASH_OFFSET 0x1C
 #define PSV_TYPE_OFFSET 0x3C
 
-static const char SJIS_REPLACEMENT_TABLE[] = 
+static const char SJIS_REPLACEMENT_TABLE[] =
     " ,.,..:;?!\"*'`*^"
     "-_????????*---/\\"
     "~||--''\"\"()()[]{"
@@ -34,7 +34,7 @@ static const char SJIS_REPLACEMENT_TABLE[] =
 
 static const uint8_t psv_ps2key[0x10] = {
 	0xFA, 0x72, 0xCE, 0xEF, 0x59, 0xB4, 0xD2, 0x98, 0x9F, 0x11, 0x19, 0x13, 0x28, 0x7F, 0x51, 0xC7
-}; 
+};
 
 static const uint8_t psv_ps1key[0x10] = {
 	0xAB, 0x5A, 0xBC, 0x9F, 0xC1, 0xF4, 0x9D, 0xE6, 0xA0, 0x51, 0xDB, 0xAE, 0xFA, 0x51, 0x88, 0x59
@@ -60,7 +60,7 @@ static void XorWithIv(uint8_t* buf, const uint8_t* Iv)
     buf[i] ^= Iv[i];
   }
 }
- 
+
 static void generateHash(const uint8_t *input, uint8_t *dest, size_t sz, uint8_t type)
 {
 	aes_context aes_ctx;
@@ -91,11 +91,11 @@ static void generateHash(const uint8_t *input, uint8_t *dest, size_t sz, uint8_t
 		memcpy(work_buf, salt_seed + 0x10, 0x4);
 
 		XorWithIv(salt + 0x10, work_buf);
-	} 
+	}
 	else if(type == PSV_TYPE_PS2)
 	{	//PS2
 		LOG("PS2 Save File");
-		uint8_t laid_paid[16]  = {	
+		uint8_t laid_paid[16]  = {
 			0x10, 0x70, 0x00, 0x00, 0x02, 0x00, 0x00, 0x01, 0x10, 0x70, 0x00, 0x03, 0xFF, 0x00, 0x00, 0x01 };
 
 		memcpy(salt, salt_seed, 0x14);
@@ -110,7 +110,7 @@ static void generateHash(const uint8_t *input, uint8_t *dest, size_t sz, uint8_t
 		LOG("Error: Unknown type");
 		return;
 	}
-	
+
 	memset(salt + 0x14, 0, sizeof(salt) - 0x14);
 	memset(dest, 0, 0x14);
 
@@ -219,7 +219,7 @@ int ps1_mcs2psv(const char* mcsfile, const char* psv_path)
 		free(input);
 		return 0;
 	}
-	
+
 	get_psv_filename(dstName, psv_path, (char*) &input[0x0A]);
 	pf = fopen(dstName, "wb");
 	if (!pf) {
@@ -227,7 +227,7 @@ int ps1_mcs2psv(const char* mcsfile, const char* psv_path)
 		free(input);
 		return 0;
 	}
-	
+
 	write_psvheader(pf, 1);
 
 	memset(&ps1h, 0, sizeof(ps1_header_t));
@@ -275,7 +275,7 @@ int ps1_psv2mcs(const char* psvfile, const char* mcs_path)
 		free(input);
 		return 0;
 	}
-	
+
 	ps1h = (ps1_header_t*)(input + 0x40);
 
 	memset(mcshdr, 0, sizeof(mcshdr));
@@ -315,7 +315,7 @@ int ps1_psx2psv(const char* psxfile, const char* psv_path)
 		free(input);
 		return 0;
 	}
-	
+
 	get_psv_filename(dstName, psv_path, (char*) input);
 	pf = fopen(dstName, "wb");
 	if (!pf) {
@@ -323,7 +323,7 @@ int ps1_psx2psv(const char* psxfile, const char* psv_path)
 		free(input);
 		return 0;
 	}
-	
+
 	write_psvheader(pf, 1);
 
 	memset(&ps1h, 0, sizeof(ps1_header_t));
@@ -417,7 +417,7 @@ int exportPSV(const char *save, const char* psv_path)
 
 		dataPos += mcDir[i].FileSizeByte;
 		ps2h.displaySize += mcDir[i].FileSizeByte;
-		
+
 		if (strcmp(ps2fi[j].filename, iconsys.view) == 0)
 		{
 			ps2h.icon1Size = ps2fi[j].filesize;
@@ -479,7 +479,7 @@ int sjis2ascii(uint8_t* bData)
 	uint16_t ch;
 	int i, j = 0;
 	int len = strlen(bData);
-	
+
 	for (i = 0; i < len; i += 2)
 	{
 		ch = (bData[i]<<8) | bData[i+1];

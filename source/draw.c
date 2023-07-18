@@ -56,7 +56,7 @@ static rawImage_t *imgLoadPngGeneric(const void *io_ptr, png_rw_ptr read_data_fn
 
 	png_bytep *row_ptrs=NULL;
 
-	if (setjmp(png_jmpbuf(png_ptr))) 
+	if (setjmp(png_jmpbuf(png_ptr)))
 	{
 		png_destroy_read_struct(&png_ptr,&info_ptr,(png_infopp)0);
 		if (row_ptrs!=NULL)
@@ -138,7 +138,7 @@ error_create_read:
 
 static rawImage_t *imgLoadPngFromBuffer(const void *buffer)
 {
-	if(png_sig_cmp((png_byte *)buffer, 0, PNG_SIGSIZE) != 0) 
+	if(png_sig_cmp((png_byte *)buffer, 0, PNG_SIGSIZE) != 0)
 		return NULL;
 
 	uint64_t buffer_address=(uint64_t)buffer+PNG_SIGSIZE;
@@ -278,7 +278,7 @@ void DrawHeader_Ani(int icon, const char * hdrTitle, const char * headerSubTitle
 	snprintf(headerTitle, sizeof(headerTitle), "%.40s%s", hdrTitle, (strlen(hdrTitle) > 40 ? "..." : ""));
 
 	//------------ Backgrounds
-	
+
 	//Background
 	DrawBackgroundTexture(0, (u8)bgrgba);
 
@@ -443,7 +443,7 @@ static int loading_screen_thread(void* user_data)
 		DrawTextureCentered(&menu_textures[circle_loading_bg_png_index], SCREEN_WIDTH/2, SCREEN_HEIGHT/2, 0, 128, 128, 0xFFFFFFFF);
 		DrawTextureRotated(&menu_textures[circle_loading_seek_png_index], SCREEN_WIDTH/2, SCREEN_HEIGHT/2, 0, 128, 128, 0xFFFFFFFF, angle);
 
-		DrawStringMono(0, SCREEN_HEIGHT - 60, (char*) user_data);		
+		DrawStringMono(0, SCREEN_HEIGHT - 60, (char*) user_data);
 
 		SDL_RenderPresent(renderer);
 	}
@@ -522,19 +522,19 @@ static void drawJars(uint8_t alpha)
 
 	//USB save
 	drawJar(jar_usb_png_index, jar_usb_png_x, jar_usb_png_y, (alpha == 0xFF ? "Ext Saves" : ""), alpha);
-	
+
 	//HDD save
 	drawJar(jar_hdd_png_index, jar_hdd_png_x, jar_hdd_png_y, (alpha == 0xFF ? "Saves" : ""), alpha);
 
 	//Online cheats
 	drawJar(jar_db_png_index, jar_db_png_x, jar_db_png_y, (alpha == 0xFF ? "Online DB" : ""), alpha);
-	
+
 	//User Backup
 	drawJar(jar_bup_png_index, jar_bup_png_x, jar_bup_png_y, (alpha == 0xFF ? "Tools" : ""), alpha);
 
 	//Options
 	drawJar(jar_opt_png_index, jar_opt_png_x, jar_opt_png_y, (alpha == 0xFF ? "Settings" : ""), alpha);
-	
+
 	//About
 	drawJar(jar_about_png_index, jar_about_png_x, jar_about_png_y, (alpha == 0xFF ? "About" : ""), alpha);
 
@@ -612,10 +612,10 @@ static void _draw_MainMenu(uint8_t alpha)
 
 	//Background
 	DrawBackgroundTexture(0, 0xFF);
-	
+
 	//App logo
 	DrawTexture(&menu_textures[logo_png_index], logo_png_x, logo_png_y, 0, logo_png_w, logo_png_h, 0xFFFFFFFF);
-	
+
 	//App description
 	DrawTextureCenteredX(&menu_textures[logo_text_png_index], SCREEN_WIDTH/2, SCREEN_HEIGHT/2 - 20, 0, menu_textures[logo_text_png_index].width/2, menu_textures[logo_text_png_index].height/2, 0xFFFFFF00 | 0xFF);
 
@@ -632,7 +632,7 @@ void Draw_MainMenu_Ani()
 	{
 		SDL_RenderClear(renderer);
 		DrawBackground2D(0xFFFFFFFF);
-		
+
 		//------------ Backgrounds
 		u8 bg_a = (u8)(ani * 2);
 		if (bg_a < 0x20)
@@ -641,30 +641,30 @@ void Draw_MainMenu_Ani()
 		if (logo_a_t > 0xFF)
 			logo_a_t = 0xFF;
 		u8 logo_a = (u8)logo_a_t;
-		
+
 		//Background
 		DrawBackgroundTexture(0, bg_a);
-		
+
 		//App logo
 		DrawTexture(&menu_textures[logo_png_index], logo_png_x, logo_png_y, 0, logo_png_w, logo_png_h, 0xFFFFFF00 | logo_a);
-		
+
 		//App description
 		DrawTextureCenteredX(&menu_textures[logo_text_png_index], SCREEN_WIDTH/2, SCREEN_HEIGHT/2 - 20, 0, menu_textures[logo_text_png_index].width/2, menu_textures[logo_text_png_index].height/2, 0xFFFFFF00 | logo_a);
 
 		SDL_RenderPresent(renderer);
 	}
-	
+
 	max = MENU_ANI_MAX / 2;
 	int rate = (0x100 / max);
 	for (ani = 0; ani < max; ani++)
 	{
 		SDL_RenderClear(renderer);
 		DrawBackground2D(0xFFFFFFFF);
-		
+
 		u8 icon_a = (u8)(((ani * rate) > 0xFF) ? 0xFF : (ani * rate));
-		
+
 		_draw_MainMenu(icon_a);
-		
+
 		SDL_RenderPresent(renderer);
 
 		if (icon_a == 32)

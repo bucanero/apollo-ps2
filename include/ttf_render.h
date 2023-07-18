@@ -27,7 +27,7 @@ void set_ttf_window(int x, int y, int width, int height, u32 mode);
 extern float Y_ttf;
 extern float Z_ttf;
 
-// display UTF8 string int posx/posy position. With color 0 don't display and refresh/calculate the width. 
+// display UTF8 string int posx/posy position. With color 0 don't display and refresh/calculate the width.
 // color is the character color and sw/sh the width/height of the characters
 
 int display_ttf_string(int posx, int posy, const char *string, u32 color, u32 bkcolor, int sw, int sh, int (*DrawIcon)(int, int, char));

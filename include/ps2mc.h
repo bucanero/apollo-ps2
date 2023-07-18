@@ -20,7 +20,7 @@ typedef struct
 	uint8_t signature[20];           //digital sig
 	uint32_t padding2;               //always 0x00000000
 	uint32_t padding3;               //always 0x00000000
-	uint32_t headerSize;             //always 0x0000002C in PS2, 0x00000014 in PS1. 
+	uint32_t headerSize;             //always 0x0000002C in PS2, 0x00000014 in PS1.
 	uint32_t saveType;               //0x00000002 PS2, 0x00000001 PS1
 } psv_header_t;
 

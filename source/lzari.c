@@ -57,7 +57,7 @@ static void PutBit(int bit)  /* Output one bit (bit = 0,1) */
 static void FlushBitBuffer(void)  /* Send remaining bits */
 {
 	int  i;
-	
+
 	for (i = 0; i < 7; i++) PutBit(0);
 }
 
@@ -144,7 +144,7 @@ static void InsertNode(int r)
 static void DeleteNode(int p)  /* Delete node p from tree */
 {
 	int  q;
-	
+
 	if (dad[p] == NIL) return;  /* not in tree */
 	if (rson[p] == NIL) q = lson[p];
 	else if (lson[p] == NIL) q = rson[p];
@@ -195,7 +195,7 @@ unsigned int
 static void StartModel(void)  /* Initialize model */
 {
 	int ch, sym, i;
-	
+
 	sym_cum[N_CHAR] = 0;
 	for (sym = N_CHAR; sym >= 1; sym--) {
 		ch = sym - 1;
@@ -214,7 +214,7 @@ static void StartModel(void)  /* Initialize model */
 static void UpdateModel(int sym)
 {
 	int i, c, ch_i, ch_sym;
-	
+
 	if (sym_cum[0] >= MAX_CUM) {
 		c = 0;
 		for (i = N_CHAR; i > 0; i--) {
@@ -291,7 +291,7 @@ static int BinarySearchSym(unsigned int x)
 	   i such that sym_cum[i - 1] > x >= sym_cum[i] otherwise */
 {
 	int i, j, k;
-	
+
 	i = 1;  j = N_CHAR;
 	while (i < j) {
 		k = (i + j) / 2;
@@ -306,7 +306,7 @@ static int BinarySearchPos(unsigned int x)
 	   i such that position_cum[i] > x >= position_cum[i + 1] otherwise */
 {
 	int i, j, k;
-	
+
 	i = 1;  j = N;
 	while (i < j) {
 		k = (i + j) / 2;
@@ -327,7 +327,7 @@ static int DecodeChar(void)
 {
 	int	 sym, ch;
 	unsigned long int  range;
-	
+
 	range = high - low;
 	sym = BinarySearchSym((unsigned int)
 		(((value - low + 1) * sym_cum[0] - 1) / range));
@@ -351,7 +351,7 @@ static int DecodePosition(void)
 {
 	int position;
 	unsigned long int  range;
-	
+
 	range = high - low;
 	position = BinarySearchPos((unsigned int)
 		(((value - low + 1) * position_cum[0] - 1) / range));
@@ -388,7 +388,7 @@ int lzari(unsigned char *in, int insz, unsigned char *out, int outsz)
     buffer2 = 0;
     mask = 128;
     mask2 = 0;
-	
+
     infile = in;
     infilel = in + insz;
     outfile = out;
@@ -449,7 +449,7 @@ int unlzari(unsigned char *in, int insz, unsigned char *out, int outsz)
         return -1;
 
     // Reset decompressor state
-    low = 0; 
+    low = 0;
     high = Q4;
     value = 0;
     codesize = 0;

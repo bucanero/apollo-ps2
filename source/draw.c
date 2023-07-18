@@ -6,6 +6,7 @@
 #include "utils.h"
 #include "libfont.h"
 #include "menu.h"
+#include "ps2icon.h"
 
 #define JAR_COLUMNS (6)
 #define PNG_SIGSIZE (8)
@@ -160,11 +161,54 @@ static rawImage_t *imgLoadPngFromFile(const char *path)
 	return img;
 }
 
+static void rawImageTexture(const rawImage_t *img, png_texture *tex)
+{
+	SDL_Surface* surface = SDL_CreateRGBSurfaceFrom(img->datap, img->width, img->height, 32, 4 * img->width,
+												0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
+
+	tex->width = img->width;
+	tex->height = img->height;
+	tex->texture = SDL_CreateTextureFromSurface(renderer, surface);
+
+	SDL_SetTextureScaleMode(tex->texture, SDL_ScaleModeBest);
+	SDL_FreeSurface(surface);
+}
+
+int LoadIconTexture(const char* fname, int idx)
+{
+	rawImage_t raw;
+	uint8_t* icon;
+	size_t len;
+
+	LOG("Loading '%s'", fname);
+	if (menu_textures[idx].texture)
+		SDL_DestroyTexture(menu_textures[idx].texture);
+
+	if (read_buffer(fname, &icon, &len) < 0)
+		return 0;
+
+	raw.datap = (uint32_t*) ps2IconTexture(icon);
+	free(icon);
+
+	if (!raw.datap)
+	{
+		LOG("Invalid icon file!");
+		return 0;
+	}
+
+	raw.width = 128;
+	raw.height = 128;
+	menu_textures[idx].size = 1;
+
+	rawImageTexture(&raw, &menu_textures[idx]);
+	free(raw.datap);
+	return 1;
+}
+
 int LoadMenuTexture(const char* path, int idx)
 {
 	rawImage_t* tmp;
 
-//	LOG("LoadMenuTexture(%s, %d)", path ? path : "memory", idx);
 	if (path)
 		tmp = imgLoadPngFromFile(path);
 	else
@@ -175,16 +219,7 @@ int LoadMenuTexture(const char* path, int idx)
 		LOG("Error Loading texture (%s)!", path);
 		return 0;
 	}
-	menu_textures[idx].width = tmp->width;
-	menu_textures[idx].height = tmp->height;
-
-	SDL_Surface* surface = SDL_CreateRGBSurfaceFrom(tmp->datap, menu_textures[idx].width, menu_textures[idx].height, 32, 4 * menu_textures[idx].width,
-												0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
-
-	menu_textures[idx].texture = SDL_CreateTextureFromSurface(renderer, surface);
-	SDL_SetTextureScaleMode(menu_textures[idx].texture, SDL_ScaleModeBest);
-
-	SDL_FreeSurface(surface);
+	rawImageTexture(tmp, &menu_textures[idx]);
 	free(tmp->datap);
 	free(tmp);
 

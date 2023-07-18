@@ -16,12 +16,20 @@ static int _set_dest_path(char* path, int dest, const char* folder)
 {
 	switch (dest)
 	{
-	case STORAGE_EF0:
+	case STORAGE_MC1:
 		sprintf(path, "%s%s", MC1_PATH, folder);
 		break;
 
-	case STORAGE_MS0:
+	case STORAGE_MC0:
 		sprintf(path, "%s%s", MC0_PATH, folder);
+		break;
+
+	case STORAGE_MASS:
+		sprintf(path, "%s%s", USB_PATH, folder);
+		break;
+
+	case STORAGE_HOST:
+		sprintf(path, "%s%s", "host:/", folder);
 		break;
 
 	default:
@@ -37,7 +45,7 @@ static void downloadSave(const save_entry_t* entry, const char* file, int dst)
 	char path[256];
 
 	_set_dest_path(path, dst, PSP_SAVES_PATH_USB);
-	if (dst == STORAGE_MS0_PSP)
+	if (dst == STORAGE_MC0)
 		snprintf(path, sizeof(path), PSP_SAVES_PATH_HDD);
 
 	if (mkdirs(path) != SUCCESS)
@@ -162,7 +170,7 @@ static int _copy_save_psp(const save_entry_t* save)
 static void copySaveHDD(const save_entry_t* save)
 {
 	//source save is already on HDD
-	if (save->flags & SAVE_FLAG_HDD)
+	if (save->flags & SAVE_FLAG_MEMCARD)
 	{
 		show_message("Copy operation cancelled!\nSame source and destination.");
 		return;
@@ -464,6 +472,39 @@ static void enableWebServer(dWebReqHandler_t handler, void* data, int port)
 */
 }
 
+static void importSave(const save_entry_t* save, const char* mc_path)
+{
+	int ret = 0;
+
+	LOG("Importing save game '%s'... {%s}", save->path, mc_path);
+
+	switch (save->type)
+	{
+	case FILE_TYPE_CBS:
+		ret = importCBS(save->path, mc_path);
+		break;
+
+	case FILE_TYPE_MAX:
+		ret = importMAX(save->path, mc_path);
+		break;
+
+	case FILE_TYPE_XPS:
+		ret = importXPS(save->path, mc_path);
+		break;
+
+	case FILE_TYPE_PSU:
+		ret = importPSU(save->path, mc_path);
+		break;
+
+	case FILE_TYPE_PSV:
+		ret = importPSV(save->path, mc_path);
+		break;
+
+	default:
+		break;
+	}
+}
+
 static void copyAllSavesUSB(const save_entry_t* save, int dev, int all)
 {
 	char dst_path[256];
@@ -707,17 +748,46 @@ static void resignAllSaves(const save_entry_t* save, int all)
 		show_message("All saves successfully resigned!");
 }
 
-static void import_mcr2vmp(const save_entry_t* save, const char* src, int dst_id)
+static void export_ps2save(const save_entry_t* save, int type, int dst_id)
 {
-	char mcrPath[256], vmpPath[256];
+	int ret = 0;
+	char outPath[256];
+	struct tm t;
 
-	snprintf(mcrPath, sizeof(mcrPath), PS1_SAVES_PATH_HDD "%s/%s", save->title_id, src);
-	snprintf(vmpPath, sizeof(vmpPath), "%sSCEVMC%d.VMP", save->path, dst_id);
+	_set_dest_path(outPath, dst_id, USER_PATH_USB);
+	mkdirs(outPath);
+	if (type != FILE_TYPE_PSV)
+	{
+		// build file path
+		gmtime_r(&(time_t){time(NULL)}, &t);
+		sprintf(strrchr(outPath, '/'), "/%s_%d-%02d-%02d_%02d%02d%02d.", save->title_id,
+			t.tm_year+1900, t.tm_mon+1, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec);
+	}
 
-	if (ps1_mcr2vmp(mcrPath, vmpPath))
-		show_message("Memory card successfully imported to:\n%s", vmpPath);
+	switch (type)
+	{
+	case FILE_TYPE_CBS:
+		strcat(outPath, "cbs");
+		ret = exportCBS(save->path, outPath, save->name);
+		break;
+
+	case FILE_TYPE_PSV:
+		ret = exportPSV(save->path, outPath);
+		break;
+
+	case FILE_TYPE_PSU:
+		strcat(outPath, "psu");
+		ret = exportPSU(save->path, outPath);
+		break;
+
+	default:
+		break;
+	}
+
+	if (ret)
+		show_message("Save successfully exported to:\n%s", outPath);
 	else
-		show_message("Error importing memory card:\n%s", mcrPath);
+		show_message("Error exporting save:\n%s", save->path);
 }
 
 static void export_vmp2mcr(const save_entry_t* save, const char* src_vmp)
@@ -862,9 +932,8 @@ void execCodeCommand(code_entry_t* code, const char* codecmd)
 			code->activated = 0;
 			break;
 
-		case CMD_IMP_MCR2VMP0:
-		case CMD_IMP_MCR2VMP1:
-			import_mcr2vmp(selected_entry, code->options[0].name[code->options[0].sel], codecmd[0] == CMD_IMP_MCR2VMP1);
+		case CMD_EXP_PS2SAVE:
+			export_ps2save(selected_entry, code->options[0].id, codecmd[1]);
 			code->activated = 0;
 			break;
 
@@ -881,6 +950,11 @@ void execCodeCommand(code_entry_t* code, const char* codecmd)
 		case CMD_COPY_SAVES_USB:
 		case CMD_COPY_ALL_SAVES_USB:
 			copyAllSavesUSB(selected_entry, codecmd[1], codecmd[0] == CMD_COPY_ALL_SAVES_USB);
+			code->activated = 0;
+			break;
+
+		case CMD_IMP_SAVE_MC:
+			importSave(selected_entry, codecmd[1] ? MC1_PATH : MC0_PATH);
 			code->activated = 0;
 			break;
 

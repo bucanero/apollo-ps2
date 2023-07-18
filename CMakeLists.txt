@@ -77,8 +77,9 @@ add_executable(${PROJECT_NAME}
   source/sfo.c
   source/ttf_fonts.c
   source/util.c
-  source/psppad.c
-  source/psv_ps2.c
+  source/ps2pad.c
+  source/ps2icon.c
+  source/import_ps2.c
   source/psv_resign.c
   source/zip_util.c
   source/vmp_resign.c
@@ -86,15 +87,6 @@ add_executable(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
   ${SDL2_LIBRARIES}
-#  SDL2main
-#  SDL2
-#  ps2_drivers
-#  patches
-#  pad
-#  gskit
-#  dmakit
-#  curl
-#  ps2ip
   CURL::libcurl
   apollo
   polarssl
@@ -105,6 +97,7 @@ target_link_libraries(${PROJECT_NAME}
 #  unrar
   zip
   lzma
+  mc
 #  un7zip
 #  xmp
 #  bz2

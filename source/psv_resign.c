@@ -17,11 +17,13 @@
 #include "ps2mc.h"
 //#include "shiftjis.h"
 
+#define PSV_TYPE_PS1    1
+#define PSV_TYPE_PS2    2
 #define PSV_SEED_OFFSET 0x8
 #define PSV_HASH_OFFSET 0x1C
 #define PSV_TYPE_OFFSET 0x3C
 
-const char SJIS_REPLACEMENT_TABLE[] = 
+static const char SJIS_REPLACEMENT_TABLE[] = 
     " ,.,..:;?!\"*'`*^"
     "-_????????*---/\\"
     "~||--''\"\"()()[]{"
@@ -30,15 +32,15 @@ const char SJIS_REPLACEMENT_TABLE[] =
     "$c&%#&*@S*******"
     "*******T><^_'='";
 
-const uint8_t psv_ps2key[0x10] = {
+static const uint8_t psv_ps2key[0x10] = {
 	0xFA, 0x72, 0xCE, 0xEF, 0x59, 0xB4, 0xD2, 0x98, 0x9F, 0x11, 0x19, 0x13, 0x28, 0x7F, 0x51, 0xC7
 }; 
 
-const uint8_t psv_ps1key[0x10] = {
+static const uint8_t psv_ps1key[0x10] = {
 	0xAB, 0x5A, 0xBC, 0x9F, 0xC1, 0xF4, 0x9D, 0xE6, 0xA0, 0x51, 0xDB, 0xAE, 0xFA, 0x51, 0x88, 0x59
 };
 
-const uint8_t psv_iv[0x10] = {
+static const uint8_t psv_iv[0x10] = {
 	0xB3, 0x0F, 0xFE, 0xED, 0xB7, 0xDC, 0x5E, 0xB7, 0x13, 0x3D, 0xA6, 0x0D, 0x1B, 0x6B, 0x2C, 0xDC
 };
 
@@ -72,7 +74,7 @@ static void generateHash(const uint8_t *input, uint8_t *dest, size_t sz, uint8_t
 	memset(&aes_ctx, 0, sizeof(aes_context));
 
 	LOG("Type detected: %d", type);
-	if(type == 1)
+	if(type == PSV_TYPE_PS1)
 	{	//PS1
 		LOG("PS1 Save File");
 		//idk why the normal cbc doesn't work.
@@ -90,7 +92,7 @@ static void generateHash(const uint8_t *input, uint8_t *dest, size_t sz, uint8_t
 
 		XorWithIv(salt + 0x10, work_buf);
 	} 
-	else if(type == 2)
+	else if(type == PSV_TYPE_PS2)
 	{	//PS2
 		LOG("PS2 Save File");
 		uint8_t laid_paid[16]  = {	
@@ -143,25 +145,18 @@ int psv_resign(const char *src_psv)
 		return 0;
 	}
 
-	LOG("File Size: %ld bytes\n", sz);
+	LOG("File Size: %ld bytes", sz);
 
 	if (memcmp(input, PSV_MAGIC, 4) != 0) {
 		LOG("Not a PSV file");
 		free(input);
 		return 0;
 	}
-	
-	LOG("Old signature: ");
-	for(int i = 0; i < 0x14; i++ ) {
-		LOG("%02X ", input[PSV_HASH_OFFSET + i]);
-	}
 
 	generateHash(input, input + PSV_HASH_OFFSET, sz, input[PSV_TYPE_OFFSET]);
 
 	LOG("New signature: ");
-	for(int i = 0; i < 0x14; i++ ) {
-		LOG("%02X ", input[PSV_HASH_OFFSET + i]);
-	}
+	dump_data(input + PSV_HASH_OFFSET, 0x14);
 
 	if (write_buffer(src_psv, input, sz) < 0) {
 		LOG("Failed to open output file");
@@ -193,13 +188,13 @@ void get_psv_filename(char* psvName, const char* path, const char* dirName)
 	strcat(psvName, ".PSV");
 }
 
-void write_psvheader(FILE *fp, uint32_t type)
+static void write_psvheader(FILE *fp, uint32_t type)
 {
     psv_header_t ph;
 
     memset(&ph, 0, sizeof(psv_header_t));
-    ph.headerSize = (type == 1) ? 0x14000000 : 0x2C000000;
-    ph.saveType = ES32(type);
+    ph.headerSize = (type == PSV_TYPE_PS1) ? 0x14 : 0x2C;
+    ph.saveType = type;
     memcpy(&ph.magic, PSV_MAGIC, sizeof(ph.magic));
     memcpy(&ph.salt, PSV_SALT, sizeof(ph.salt));
 
@@ -345,6 +340,135 @@ int ps1_psx2psv(const char* psxfile, const char* psv_path)
 	free(input);
 
 	psv_resign(dstName);
+
+	return 1;
+}
+
+int exportPSV(const char *save, const char* psv_path)
+{
+	FILE *psvFile;
+	sceMcTblGetDir mcDir[64] __attribute__((aligned(64)));
+	ps2_header_t ps2h;
+	ps2_FileInfo_t *ps2fi;
+	ps2_MainDirInfo_t ps2md;
+	mcIcon iconsys;
+	uint32_t dataPos, i;
+	size_t j;
+	char mcPath[100];
+	char filePath[150];
+	uint8_t *data;
+	int ret;
+
+	snprintf(filePath, sizeof(filePath), "%sicon.sys", save);
+	if (read_file(filePath, (uint8_t*) &iconsys, sizeof(mcIcon)) < 0)
+	{
+		LOG("Failed to open icon.sys");
+		return 0;
+	}
+
+	strcpy(mcPath, strchr(save, '/')+1);
+	*strrchr(mcPath, '/') = 0;
+	get_psv_filename(filePath, psv_path, mcPath);
+
+	LOG("Export %s -> %s ...", save, filePath);
+	psvFile = fopen(filePath, "wb");
+	if(!psvFile)
+		return 0;
+
+	write_psvheader(psvFile, PSV_TYPE_PS2);
+
+	memset(&ps2h, 0, sizeof(ps2_header_t));
+	memset(&ps2md, 0, sizeof(ps2_MainDirInfo_t));
+
+	mcGetDir(save[2] - '0', 0, mcPath, 0, 1, mcDir);
+	mcSync(0, NULL, &ret);
+	LOG("mcGetDir(%s) %d", mcPath, ret);
+
+	ps2md.attribute = mcDir[0].AttrFile;
+	ps2md.created = mcDir[0]._Create;
+	ps2md.modified = mcDir[0]._Modify;
+	memcpy(ps2md.filename, mcDir[0].EntryName, sizeof(ps2md.filename));
+
+	snprintf(mcPath, sizeof(mcPath), "%s*", save + 5);
+	mcGetDir(save[2] - '0', 0, mcPath, 0, countof(mcDir), mcDir);
+	mcSync(0, NULL, &ret);
+	LOG("mcGetDir(%s) %d", mcPath, ret);
+
+	// root directory
+	ps2h.numberOfFiles = ret - 2;
+	ps2md.numberOfFilesInDir = ret;
+
+	// Calculate the start offset for the file's data
+	dataPos = sizeof(psv_header_t) + sizeof(ps2_header_t) + sizeof(ps2_MainDirInfo_t) + sizeof(ps2_FileInfo_t)*ps2h.numberOfFiles;
+	ps2fi = malloc(sizeof(ps2_FileInfo_t)*ps2h.numberOfFiles);
+
+	// Build the PS2 FileInfo entries
+	for(i = 0, j = 0; i < ps2md.numberOfFilesInDir; i++)
+	{
+		if(!(mcDir[i].AttrFile & sceMcFileAttrFile))
+			continue;
+
+		ps2fi[j].attribute = mcDir[i].AttrFile;
+		ps2fi[j].positionInFile = dataPos;
+		ps2fi[j].filesize = mcDir[i].FileSizeByte;
+		ps2fi[j].created = mcDir[i]._Create;
+		ps2fi[j].modified = mcDir[i]._Modify;
+		memcpy(ps2fi[j].filename, mcDir[i].EntryName, sizeof(ps2fi[j].filename));
+
+		dataPos += mcDir[i].FileSizeByte;
+		ps2h.displaySize += mcDir[i].FileSizeByte;
+		
+		if (strcmp(ps2fi[j].filename, iconsys.view) == 0)
+		{
+			ps2h.icon1Size = ps2fi[j].filesize;
+			ps2h.icon1Pos = ps2fi[j].positionInFile;
+		}
+
+		if (strcmp(ps2fi[j].filename, iconsys.copy) == 0)
+		{
+			ps2h.icon2Size = ps2fi[j].filesize;
+			ps2h.icon2Pos = ps2fi[j].positionInFile;
+		}
+
+		if (strcmp(ps2fi[j].filename, iconsys.del) == 0)
+		{
+			ps2h.icon3Size = ps2fi[j].filesize;
+			ps2h.icon3Pos = ps2fi[j].positionInFile;
+		}
+
+		if(strcmp(ps2fi[j].filename, "icon.sys") == 0)
+		{
+			ps2h.sysSize = ps2fi[j].filesize;
+			ps2h.sysPos = ps2fi[j].positionInFile;
+		}
+		j++;
+	}
+
+	fwrite(&ps2h, sizeof(ps2_header_t), 1, psvFile);
+	fwrite(&ps2md, sizeof(ps2_MainDirInfo_t), 1, psvFile);
+	fwrite(ps2fi, sizeof(ps2_FileInfo_t), ps2h.numberOfFiles, psvFile);
+	free(ps2fi);
+
+	LOG(" %8d Total bytes", ps2h.displaySize);
+
+	// Write the file's data
+	for(i = 0; i < ps2md.numberOfFilesInDir; i++)
+	{
+		if(!(mcDir[i].AttrFile & sceMcFileAttrFile))
+			continue;
+
+		LOG("(%d/%d) Add '%s'", i+1, ps2md.numberOfFilesInDir, mcDir[i].EntryName);
+
+		snprintf(mcPath, sizeof(mcPath), "%s%s", save, mcDir[i].EntryName);
+		if (read_buffer(mcPath, &data, &j) < 0)
+			continue;
+
+		fwrite(data, 1, mcDir[i].FileSizeByte, psvFile);
+		free(data);
+	}
+
+	fclose(psvFile);
+	psv_resign(filePath);
 
 	return 1;
 }

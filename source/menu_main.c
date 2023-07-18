@@ -6,7 +6,7 @@
 #include "menu_gui.h"
 #include "libfont.h"
 #include "ttf_render.h"
-#include "psppad.h"
+#include "ps2pad.h"
 #include "common.h"
 #include "utils.h"
 
@@ -61,8 +61,6 @@ static void LoadFileTexture(const char* fname, int idx)
 
 static int ReloadUserSaves(save_list_t* save_list)
 {
-    init_loading_screen("Loading saves...");
-
 	if (save_list->list)
 	{
 		UnloadGameList(save_list->list);
@@ -71,6 +69,8 @@ static int ReloadUserSaves(save_list_t* save_list)
 
 	if (save_list->UpdatePath)
 		save_list->UpdatePath(save_list->path);
+
+	init_loading_screen("Loading saves...");
 
 	save_list->list = save_list->ReadList(save_list->path);
 	if (apollo_config.doSort == SORT_BY_NAME)
@@ -89,7 +89,7 @@ static int ReloadUserSaves(save_list_t* save_list)
 	return list_count(save_list->list);
 }
 
-static code_entry_t* LoadRawPatch()
+static code_entry_t* LoadRawPatch(void)
 {
 	char patchPath[256];
 	code_entry_t* centry = calloc(1, sizeof(code_entry_t));
@@ -101,7 +101,7 @@ static code_entry_t* LoadRawPatch()
 	return centry;
 }
 
-static code_entry_t* LoadSaveDetails()
+static code_entry_t* LoadSaveDetails(void)
 {
 	code_entry_t* centry = calloc(1, sizeof(code_entry_t));
 	centry->name = strdup(selected_entry->title_id);
@@ -183,9 +183,9 @@ static void SetMenu(int id)
 			break;
 
 		case MENU_HDD_SAVES: //HDD saves Menu
-			if (!hdd_saves.list)
-				ReloadUserSaves(&hdd_saves);
-			
+			if (!hdd_saves.list && !ReloadUserSaves(&hdd_saves))
+				return;
+
 			if (apollo_config.doAni)
 				Draw_UserCheatsMenu_Ani(&hdd_saves);
 			break;
@@ -234,11 +234,11 @@ static void SetMenu(int id)
 //				if (selected_entry->flags & SAVE_FLAG_PSV && file_exists(iconfile) != SUCCESS)
 //					http_download(selected_entry->path, "icon0.png", iconfile, 0);
 			}
-			else if (selected_entry->flags & (SAVE_FLAG_PSP | SAVE_FLAG_PS1))
-				snprintf(iconfile, sizeof(iconfile), "%sICON0.PNG", selected_entry->path);
+			else if (selected_entry->flags & (SAVE_FLAG_PS2 | SAVE_FLAG_PS1) && selected_entry->icon)
+				snprintf(iconfile, sizeof(iconfile), "%s%s", selected_entry->path, selected_entry->icon);
 
 			if (file_exists(iconfile) == SUCCESS)
-				LoadFileTexture(iconfile, icon_png_file_index);
+				LoadIconTexture(iconfile, icon_png_file_index);
 			else
 				menu_textures[icon_png_file_index].size = 0;
 
@@ -374,9 +374,10 @@ static void doSaveMenu(save_list_t * save_list)
 		if (selected_entry->type != FILE_TYPE_MENU)
 			selected_entry->flags ^= SAVE_FLAG_SELECTED;
 	}
-	else if (ps2PadGetButtonPressed(PAD_SQUARE))
+	else if (ps2PadGetButtonPressed(PAD_SQUARE) && !ReloadUserSaves(save_list))
 	{
-		ReloadUserSaves(save_list);
+		SetMenu(MENU_MAIN_SCREEN);
+		return;
 	}
 
 	Draw_UserCheatsMenu(save_list, menu_sel, 0xFF);
@@ -428,7 +429,6 @@ static void doOptionsMenu()
 	else if (ps2PadGetButtonPressed(PAD_CIRCLE))
 	{
 		save_app_settings(&apollo_config);
-		set_ttf_window(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, WIN_SKIP_LF);
 		SetMenu(MENU_MAIN_SCREEN);
 		return;
 	}

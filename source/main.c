@@ -8,12 +8,15 @@
 #include <unistd.h>
 #include <xmp.h>
 #include <zlib.h>
+#include <sifrpc.h>
+#include <loadfile.h>
+#include <libmc.h>
 
 #include "saves.h"
 #include "sfo.h"
 #include "utils.h"
 #include "common.h"
-#include "psppad.h"
+#include "ps2pad.h"
 
 //Font
 #include "libfont.h"
@@ -91,7 +94,7 @@ const char * menu_pad_help[TOTAL_MENU_IDS] = { NULL,												//Main
 */
 save_list_t hdd_saves = {
     .icon_id = cat_hdd_png_index,
-    .title = "Internal Saves",
+    .title = "MemCard Saves",
     .list = NULL,
     .path = "",
     .ReadList = &ReadUserList,
@@ -339,7 +342,7 @@ static int LoadSounds(void* data)
 
 void update_usb_path(char* path)
 {
-	sprintf(path, USB_PATH PSP_SAVES_PATH_USB, menu_options[3].options[apollo_config.storage]);
+	sprintf(path, "%s", menu_options[3].options[apollo_config.storage]);
 	if (dir_exists(path) == SUCCESS)
 		return;
 
@@ -348,7 +351,23 @@ void update_usb_path(char* path)
 
 void update_hdd_path(char* path)
 {
-	strcpy(path, MC0_PATH);
+	int sel;
+	const char* memcard_opt[] = {"Memory Card 1", "Memory Card 2", NULL};
+
+	path[0] = 0;
+	if (dir_exists(MC0_PATH) == SUCCESS && dir_exists(MC1_PATH) == SUCCESS)
+	{
+		if ((sel = show_multi_dialog(memcard_opt, "Select Memory Card")) < 0)
+			return;
+
+		strcpy(path, sel ? MC1_PATH : MC0_PATH);
+		return;
+	}
+	else if (dir_exists(MC0_PATH) == SUCCESS)
+		strcpy(path, MC0_PATH);
+
+	else if (dir_exists(MC1_PATH) == SUCCESS)
+		strcpy(path, MC1_PATH);
 }
 
 void update_db_path(char* path)
@@ -356,7 +375,7 @@ void update_db_path(char* path)
 	strcpy(path, apollo_config.save_db);
 }
 
-static void registerSpecialChars()
+static void registerSpecialChars(void)
 {
 	// Register save tags
 	RegisterSpecialCharacter(CHAR_TAG_PS1, 2, 1.5, &menu_textures[tag_ps1_png_index]);
@@ -390,39 +409,37 @@ static void terminate()
 //	sceAudioChRelease(audio);
 }
 
-static int initInternal()
-{/*
+static int initInternal(void)
+{
 	// load common modules
-	int ret = sceSysmoduleLoadModule(SCE_SYSMODULE_SQLITE);
-	if (ret != SUCCESS) {
-		LOG("load module failed: SQLITE (0x%08x)\n", ret);
-		return 0;
+	int ret;
+
+	// Initialise
+	SifInitRpc(0);
+
+	ret = SifLoadModule("rom0:XSIO2MAN", 0, NULL);
+	if (ret < 0) {
+		LOG("Failed to load module: SIO2MAN");
+		return(0);
 	}
 
-	ret = sceSysmoduleLoadModule(SCE_SYSMODULE_NOTIFICATION_UTIL);
-	if (ret != SUCCESS) {
-		LOG("load module failed: NOTIFICATION (0x%08x)\n", ret);
-		return 0;
+	ret = SifLoadModule("rom0:XMCMAN", 0, NULL);
+	if (ret < 0) {
+		LOG("Failed to load module: MCMAN");
+		return(0);
 	}
 
-	ret = sceSysmoduleLoadModule(SCE_SYSMODULE_APPUTIL);
-	if (ret != SUCCESS) {
-		LOG("load module failed: APPUTIL (0x%08x)\n", ret);
-		return 0;
+	ret = SifLoadModule("rom0:XMCSERV", 0, NULL);
+	if (ret < 0) {
+		LOG("Failed to load module: MCSERV");
+		return(0);
 	}
 
-	SceAppUtilInitParam initParam;
-	SceAppUtilBootParam bootParam;
-
-	memset(&initParam, 0, sizeof(SceAppUtilInitParam));
-	memset(&bootParam, 0, sizeof(SceAppUtilBootParam));
-
-	/* Initialize the application utility library *
-	ret = sceAppUtilInit(&initParam, &bootParam);
-	if (ret == SUCCESS) {
-		sceAppUtilSystemParamGetString(SCE_SYSTEM_PARAM_ID_USERNAME, user_id_str, SCE_SYSTEM_PARAM_USERNAME_MAXSIZE);
+	if(mcInit(MC_TYPE_XMC) < 0) {
+		LOG("Failed to initialise memcard server!");
+		return(0);
 	}
-*/
+
 	return 1;
 }
 
@@ -551,13 +568,11 @@ int main(int argc, char *argv[])
 		LOG("Failed to load menu textures!");
 		return (-1);
 	}
+	registerSpecialChars();
+	initMenuOptions();
 
 	// Load application settings
-	if (!load_app_settings(&apollo_config) &&
-		show_dialog(DIALOG_TYPE_YESNO, "Install the Save-game Key dumper plugin?"))
-	{
-		LOG("Installing plugin");
-	}
+	load_app_settings(&apollo_config);
 
 	// Unpack application data on first run
 	if (file_exists(APOLLO_LOCAL_CACHE "appdata.zip") == SUCCESS)
@@ -577,9 +592,6 @@ int main(int argc, char *argv[])
 	// Setup font
 	SetExtraSpace(-10);
 	SetCurrentFont(font_adonais_regular);
-
-	registerSpecialChars();
-	initMenuOptions();
 
 	// Splash screen logo (fade-out)
 	drawSplashLogo(-1);
@@ -619,7 +631,7 @@ int main(int argc, char *argv[])
 			}
 			
 			SetFontSize(APP_FONT_SIZE_DESCRIPTION);
-			SetCurrentFont(0);
+			SetCurrentFont(font_adonais_regular);
 			SetFontAlign(FONT_ALIGN_SCREEN_CENTER);
 			SetFontColor(APP_FONT_COLOR | alpha, 0);
 			DrawString(0, SCREEN_HEIGHT - 22, (char *)menu_pad_help[menu_id]);

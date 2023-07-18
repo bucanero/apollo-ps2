@@ -10,7 +10,7 @@
 #include <sys/time.h>
 #include <dbglogger.h>
 #include <SDL2/SDL.h>
-#include "psppad.h"
+#include "ps2pad.h"
 
 #define LOG dbglogger_log
 

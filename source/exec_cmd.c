@@ -3,7 +3,6 @@
 #include <dirent.h>
 #include <time.h>
 #include <polarssl/md5.h>
-//#include <pspnet_apctl.h>
 
 #include "saves.h"
 #include "menu.h"
@@ -477,6 +476,7 @@ static void importSave(const save_entry_t* save, const char* mc_path)
 	int ret = 0;
 
 	LOG("Importing save game '%s'... {%s}", save->path, mc_path);
+	init_progress_bar("Importing save...");
 
 	switch (save->type)
 	{
@@ -503,6 +503,13 @@ static void importSave(const save_entry_t* save, const char* mc_path)
 	default:
 		break;
 	}
+
+	end_progress_bar();
+
+	if (ret)
+		show_message("Save successfully imported to %s", mc_path);
+	else
+		show_message("Error: save couldn't be imported");
 }
 
 static void copyAllSavesUSB(const save_entry_t* save, int dev, int all)
@@ -763,6 +770,7 @@ static void export_ps2save(const save_entry_t* save, int type, int dst_id)
 		sprintf(strrchr(outPath, '/'), "/%s_%d-%02d-%02d_%02d%02d%02d.", save->title_id,
 			t.tm_year+1900, t.tm_mon+1, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec);
 	}
+	init_progress_bar("Exporting save...");
 
 	switch (type)
 	{
@@ -783,6 +791,7 @@ static void export_ps2save(const save_entry_t* save, int type, int dst_id)
 	default:
 		break;
 	}
+	end_progress_bar();
 
 	if (ret)
 		show_message("Save successfully exported to:\n%s", outPath);

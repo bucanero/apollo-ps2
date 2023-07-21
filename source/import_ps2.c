@@ -12,6 +12,7 @@
 #include "utils.h"
 #include "lzari.h"
 #include "ps2mc.h"
+#include "saves.h"
 
 #define  MAX_HEADER_MAGIC   "Ps2PowerSave"
 #define  CBS_HEADER_MAGIC   "CFU\0"
@@ -172,6 +173,7 @@ int importMAX(const char *save, const char* mc_path)
         entry = (maxEntry_t*) &decompressed[offset];
         offset += sizeof(maxEntry_t);
         LOG(" %8d bytes  : %s", entry->length, entry->name);
+        update_progress_bar(offset, header.decompressedSize, entry->name);
 
         snprintf(dstName, sizeof(dstName), "%s%s/%s", mc_path, header.dirName, entry->name);
         if (!(out = fopen(dstName, "wb")))
@@ -219,6 +221,7 @@ int importPSU(const char *save, const char* mc_path)
         fread(data, 1, entry.length, psuFile);
 
         LOG(" %8d bytes  : %s", entry.length, entry.name);
+        update_progress_bar(dirEntry.length - numFiles, dirEntry.length, entry.name);
 
         snprintf(dstName, sizeof(dstName), "%s%s/%s", mc_path, dirEntry.name, entry.name);
         if(!(outFile = fopen(dstName, "wb")))
@@ -320,6 +323,7 @@ int importCBS(const char *save, const char *mc_path)
         memcpy(&entryHeader, &decompressed[offset], sizeof(cbsEntry_t));
         offset += sizeof(cbsEntry_t);
         LOG(" %8d bytes  : %s", entryHeader.length, entryHeader.name);
+        update_progress_bar(offset + sizeof(cbsEntry_t), decompressedSize, entryHeader.name);
 
         snprintf(dstName, sizeof(dstName), "%s%s/%s", mc_path, header->name, entryHeader.name);
         if (!(dstFile = fopen(dstName, "wb")))
@@ -407,6 +411,7 @@ int importXPS(const char *save, const char *mc_path)
         fread(data, 1, entry.length, xpsFile);
 
         LOG(" %8d bytes  : %s\n", entry.length, entry.name);
+        update_progress_bar(dirEntry.length - numFiles, dirEntry.length, entry.name);
 
         snprintf(dstName, sizeof(dstName), "%s/%s", tmp, entry.name);
         if(!(outFile = fopen(dstName, "wb")))
@@ -474,6 +479,7 @@ int importPSV(const char *save, const char* mc_path)
         fread(data, 1, ps2fi.filesize, psvFile);
 
         LOG(" %8d bytes  : %s", ps2fi.filesize, ps2fi.filename);
+        update_progress_bar(ps2md.numberOfFilesInDir - numFiles, ps2md.numberOfFilesInDir, ps2fi.filename);
 
         snprintf(dstName, sizeof(dstName), "%s%s/%s", mc_path, ps2md.filename, ps2fi.filename);
         if(!(outFile = fopen(dstName, "wb")))
@@ -568,6 +574,7 @@ int exportPSU(const char *save, const char* psu_path)
             continue;
 
         LOG("(%d/%d) Add '%s'", i+1, ret, mcDir[i].EntryName);
+        update_progress_bar(i+1, ret, mcDir[i].EntryName);
         setMcFsEntryValues(&mcEntry, &mcDir[i]);
 
         snprintf(filePath, sizeof(filePath), "%s%s", save, mcEntry.name);
@@ -645,6 +652,7 @@ int exportCBS(const char *save, const char* cbs_path, const char* title)
             continue;
 
         LOG("(%d/%d) Add '%s'", i+1, ret, mcDir[i].EntryName);
+        update_progress_bar(i+1, ret, mcDir[i].EntryName);
 
         entryHeader.created = mcDir[i]._Create;
         entryHeader.modified = mcDir[i]._Modify;

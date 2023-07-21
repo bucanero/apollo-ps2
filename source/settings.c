@@ -195,8 +195,8 @@ void owner_callback(int sel)
 
 void log_callback(int sel)
 {
-	dbglogger_init_mode(FILE_LOGGER, APOLLO_PATH "apollo.log", 1);
-	show_message("Debug Logging Enabled!\n\n" APOLLO_PATH "apollo.log");
+	dbglogger_init_mode(FILE_LOGGER, USB_PATH "apollo.log", 1);
+	show_message("Debug Logging Enabled!\n\n" USB_PATH "apollo.log");
 }
 
 int save_app_settings(app_config_t* config)
@@ -214,7 +214,6 @@ int save_app_settings(app_config_t* config)
 	LOG("Saving Settings...");
 	if (file_exists(filePath) != SUCCESS)
 	{
-		LOG("X");
 		uLong destLen = size_icon_sys;
 		Bytef *dest = malloc(destLen);
 
@@ -265,14 +264,6 @@ int load_app_settings(app_config_t* config)
 		save_app_settings(config);
 		return 0;
 	}
-/*
-	if (!runSaveDialog(PSP_UTILITY_SAVEDATA_AUTOLOAD, config))
-	{
-		LOG("Load ERROR");
-		memcpy(config, &tmp_data, sizeof(app_config_t));
-		return 0;
-	}
-*/
 
 	return 1;
 }

@@ -169,8 +169,6 @@ static void rawImageTexture(const rawImage_t *img, png_texture *tex)
 	tex->width = img->width;
 	tex->height = img->height;
 	tex->texture = SDL_CreateTextureFromSurface(renderer, surface);
-
-	SDL_SetTextureScaleMode(tex->texture, SDL_ScaleModeBest);
 	SDL_FreeSurface(surface);
 }
 
@@ -253,7 +251,7 @@ static void _drawListBackground(int off, int icon)
 
 			if (menu_textures[icon_png_file_index].size)
 			{
-				int off = (menu_textures[icon_png_file_index].width > 128) ? 20 : -40;
+				int off = (menu_textures[icon_png_file_index].width == 128) ? 20 : -40;
 				DrawTexture(&menu_textures[help_png_index], SCREEN_WIDTH - 162 - off, help_png_y + 2, 0, menu_textures[icon_png_file_index].width + 4, menu_textures[icon_png_file_index].height + 4, 0xFFFFFF00 | 0xFF);
 				DrawTexture(&menu_textures[icon_png_file_index], SCREEN_WIDTH - 160 - off, help_png_y + 4, 0, menu_textures[icon_png_file_index].width, menu_textures[icon_png_file_index].height, 0xFFFFFF00 | 0xFF);
 			}
@@ -443,7 +441,7 @@ static int loading_screen_thread(void* user_data)
 		DrawTextureCentered(&menu_textures[circle_loading_bg_png_index], SCREEN_WIDTH/2, SCREEN_HEIGHT/2, 0, 128, 128, 0xFFFFFFFF);
 		DrawTextureRotated(&menu_textures[circle_loading_seek_png_index], SCREEN_WIDTH/2, SCREEN_HEIGHT/2, 0, 128, 128, 0xFFFFFFFF, angle);
 
-		DrawStringMono(0, SCREEN_HEIGHT - 60, (char*) user_data);		
+		DrawStringMono(0, SCREEN_HEIGHT - 120, (char*) user_data);		
 
 		SDL_RenderPresent(renderer);
 	}

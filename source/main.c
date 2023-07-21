@@ -22,7 +22,7 @@
 #include "libfont.h"
 #include "ttf_render.h"
 #include "font_adonais.h"
-#include "font-6x10.h"
+#include "font-8x16.h"
 #include "zfont.h"
 
 //Menus
@@ -179,7 +179,7 @@ static int LoadTextures_Menu()
 
 	ResetFont();
 	free_mem = (u32 *) AddFontFromBitmapArray((u8 *) data_font_Adonais, (u8 *) texture_mem, 0x20, 0x7e, 32, 31, 1, BIT7_FIRST_PIXEL);
-	free_mem = (u32 *) AddFontFromBitmapArray((u8 *) console_font_6x10, (u8 *) free_mem, 0, 0xFF, 6, 10, 1, BIT7_FIRST_PIXEL);
+	free_mem = (u32 *) AddFontFromBitmapArray((u8 *) console_font_8x16, (u8 *) free_mem, 0, 0xFF, 8, 16, 1, BIT7_FIRST_PIXEL);
 
 	uncompress(font_ttf, &size_font_ttf, (const Bytef *) zfont, sizeof(zfont));
 	if (TTFLoadFont(0, NULL, font_ttf, size_font_ttf) != SUCCESS)
@@ -542,7 +542,7 @@ int main(int argc, char *argv[])
 
 	// Create a window context
 	LOG("Creating a window");
-	window = SDL_CreateWindow("main", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+	window = SDL_CreateWindow("main", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_FULLSCREEN);
 	if (!window) {
 		LOG("SDL_CreateWindow: %s", SDL_GetError());
 		return (-1);
@@ -634,7 +634,7 @@ int main(int argc, char *argv[])
 			SetCurrentFont(font_adonais_regular);
 			SetFontAlign(FONT_ALIGN_SCREEN_CENTER);
 			SetFontColor(APP_FONT_COLOR | alpha, 0);
-			DrawString(0, SCREEN_HEIGHT - 22, (char *)menu_pad_help[menu_id]);
+			DrawString(0, SCREEN_HEIGHT - 40, (char *)menu_pad_help[menu_id]);
 			SetFontAlign(FONT_ALIGN_LEFT);
 		}
 

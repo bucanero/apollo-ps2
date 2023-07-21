@@ -7,8 +7,8 @@
 #include "ps2pad.h"
 
 #define PSP_UTILITY_OSK_MAX_TEXT_LENGTH			(512)
-#define DIALOG_WINDOW_WIDTH						(300)
-#define DIALOG_WINDOW_HEIGHT					(200)
+#define DIALOG_WINDOW_WIDTH						(500)
+#define DIALOG_WINDOW_HEIGHT					(250)
 
 int init_loading_screen(const char* msg);
 void stop_loading_screen(void);
@@ -115,10 +115,10 @@ int show_multi_dialog(const char** options, const char * msg)
 void init_progress_bar(const char* msg)
 {
     SetExtraSpace(0);
-    SetCurrentFont(font_console_6x10);
+    SetCurrentFont(font_console_8x16);
     strncpy(progress_bar, msg, sizeof(progress_bar) - 1);
     init_loading_screen(progress_bar);
-    SetFontSize(6, 10);
+    SetFontSize(8, 16);
 }
 
 void end_progress_bar(void)

@@ -131,7 +131,7 @@ int copy_file(const char* input, const char* output)
 
     if (!buffer)
     {
-	fclose(fd);
+        fclose(fd);
         fclose(fd2);
         return FAILED;
     }

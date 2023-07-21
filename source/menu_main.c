@@ -511,14 +511,14 @@ static void doHexEditor(void)
 	}
 	else if (ps2PadGetButtonHold(PAD_L1))
 	{
-		hex_data.pos -= 0x120;
+		hex_data.pos -= 0x140;
 		if (hex_data.pos < 0)
 			hex_data.pos = 0;
 	}
 	else if (ps2PadGetButtonHold(PAD_R1))
 	{
-		if (hex_data.pos + 0x120 < hex_data.size)
-			hex_data.pos += 0x120;
+		if (hex_data.pos + 0x140 < hex_data.size)
+			hex_data.pos += 0x140;
 	}
 	else if (ps2PadGetButtonPressed(PAD_L2))
 		hex_data.pos = 0;
@@ -553,7 +553,7 @@ static void doHexEditor(void)
 			hex_data.data[hex_data.pos] -= (0x10 >> hex_data.low_nibble * 4);
 	}
 
-	if ((hex_data.pos < hex_data.start) || (hex_data.pos >= hex_data.start + 0x120))
+	if ((hex_data.pos < hex_data.start) || (hex_data.pos >= hex_data.start + 0x140))
 		hex_data.start = (hex_data.pos) & ~15;
 
 	Draw_HexEditor(&hex_data);

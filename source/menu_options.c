@@ -9,11 +9,10 @@
 
 static void _draw_OptionsMenu(u8 alpha)
 {
-	int c = 0;
+	int c, ind = 0, y_off = 60;
 	char *option_name;
 
     SetFontSize(APP_FONT_SIZE_SELECTION);
-    int ind = 0, y_off = 30;
     while ((option_name = menu_options[ind].name))
     {
         if (option_name[0] == '\n')

@@ -93,14 +93,12 @@ target_link_libraries(${PROJECT_NAME}
   dbglogger
   freetype
   png
-#  pthread
 #  unrar
   zip
   lzma
   mc
 #  un7zip
 #  xmp
-#  bz2
   z
 )
 
@@ -122,8 +120,8 @@ add_custom_target(copy
   DEPENDS ${PROJECT_NAME}
 )
 
-add_custom_target(send
-  COMMAND @echo "Uploading to ftp://$$PSPIP:1337/ms0:/PSP/GAME/APOLLO/EBOOT.PBP ..."
-  COMMAND @curl -T EBOOT.PBP ftp://$$PSPIP:1337/ms0:/PSP/GAME/APOLLO/EBOOT.PBP
+add_custom_target(release
+  COMMAND @echo "Packing release ELF ..."
+  COMMAND @${PS2DEV}/bin/ps2-packer-lite ${PROJECT_NAME} APOLLO.ELF
   DEPENDS ${PROJECT_NAME}
 )

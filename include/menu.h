@@ -122,32 +122,32 @@ enum texture_index
 
 //Fonts
 #define font_adonais_regular				0
-#define font_console_6x10					1
+#define font_console_8x16					1
 
 #define APP_FONT_COLOR						0xFFFFFF00
 #define APP_FONT_TAG_COLOR					0xFFFFFF00
 #define APP_FONT_MENU_COLOR					0x00000000
 #define APP_FONT_TITLE_COLOR				0xFFFFFF00
-#define APP_FONT_SIZE_TITLE					22, 22
-#define APP_FONT_SIZE_SUBTITLE				18, 18
+#define APP_FONT_SIZE_TITLE					32, 32
+#define APP_FONT_SIZE_SUBTITLE				28, 28
 #define APP_FONT_SIZE_SUBTEXT				16, 16
 #define APP_FONT_SIZE_ABOUT					25, 23
-#define APP_FONT_SIZE_SELECTION				16, 16
-#define APP_FONT_SIZE_DESCRIPTION			16, 14
+#define APP_FONT_SIZE_SELECTION				21, 21
+#define APP_FONT_SIZE_DESCRIPTION			24, 21
 #define APP_FONT_SIZE_MENU					25, 24
-#define APP_FONT_SIZE_JARS					24, 23
-#define APP_LINE_OFFSET						18
+#define APP_FONT_SIZE_JARS					27, 26
+#define APP_LINE_OFFSET						23
 
-#define SCREEN_WIDTH						480
-#define SCREEN_HEIGHT						272
+#define SCREEN_WIDTH						640
+#define SCREEN_HEIGHT						448
 
 //Screen adjustment (PS2 Res/Assets)
-#define SCREEN_W_ADJ 						480/1920
-#define SCREEN_H_ADJ 						272/1080
+#define SCREEN_W_ADJ 						640/1920
+#define SCREEN_H_ADJ 						360/1080
 
 //Asset sizes
-#define	logo_png_w							478 * SCREEN_W_ADJ
-#define	logo_png_h							468 * SCREEN_H_ADJ
+#define	logo_png_w							179 //478 * SCREEN_W_ADJ
+#define	logo_png_h							175 //468 * SCREEN_H_ADJ
 #define bg_water_png_w						1920 * SCREEN_W_ADJ
 #define bg_water_png_h						230 * SCREEN_H_ADJ
 
@@ -156,8 +156,8 @@ enum texture_index
 
 #define help_png_x							40
 #define help_png_y							175 * SCREEN_H_ADJ
-#define help_png_w							420
-#define help_png_h							200
+#define help_png_w							570
+#define help_png_h							350
 
 //Asset positions
 #define bg_water_png_x						0

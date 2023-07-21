@@ -15,7 +15,7 @@
 #include "types.h"
 #include "utils.h"
 #include "ps2mc.h"
-//#include "shiftjis.h"
+#include "saves.h"
 
 #define PSV_TYPE_PS1    1
 #define PSV_TYPE_PS2    2
@@ -458,6 +458,7 @@ int exportPSV(const char *save, const char* psv_path)
 			continue;
 
 		LOG("(%d/%d) Add '%s'", i+1, ps2md.numberOfFilesInDir, mcDir[i].EntryName);
+		update_progress_bar(i+1, ps2md.numberOfFilesInDir, mcDir[i].EntryName);
 
 		snprintf(mcPath, sizeof(mcPath), "%s%s", save, mcDir[i].EntryName);
 		if (read_buffer(mcPath, &data, &j) < 0)

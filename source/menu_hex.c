@@ -7,24 +7,24 @@
 #include "menu_gui.h"
 #include "libfont.h"
 
-#define MAX_LINES   18
-#define FNT_HEIGHT  10
+#define MAX_LINES   20
+#define FNT_HEIGHT  16
 
 static void _draw_HexEditor(const hexedit_data_t* hex, u8 alpha)
 {
     char msgout[64];
     char ascii[32];
-    int i, y_off = 56;
+    int i, y_off = 76;
 
-    SetCurrentFont(font_console_6x10);
-    SetFontSize(6, FNT_HEIGHT);
+    SetCurrentFont(font_console_8x16);
+    SetFontSize(8, FNT_HEIGHT);
     SetFontColor(0x00000000 | alpha, 0);
 
     memset(msgout, 32, sizeof(msgout));
     sprintf(msgout + (hex->pos % 16)*3 + hex->low_nibble, "%c", 0xDB);
     DrawFormatStringMono(MENU_ICON_OFF -20, y_off - FNT_HEIGHT, "OFFSET \xB3 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F  \xB3 0123456789ABCDEF");
     DrawFormatStringMono(MENU_ICON_OFF -20, y_off + (hex->pos - hex->start)/16*FNT_HEIGHT, "         %s", msgout);
-    DrawTexture(&menu_textures[mark_line_png_index], 0, y_off + (hex->pos - hex->start)/16*FNT_HEIGHT, 0, SCREEN_WIDTH, menu_textures[mark_line_png_index].height/2, 0xFFFFFF00 | alpha);
+    DrawTexture(&menu_textures[mark_line_png_index], 0, y_off + (hex->pos - hex->start)/16*FNT_HEIGHT, 0, SCREEN_WIDTH, FNT_HEIGHT, 0xFFFFFF00 | alpha);
 
     SetFontColor(APP_FONT_COLOR | alpha, 0);
     for (i = hex->start; i < hex->size && (i - hex->start) < (MAX_LINES*16); i++)

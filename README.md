@@ -47,7 +47,7 @@ On first run, the application will detect and setup the required user settings.
 
 | PS2 | Folder |
 |-----|--------|
-| **External saves** | your saves must be stored on `<mass/host>:/PS2/SAVEDATA/`. |
+| **External saves** | your saves must be stored on `<mass/host/cdfs>:/PS2/SAVEDATA/`. |
 | **Memory Card saves** | save-games will be scanned from `mc0:/` and `mc1:/`. |
 
 # Usage
@@ -123,5 +123,5 @@ the Free Software Foundation, either version 3 of the License, or
 [app_license]: https://github.com/bucanero/apollo-ps2/blob/main/LICENSE
 [changelog]: https://github.com/bucanero/apollo-ps2/blob/main/CHANGELOG.md
 [img_downloads]: https://img.shields.io/github/downloads/bucanero/apollo-ps2/total.svg?maxAge=3600
-[img_latest]: https://img.shields.io/github/release/bucanero/apollo-psp.svg?maxAge=3600
-[img_license]: https://img.shields.io/github/license/bucanero/apollo-psp.svg?maxAge=2592000
+[img_latest]: https://img.shields.io/github/release/bucanero/apollo-ps2.svg?maxAge=3600
+[img_license]: https://img.shields.io/github/license/bucanero/apollo-ps2.svg?maxAge=2592000

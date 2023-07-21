@@ -342,13 +342,13 @@ void DrawGameList(int selIndex, list_t * games, u8 alpha)
 			{
 				char * nBuffer = strdup(item->name);
 				int game_name_width = 0;
-				while ((game_name_width = WidthFromStr(nBuffer)) > 0 && (MENU_ICON_OFF + (MENU_TITLE_OFF * 1) + game_name_width) > ((SCREEN_WIDTH - 30) - (MENU_ICON_OFF * 4)))
+				while ((game_name_width = WidthFromStr(nBuffer)) > 0 && (MENU_ICON_OFF + (MENU_TITLE_OFF * 1) + game_name_width) > ((SCREEN_WIDTH - 30) - (MENU_ICON_OFF * 5)))
 					nBuffer[strlen(nBuffer) - 1] = '\0';
 				DrawString(MENU_ICON_OFF + (MENU_TITLE_OFF * 1), game_y, nBuffer);
 				free(nBuffer);
 			}
 			if (item->title_id)
-				DrawString((SCREEN_WIDTH - 20) - (MENU_ICON_OFF * 4), game_y, item->title_id);
+				DrawString((SCREEN_WIDTH - 20) - (MENU_ICON_OFF * 5), game_y, item->title_id);
 
 			if (item->flags & SAVE_FLAG_SELECTED)
 				DrawString(MENU_ICON_OFF + MENU_TITLE_OFF - 30, game_y, UTF8_CHAR_STAR);

@@ -15,8 +15,8 @@
 #define USB_PATH                "mass:/"
 #define USER_PATH_USB           "PS2/SAVEDATA/"
 
-#define PS2_SAVES_PATH_USB      "PS3/EXPORT/PS2SD/"
-#define PSP_SAVES_PATH_USB      "APOLLO/SAVEDATA/"
+#define PS1_SAVES_PATH_USB      "PS1/SAVEDATA/"
+#define PS2_SAVES_PATH_USB      "PS2/SAVEDATA/"
 
 #define PS1_SAVES_PATH_HDD      APOLLO_PATH "PS1/"
 #define PSP_SAVES_PATH_HDD      USB_PATH USER_PATH_USB
@@ -109,7 +109,7 @@ enum cmd_code_enum
 #define SAVE_FLAG_PS1           8
 #define SAVE_FLAG_PS2           16
 #define SAVE_FLAG_PSP           32
-#define SAVE_FLAG_ISO           64
+#define SAVE_FLAG_PACKED        64
 #define SAVE_FLAG_LOCKED        128
 #define SAVE_FLAG_ONLINE        256
 
@@ -152,7 +152,7 @@ enum char_flag_enum
     CHAR_TAG_TRANSFER,
     CHAR_TAG_ZIP,
     CHAR_RES_CR,
-    CHAR_TAG_PCE,
+    CHAR_TAG_PACK,
     CHAR_TAG_WARNING,
     CHAR_BTN_X,
     CHAR_BTN_S,

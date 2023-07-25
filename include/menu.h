@@ -72,7 +72,7 @@ enum texture_index
 	cat_warning_png_index,
 	tag_lock_png_index,
 	tag_own_png_index,
-	tag_pce_png_index,
+	tag_pack_png_index,
 	tag_ps1_png_index,
 	tag_ps2_png_index,
 	tag_psp_png_index,

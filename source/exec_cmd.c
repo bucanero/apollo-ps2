@@ -43,7 +43,7 @@ static void downloadSave(const save_entry_t* entry, const char* file, int dst)
 {
 	char path[256];
 
-	_set_dest_path(path, dst, PSP_SAVES_PATH_USB);
+	_set_dest_path(path, dst, PS2_SAVES_PATH_USB);
 	if (dst == STORAGE_MC0)
 		snprintf(path, sizeof(path), PSP_SAVES_PATH_HDD);
 
@@ -130,7 +130,7 @@ static void copySave(const save_entry_t* save, int dev)
 	char* copy_path;
 	char exp_path[256];
 
-	_set_dest_path(exp_path, dev, PSP_SAVES_PATH_USB);
+	_set_dest_path(exp_path, dev, PS2_SAVES_PATH_USB);
 	if (strncmp(save->path, exp_path, strlen(exp_path)) == 0)
 	{
 		show_message("Copy operation cancelled!\nSame source and destination.");
@@ -156,17 +156,18 @@ static void copySave(const save_entry_t* save, int dev)
 	show_message("Files successfully copied to:\n%s", exp_path);
 }
 
-static int _copy_save_psp(const save_entry_t* save)
+static int _copy_save_memcard(const save_entry_t* save, int dev)
 {
 	char copy_path[256];
 
-	snprintf(copy_path, sizeof(copy_path), PSP_SAVES_PATH_HDD "%s/", save->dir_name);
+	_set_dest_path(copy_path, dev, save->dir_name);
+	strcat(copy_path, "/");
 
 	LOG("Copying <%s> to %s...", save->path, copy_path);
 	return (copy_directory(save->path, save->path, copy_path) == SUCCESS);
 }
 
-static void copySaveHDD(const save_entry_t* save)
+static void copySaveMC(const save_entry_t* save, int dev)
 {
 	//source save is already on HDD
 	if (save->flags & SAVE_FLAG_MEMCARD)
@@ -176,16 +177,16 @@ static void copySaveHDD(const save_entry_t* save)
 	}
 
 	init_loading_screen("Copying save game...");
-	int ret = _copy_save_psp(save);
+	int ret = _copy_save_memcard(save, dev);
 	stop_loading_screen();
 
 	if (ret)
-		show_message("Files successfully copied to:\n%s%s", PSP_SAVES_PATH_HDD, save->dir_name);
+		show_message("Files successfully copied to:\nmc%d:/%s", dev, save->dir_name);
 	else
-		show_message("Error! Can't copy Save-game folder:\n%s%s", PSP_SAVES_PATH_HDD, save->dir_name);
+		show_message("Error! Can't copy Save-game folder:\n%s", save->path);
 }
 
-static void copyAllSavesHDD(const save_entry_t* save, int all)
+static void copyAllSavesMC(const save_entry_t* save, int dev, int all)
 {
 	int done = 0, err_count = 0;
 	list_node_t *node;
@@ -195,7 +196,7 @@ static void copyAllSavesHDD(const save_entry_t* save, int all)
 
 	init_progress_bar("Copying all saves...");
 
-	LOG("Copying all saves from '%s' to HDD...", save->path);
+	LOG("Copying all saves from '%s' to mc%d:/...", save->path, dev);
 	for (node = list_head(list); (item = list_get(node)); node = list_next(node))
 	{
 		update_progress_bar(progress++, list_count(list), item->name);
@@ -203,12 +204,12 @@ static void copyAllSavesHDD(const save_entry_t* save, int all)
 			continue;
 
 		if ((item->flags & SAVE_FLAG_PS1) || item->type == FILE_TYPE_PS2)
-			(_copy_save_psp(item) ? done++ : err_count++);
+			(_copy_save_memcard(item, dev) ? done++ : err_count++);
 	}
 
 	end_progress_bar();
 
-	show_message("%d/%d Saves copied to Memory Stick\n" PSP_SAVES_PATH_HDD, done, done+err_count);
+	show_message("%d/%d Saves copied to Memory Card %d", done, done+err_count, dev+1);
 }
 
 static void extractArchive(const char* file_path)
@@ -522,7 +523,7 @@ static void copyAllSavesUSB(const save_entry_t* save, int dev, int all)
 	save_entry_t *item;
 	list_t *list = ((void**)save->dir_name)[0];
 
-	_set_dest_path(dst_path, dev, PSP_SAVES_PATH_USB);
+	_set_dest_path(dst_path, dev, PS2_SAVES_PATH_USB);
 	if (!list || mkdirs(dst_path) != SUCCESS)
 	{
 		show_message("Error! Folder is not available:\n%s", dst_path);
@@ -937,7 +938,7 @@ void execCodeCommand(code_entry_t* code, const char* codecmd)
 			break;
 
 		case CMD_COPY_SAVE_HDD:
-			copySaveHDD(selected_entry);
+			copySaveMC(selected_entry, codecmd[1]);
 			code->activated = 0;
 			break;
 
@@ -980,7 +981,7 @@ void execCodeCommand(code_entry_t* code, const char* codecmd)
 
 		case CMD_COPY_SAVES_HDD:
 		case CMD_COPY_ALL_SAVES_HDD:
-			copyAllSavesHDD(selected_entry, codecmd[0] == CMD_COPY_ALL_SAVES_HDD);
+			copyAllSavesMC(selected_entry, codecmd[1], codecmd[0] == CMD_COPY_ALL_SAVES_HDD);
 			code->activated = 0;
 			break;
 

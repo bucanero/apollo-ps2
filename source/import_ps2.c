@@ -18,8 +18,6 @@
 #define  CBS_HEADER_MAGIC   "CFU\0"
 #define  XPS_HEADER_MAGIC   "SharkPortSave\0\0\0"
 
-#define  xps_mode_swap(M)   ((M & 0x00FF) << 8) + ((M & 0xFF00) >> 8)
-
 // flag value used for mcSetFileInfo at MC file restoration
 #define  MC_SFI             0xFEED
 

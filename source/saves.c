@@ -489,12 +489,12 @@ list_t * ReadBackupList(const char* userPath)
 	item->path = strdup(menu_options[3].options[apollo_config.storage]);
 	item->type = FILE_TYPE_ZIP;
 	list_append(list, item);
-
+/*
 	item = _createSaveEntry(0, CHAR_ICON_NET " Network Tools");
 	item->path = strdup(MC0_PATH);
 	item->type = FILE_TYPE_NET;
 	list_append(list, item);
-
+*/
 	return list;
 }
 
@@ -793,13 +793,6 @@ static void read_ps2_savegames(const char* userPath, list_t *list, int flags)
 		if(item->title_id[4] == '-')
 			memmove(&item->title_id[4], &item->title_id[5], 6);
 
-		if (0) //strcmp((char*) sfo_get_param_value(sfo, "SAVEDATA_FILE_LIST"), "CONFIG.BIN") == 0)
-		{
-			snprintf(sfoPath, sizeof(sfoPath), "%s%s/SCEVMC0.VMP", userPath, dir->d_name);
-			if (file_exists(sfoPath) == SUCCESS)
-				item->flags ^= (SAVE_FLAG_PS1 | SAVE_FLAG_PS2);
-		}
-
 		LOG("[%s] F(%X) name '%s'", item->title_id, item->flags, item->name);
 		list_append(list, item);
 	}
@@ -809,54 +802,10 @@ static void read_ps2_savegames(const char* userPath, list_t *list, int flags)
 
 static void read_usb_savegames(const char* userPath, list_t *list)
 {
-	DIR *d;
-	struct dirent *dir;
-	save_entry_t *item;
-	char sfoPath[256];
+	char path[256];
 
-	d = opendir(userPath);
-
-	if (!d)
-		return;
-
-	while ((dir = readdir(d)) != NULL)
-	{
-		if (!S_ISDIR(dir->d_stat.st_mode) || strcmp(dir->d_name, ".") == 0 || strcmp(dir->d_name, "..") == 0)
-			continue;
-
-		snprintf(sfoPath, sizeof(sfoPath), "%s%s/sce_sys/param.sfo", userPath, dir->d_name);
-		if (file_exists(sfoPath) != SUCCESS)
-			continue;
-
-		LOG("Reading %s...", sfoPath);
-
-		sfo_context_t* sfo = sfo_alloc();
-		if (sfo_read(sfo, sfoPath) < 0) {
-			LOG("Unable to read from '%s'", sfoPath);
-			sfo_free(sfo);
-			continue;
-		}
-
-		char *sfo_data = (char*)(sfo_get_param_value(sfo, "PARAMS") + 0x28);
-		item = _createSaveEntry(SAVE_FLAG_PSP, sfo_data);
-		item->type = FILE_TYPE_PSV;
-		asprintf(&item->path, "%s%s/", userPath, dir->d_name);
-		asprintf(&item->title_id, "%.9s", sfo_data);
-
-		sfo_data = (char*)(sfo_get_param_value(sfo, "PARENT_DIRECTORY") + 1);
-		item->dir_name = strdup(sfo_data);
-
-//		uint64_t* int_data = (uint64_t*) sfo_get_param_value(sfo, "ACCOUNT_ID");
-//		if (int_data && (apollo_config.account_id == *int_data))
-//			item->flags |= SAVE_FLAG_OWNER;
-
-		sfo_free(sfo);
-
-		LOG("[%s] F(%X) name '%s'", item->title_id, item->flags, item->name);
-		list_append(list, item);
-	}
-
-	closedir(d);
+	snprintf(path, sizeof(path), "%sPS2/SAVEDATA/", userPath);
+	read_ps2_savegames(path, list, 0);
 }
 
 static int set_psx_import_codes(save_entry_t* item)
@@ -946,12 +895,10 @@ static void read_psx_savegames(const char* userPath, const char* folder, list_t 
 		fread(data, 1, sizeof(data), fp);
 		fclose(fp);
 
-		item = _createSaveEntry(SAVE_FLAG_PS2, dir->d_name);
+		item = _createSaveEntry(SAVE_FLAG_PACKED, dir->d_name);
 		set_psx_import_codes(item);
 
-		if (type == FILE_TYPE_PSX || type == FILE_TYPE_MCS)
-			item->flags = SAVE_FLAG_PS1;
-
+		item->flags |= (type == FILE_TYPE_PSX || type == FILE_TYPE_MCS) ? SAVE_FLAG_PS1 : SAVE_FLAG_PS2;
 		item->type = type;
 		item->path = strdup(psvPath);
 		asprintf(&item->title_id, "%.10s", data+2);
@@ -1010,7 +957,7 @@ list_t * ReadUsbList(const char* userPath)
 
 	read_usb_savegames(userPath, list);
 	read_psx_savegames(userPath, "PS2/SAVEDATA/", list);
-	read_ps2_savegames(userPath, list, 0);
+//	read_psx_savegames(userPath, "PS1/SAVEDATA/", list);
 
 	return list;
 }

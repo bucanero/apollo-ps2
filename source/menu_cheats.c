@@ -342,25 +342,26 @@ void DrawGameList(int selIndex, list_t * games, u8 alpha)
 			{
 				char * nBuffer = strdup(item->name);
 				int game_name_width = 0;
-				while ((game_name_width = WidthFromStr(nBuffer)) > 0 && (MENU_ICON_OFF + (MENU_TITLE_OFF * 1) + game_name_width) > ((SCREEN_WIDTH - 30) - (MENU_ICON_OFF * 5)))
+				while ((game_name_width = WidthFromStr(nBuffer)) > 0 && (MENU_ICON_OFF + (MENU_TITLE_OFF * 1) + game_name_width) > ((SCREEN_WIDTH - 50) - (MENU_ICON_OFF * 5)))
 					nBuffer[strlen(nBuffer) - 1] = '\0';
 				DrawString(MENU_ICON_OFF + (MENU_TITLE_OFF * 1), game_y, nBuffer);
 				free(nBuffer);
 			}
 			if (item->title_id)
-				DrawString((SCREEN_WIDTH - 20) - (MENU_ICON_OFF * 5), game_y, item->title_id);
+				DrawString((SCREEN_WIDTH - 40) - (MENU_ICON_OFF * 5), game_y, item->title_id);
 
 			if (item->flags & SAVE_FLAG_SELECTED)
-				DrawString(MENU_ICON_OFF + MENU_TITLE_OFF - 30, game_y, UTF8_CHAR_STAR);
+				DrawFormatString(MENU_ICON_OFF + MENU_TITLE_OFF - 30, game_y, "%c", CHAR_TAG_OWNER);
 
 			tmp[0] = ' ';
+			tmp[1] = ' ';
 			if (item->flags & SAVE_FLAG_PS2) tmp[0] = CHAR_TAG_PS2;
 			if (item->flags & SAVE_FLAG_PSP) tmp[0] = CHAR_TAG_PSP;
 			if (item->flags & SAVE_FLAG_PS1) tmp[0] = CHAR_TAG_PS1;
-//			if (item->flags & SAVE_FLAG_PSV) tmp[0] = CHAR_TAG_PSV;
-			tmp[1] = (item->flags & SAVE_FLAG_LOCKED) ? CHAR_TAG_LOCKED : ' ';
+			if (item->flags & SAVE_FLAG_LOCKED) tmp[1] = CHAR_TAG_LOCKED;
+			if (item->flags & SAVE_FLAG_PACKED) tmp[1] = CHAR_TAG_PACK;
 
-			DrawString(SCREEN_WIDTH - (MENU_ICON_OFF * 2), game_y, tmp);
+			DrawString(SCREEN_WIDTH - 20 - (MENU_ICON_OFF * 2), game_y, tmp);
 skip_draw:
 			node = list_next(node);
         }

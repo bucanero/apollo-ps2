@@ -188,6 +188,7 @@ static void copySaveMC(const save_entry_t* save, int dev)
 
 static void copyAllSavesMC(const save_entry_t* save, int dev, int all)
 {
+	char mc_path[32];
 	int done = 0, err_count = 0;
 	list_node_t *node;
 	save_entry_t *item;
@@ -195,6 +196,7 @@ static void copyAllSavesMC(const save_entry_t* save, int dev, int all)
 	list_t *list = ((void**)save->dir_name)[0];
 
 	init_progress_bar("Copying all saves...");
+	_set_dest_path(mc_path, dev, "");
 
 	LOG("Copying all saves from '%s' to mc%d:/...", save->path, dev);
 	for (node = list_head(list); (item = list_get(node)); node = list_next(node))
@@ -205,6 +207,32 @@ static void copyAllSavesMC(const save_entry_t* save, int dev, int all)
 
 		if ((item->flags & SAVE_FLAG_PS1) || item->type == FILE_TYPE_PS2)
 			(_copy_save_memcard(item, dev) ? done++ : err_count++);
+
+		switch (item->type)
+		{
+		case FILE_TYPE_CBS:
+			(importCBS(item->path, mc_path) ? done++ : err_count++);
+			break;
+
+		case FILE_TYPE_MAX:
+			(importMAX(item->path, mc_path) ? done++ : err_count++);
+			break;
+
+		case FILE_TYPE_XPS:
+			(importXPS(item->path, mc_path) ? done++ : err_count++);
+			break;
+
+		case FILE_TYPE_PSU:
+			(importPSU(item->path, mc_path) ? done++ : err_count++);
+			break;
+
+		case FILE_TYPE_PSV:
+			(importPSV(item->path, mc_path) ? done++ : err_count++);
+			break;
+
+		default:
+			break;
+		}
 	}
 
 	end_progress_bar();
@@ -719,41 +747,38 @@ static void resignSave(save_entry_t* entry)
     show_message("Save %s successfully modified!", entry->title_id);
 }
 
-static void resignAllSaves(const save_entry_t* save, int all)
+static void exportAllSaves(const save_entry_t* save, int dev, int all)
 {
-	char sfoPath[256];
-	int err_count = 0;
+	struct tm t;
+	char outPath[256];
+	int done = 0, err_count = 0;
 	list_node_t *node;
 	save_entry_t *item;
 	uint64_t progress = 0;
 	list_t *list = ((void**)save->dir_name)[0];
-	sfo_patch_t patch = {
-		.user_id = apollo_config.user_id,
-	};
 
-	init_progress_bar("Resigning all saves...");
+	init_progress_bar("Exporting all saves...");
+	_set_dest_path(outPath, dev, PS2_SAVES_PATH_USB);
+	mkdirs(outPath);
 
-	LOG("Resigning all saves from '%s'...", save->path);
+	LOG("Exporting all saves from '%s' to %s...", save->path, outPath);
 	for (node = list_head(list); (item = list_get(node)); node = list_next(node))
 	{
 		update_progress_bar(progress++, list_count(list), item->name);
-		if (!(item->flags & SAVE_FLAG_PS1) || !(all || item->flags & SAVE_FLAG_SELECTED))
+		if (item->type != FILE_TYPE_PS2 || !(all || item->flags & SAVE_FLAG_SELECTED))
 			continue;
 
-		snprintf(sfoPath, sizeof(sfoPath), "%s" "sce_sys/param.sfo", item->path);
-		if (file_exists(sfoPath) != SUCCESS)
-			continue;
+		gmtime_r(&(time_t){time(NULL)}, &t);
+		sprintf(strrchr(outPath, '/'), "/%s_%d-%02d-%02d_%02d%02d%02d.psu", item->title_id,
+			t.tm_year+1900, t.tm_mon+1, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec);
 
-		LOG("Patching SFO '%s'...", sfoPath);
-		err_count += (patch_sfo(sfoPath, &patch) != SUCCESS);
+		(exportPSU(item->path, outPath) ? done++ : err_count++);
 	}
 
 	end_progress_bar();
 
-	if (err_count)
-		show_message("Error: %d Saves couldn't be resigned", err_count);
-	else
-		show_message("All saves successfully resigned!");
+	*strrchr(outPath, '/') = 0;
+	show_message("%d/%d Saves exported to:\n%s", done, done+err_count, outPath);
 }
 
 static void export_ps2save(const save_entry_t* save, int type, int dst_id)
@@ -848,7 +873,7 @@ if(0)//	if (entry->flags & SAVE_FLAG_PSP && !get_psp_save_key(entry, key))
 		return;
 	}
 
-	snprintf(path, sizeof(path), APOLLO_USER_PATH "%s/", entry->dir_name);
+	snprintf(path, sizeof(path), APOLLO_USER_PATH "%s/", entry->title_id);
 	mkdirs(path);
 
 	LOG("Decrypt '%s%s' to '%s'...", entry->path, filename, path);
@@ -876,14 +901,14 @@ if(0)//	if (entry->flags & SAVE_FLAG_PSP && !get_psp_save_key(entry, key))
 		return;
 	}
 
-	snprintf(path, sizeof(path), APOLLO_USER_PATH "%s/%s", entry->dir_name, filename);
+	snprintf(path, sizeof(path), APOLLO_USER_PATH "%s/%s", entry->title_id, filename);
 	if (file_exists(path) != SUCCESS)
 	{
 		show_message("Error! Can't find decrypted save-game file:\n%s", path);
 		return;
 	}
 
-	snprintf(path, sizeof(path), APOLLO_USER_PATH "%s/", entry->dir_name);
+	snprintf(path, sizeof(path), APOLLO_USER_PATH "%s/", entry->title_id);
 	LOG("Encrypt '%s%s' to '%s'...", path, filename, entry->path);
 
 	if (_copy_save_file(path, entry->path, filename))
@@ -973,9 +998,9 @@ void execCodeCommand(code_entry_t* code, const char* codecmd)
 			code->activated = 0;
 			break;
 
-		case CMD_RESIGN_SAVES:
-		case CMD_RESIGN_ALL_SAVES:
-			resignAllSaves(selected_entry, codecmd[0] == CMD_RESIGN_ALL_SAVES);
+		case CMD_EXPORT_SAVES:
+		case CMD_EXPORT_ALL_SAVES:
+			exportAllSaves(selected_entry, codecmd[1], codecmd[0] == CMD_EXPORT_ALL_SAVES);
 			code->activated = 0;
 			break;
 

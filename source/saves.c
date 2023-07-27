@@ -154,7 +154,7 @@ static void _walk_dir_list(const char* startdir, const char* inputdir, const cha
 	{
 		if ((strcmp(dirp->d_name, ".")  == 0) || (strcmp(dirp->d_name, "..") == 0) ||
 			(strcmp(dirp->d_name, "ICON0.PNG") == 0) || (strcmp(dirp->d_name, "PARAM.SFO") == 0) || (strcmp(dirp->d_name,"PIC1.PNG") == 0) ||
-			(strcmp(dirp->d_name, "ICON1.PMF") == 0) || (strcmp(dirp->d_name, "SND0.AT3") == 0))
+			(strcmp(dirp->d_name, "icon.sys") == 0) || (strcmp(dirp->d_name, "SND0.AT3") == 0))
 			continue;
 
 		snprintf(fullname, sizeof(fullname), "%s%s", inputdir, dirp->d_name);
@@ -757,7 +757,7 @@ static void read_ps2_savegames(const char* userPath, list_t *list, int flags)
 	mcIcon iconsys;
 	struct dirent *dir;
 	save_entry_t *item;
-	char sfoPath[256];
+	char sysPath[256];
 
 	d = opendir(userPath);
 	if (!d)
@@ -768,11 +768,11 @@ static void read_ps2_savegames(const char* userPath, list_t *list, int flags)
 		if (!S_ISDIR(dir->d_stat.st_mode) || strcmp(dir->d_name, ".") == 0 || strcmp(dir->d_name, "..") == 0)
 			continue;
 
-		snprintf(sfoPath, sizeof(sfoPath), "%s%s/icon.sys", userPath, dir->d_name);
+		snprintf(sysPath, sizeof(sysPath), "%s%s/icon.sys", userPath, dir->d_name);
 
-		LOG("Reading %s...", sfoPath);
-		if (read_file(sfoPath, (uint8_t*) &iconsys, sizeof(iconsys)) < 0) {
-			LOG("Unable to read from '%s'", sfoPath);
+		LOG("Reading %s...", sysPath);
+		if (read_file(sysPath, (uint8_t*) &iconsys, sizeof(mcIcon)) < 0) {
+			LOG("Unable to read from '%s'", sysPath);
 			continue;
 		}
 
@@ -989,6 +989,16 @@ list_t * ReadUserList(const char* userPath)
 	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_COPY " Copy all Saves to Backup Storage", CMD_CODE_NULL);
 	cmd->options_count = 1;
 	cmd->options = _createExtOptions(2, "Copy Saves to Backup Storage", CMD_COPY_ALL_SAVES_USB);
+	list_append(item->codes, cmd);
+
+	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_COPY " .PSU Export selected Saves to Backup Storage", CMD_CODE_NULL);
+	cmd->options_count = 1;
+	cmd->options = _createExtOptions(2, "Copy Saves to Backup Storage", CMD_EXPORT_SAVES);
+	list_append(item->codes, cmd);
+
+	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_COPY " .PSU Export All Saves to Backup Storage", CMD_CODE_NULL);
+	cmd->options_count = 1;
+	cmd->options = _createExtOptions(2, "Copy Saves to Backup Storage", CMD_EXPORT_ALL_SAVES);
 	list_append(item->codes, cmd);
 
 //	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_NET " Start local Web Server", CMD_SAVE_WEBSERVER);

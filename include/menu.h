@@ -167,33 +167,33 @@ enum texture_index
 #define logo_png_x							722 * SCREEN_W_ADJ
 #define logo_png_y							45 * SCREEN_H_ADJ
 #define column_1_png_x						131 * SCREEN_W_ADJ
-#define column_1_png_y						908 * SCREEN_H_ADJ
+#define column_1_png_y						383
 #define column_2_png_x						401 * SCREEN_W_ADJ
-#define column_2_png_y						831 * SCREEN_H_ADJ
+#define column_2_png_y						347
 #define column_3_png_x						638 * SCREEN_W_ADJ
-#define column_3_png_y						871 * SCREEN_H_ADJ
+#define column_3_png_y						370
 #define column_4_png_x						870 * SCREEN_W_ADJ
-#define column_4_png_y						831 * SCREEN_H_ADJ
+#define column_4_png_y						347
 #define column_5_png_x						1094 * SCREEN_W_ADJ
-#define column_5_png_y						942 * SCREEN_H_ADJ
+#define column_5_png_y						394
 #define column_6_png_x						1313 * SCREEN_W_ADJ
-#define column_6_png_y						828 * SCREEN_H_ADJ
+#define column_6_png_y						346
 #define column_7_png_x						1665 * SCREEN_W_ADJ
-#define column_7_png_y						955 * SCREEN_H_ADJ
+#define column_7_png_y						398
 #define jar_empty_png_x						159 * SCREEN_W_ADJ
-#define jar_empty_png_y						777 * SCREEN_H_ADJ
+#define jar_empty_png_y						330
 #define jar_usb_png_x						441 * SCREEN_W_ADJ
-#define jar_usb_png_y						699 * SCREEN_H_ADJ
+#define jar_usb_png_y						294
 #define jar_hdd_png_x						669 * SCREEN_W_ADJ
-#define jar_hdd_png_y						739 * SCREEN_H_ADJ
+#define jar_hdd_png_y						317
 #define jar_db_png_x						898 * SCREEN_W_ADJ
-#define jar_db_png_y						700 * SCREEN_H_ADJ
+#define jar_db_png_y						294
 #define jar_bup_png_x						1125 * SCREEN_W_ADJ
-#define jar_bup_png_y						810 * SCREEN_H_ADJ
+#define jar_bup_png_y						341
 #define jar_opt_png_x						1353 * SCREEN_W_ADJ
-#define jar_opt_png_y						696 * SCREEN_H_ADJ
+#define jar_opt_png_y						293
 #define jar_about_png_x						1698 * SCREEN_W_ADJ
-#define jar_about_png_y						787 * SCREEN_H_ADJ
+#define jar_about_png_y						328
 #define cat_any_png_x						40 * SCREEN_W_ADJ
 #define cat_any_png_y						45 * SCREEN_H_ADJ
 #define app_ver_png_x						1828 * SCREEN_W_ADJ

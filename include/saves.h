@@ -4,7 +4,7 @@
 
 #define APOLLO_PATH				"ms0:/APOLLO/"
 #define APOLLO_APP_PATH			"ms0:/PSP/GAME/APOLLO/"
-#define APOLLO_USER_PATH		APOLLO_PATH "FILES/"
+#define APOLLO_USER_PATH		USB_PATH "PS2/EXPORT/"
 #define APOLLO_DATA_PATH		APOLLO_APP_PATH "DATA/"
 #define APOLLO_LOCAL_CACHE		APOLLO_APP_PATH "CACHE/"
 #define APOLLO_UPDATE_URL		"https://api.github.com/repos/bucanero/apollo-psp/releases/latest"
@@ -71,8 +71,8 @@ enum cmd_code_enum
     CMD_IMPORT_DATA_FILE,
 
 // Bulk commands
-    CMD_RESIGN_SAVES,
-    CMD_RESIGN_ALL_SAVES,
+    CMD_EXPORT_SAVES,
+    CMD_EXPORT_ALL_SAVES,
     CMD_COPY_SAVES_USB,
     CMD_COPY_ALL_SAVES_USB,
     CMD_COPY_SAVES_HDD,

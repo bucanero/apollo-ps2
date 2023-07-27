@@ -615,7 +615,7 @@ static void _draw_MainMenu(uint8_t alpha)
 	DrawTexture(&menu_textures[logo_png_index], logo_png_x, logo_png_y, 0, logo_png_w, logo_png_h, 0xFFFFFFFF);
 	
 	//App description
-	DrawTextureCenteredX(&menu_textures[logo_text_png_index], SCREEN_WIDTH/2, SCREEN_HEIGHT/2 - 20, 0, menu_textures[logo_text_png_index].width/2, menu_textures[logo_text_png_index].height/2, 0xFFFFFF00 | 0xFF);
+	DrawTextureCenteredX(&menu_textures[logo_text_png_index], SCREEN_WIDTH/2, SCREEN_HEIGHT/2 - 40, 0, menu_textures[logo_text_png_index].width *3/4, menu_textures[logo_text_png_index].height *3/4, 0xFFFFFF00 | 0xFF);
 
 	drawColumns(alpha);
 
@@ -647,7 +647,7 @@ void Draw_MainMenu_Ani()
 		DrawTexture(&menu_textures[logo_png_index], logo_png_x, logo_png_y, 0, logo_png_w, logo_png_h, 0xFFFFFF00 | logo_a);
 		
 		//App description
-		DrawTextureCenteredX(&menu_textures[logo_text_png_index], SCREEN_WIDTH/2, SCREEN_HEIGHT/2 - 20, 0, menu_textures[logo_text_png_index].width/2, menu_textures[logo_text_png_index].height/2, 0xFFFFFF00 | logo_a);
+		DrawTextureCenteredX(&menu_textures[logo_text_png_index], SCREEN_WIDTH/2, SCREEN_HEIGHT/2 - 40, 0, menu_textures[logo_text_png_index].width *3/4, menu_textures[logo_text_png_index].height *3/4, 0xFFFFFF00 | logo_a);
 
 		SDL_RenderPresent(renderer);
 	}

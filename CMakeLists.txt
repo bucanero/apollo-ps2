@@ -52,7 +52,8 @@ ENDFUNCTION()
 file(GLOB res_files RELATIVE
   ${CMAKE_SOURCE_DIR}
   data/*.png
-#  data/*.s3m
+  data/*.irx
+  data/*.ahx
 )
 add_resources(apollo_res ${res_files})
 
@@ -98,7 +99,7 @@ target_link_libraries(${PROJECT_NAME}
   lzma
   mc
 #  un7zip
-#  xmp
+  ahx
   z
 )
 

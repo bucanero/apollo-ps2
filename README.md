@@ -88,7 +88,7 @@ The Online Database project aims to [add more save-games](https://github.com/buc
 * [Dnawrkshp](https://github.com/Dnawrkshp/): [Artemis PS3](https://github.com/Dnawrkshp/ArtemisPS3)
 * [Berion](https://www.psx-place.com/members/berion.1431/): GUI design
 * [aldostools](https://aldostools.org/): [Bruteforce Save Data](https://bruteforcesavedata.forumms.net/)
-* [Nobody/Wild Light](https://github.com/nobodo): [Background music track](https://github.com/bucanero/apollo-vita/blob/main/data/haiku.s3m)
+* [PiNk/abyss](http://amigascne.org/abyss/pink/index.html): [Background music track](https://github.com/bucanero/apollo-ps2/blob/main/data/inside.ahx)
 
 # Building
 
@@ -97,7 +97,7 @@ You need to have installed:
 - [PS2 SDK](https://github.com/ps2dev/)
 - [Apollo](https://github.com/bucanero/apollo-lib) library
 - [cURL](https://github.com/pspdev/psp-packages/tree/master/curl) library
-- [libxmp](https://github.com/pspdev/psp-packages/tree/master/libxmp) library
+- [PolarSSL](https://github.com/bucanero/oosdk_libraries/tree/master/polarssl-1.3.9) library
 - [libZip](https://github.com/pspdev/psp-packages/tree/master/libzip) library
 - [dbglogger](https://github.com/bucanero/dbglogger) library
 

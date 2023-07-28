@@ -6,7 +6,7 @@
 #include <malloc.h>
 #include <string.h>
 #include <unistd.h>
-#include <xmp.h>
+#include <ahx_rpc.h>
 #include <zlib.h>
 #include <sifrpc.h>
 #include <loadfile.h>
@@ -30,13 +30,12 @@
 #include "menu_gui.h"
 
 //Sound
-#define SAMPLING_FREQ       44100 /* 44.1khz. */
-#define AUDIO_SAMPLES       256   /* audio samples */
+extern const uint8_t _binary_data_inside_ahx_start;
+extern const uint8_t _binary_data_inside_ahx_size;
 
 // Audio handle
-static int32_t audio = 0;
-extern const uint8_t _binary_data_haiku_s3m_start;
-extern const uint8_t _binary_data_haiku_s3m_size;
+extern const uint8_t _binary_data_ahx_irx_start;
+extern const uint8_t _binary_data_ahx_irx_size;
 
 void *font_ttf = NULL;
 
@@ -168,7 +167,7 @@ static int initPad()
 }
 
 // Used only in initialization. Allocates 64 mb for textures and loads the font
-static int LoadTextures_Menu()
+static int LoadTextures_Menu(void)
 {
 	font_ttf = malloc(size_font_ttf);
 	texture_mem = malloc(256 * 8 * 4);
@@ -265,79 +264,11 @@ static int LoadTextures_Menu()
 	return 1;
 }
 
-/*
-static void fill_audio(void *udata, unsigned char *stream, int len)
+static void LoadSounds(void)
 {
-	xmp_play_buffer(udata, stream, len, 0);
-}
-
-int sound_init(xmp_context ctx, int sampling_rate, int channels)
-{
-	SDL_AudioSpec a;
-	a.freq = sampling_rate;
-	a.format = (AUDIO_S16);
-	a.channels = channels;
-	a.samples = 2048;
-	a.callback = fill_audio;
-	a.userdata = ctx;
-	if (SDL_OpenAudio(&a, NULL) < 0) {
-		LOG("%s\n", SDL_GetError());
-		return -1;
-	}
-}
-*/
-
-static int LoadSounds(void* data)
-{
-	uint8_t* play_audio = data;
-	xmp_context xmp = xmp_create_context();
-
-	// Decode a mp3 file to play
-	if (xmp_load_module_from_memory(xmp, (void*) &_binary_data_haiku_s3m_start, (int) &_binary_data_haiku_s3m_size) < 0)
-	{
-		LOG("[ERROR] Failed to decode audio file");
-		return -1;
-	}
-
-	xmp_set_player(xmp, XMP_PLAYER_VOLUME, 100);
-	xmp_set_player(xmp, XMP_PLAYER_INTERP, XMP_INTERP_SPLINE);
-	xmp_start_player(xmp, SAMPLING_FREQ, 0);
-
-//	sound_init(xmp, SAMPLING_FREQ, 2);
-//	SDL_PauseAudio(0);
-
-	// Calculate the sample count and allocate a buffer for the sample data accordingly
-	size_t sampleCount = AUDIO_SAMPLES * 2;
-	int16_t *pSampleData = (int16_t *)malloc(sampleCount * sizeof(uint16_t));
-/*
-	sceAudioChangeChannelVolume(audio, PSP_AUDIO_VOLUME_MAX, PSP_AUDIO_VOLUME_MAX);
-
-	// Play the song in a loop
-	while (!close_app)
-	{
-		if (*play_audio == 0)
-		{
-			usleep(0x1000);
-			continue;
-		}
-
-		// Decode the audio into pSampleData
-		xmp_play_buffer(xmp, pSampleData, sampleCount * sizeof(uint16_t), 0);
-
-		/* Output audio *
-		if (sceAudioOutputBlocking(audio, PSP_AUDIO_VOLUME_MAX, pSampleData) < 0)
-		{
-			LOG("Failed to output audio");
-			return -1;
-		}
-	}
-*/
-	free(pSampleData);
-	xmp_end_player(xmp);
-	xmp_release_module(xmp);
-	xmp_free_context(xmp);
-
-	return 0;
+	AHX_Init();
+	AHX_LoadSongBuffer((void*) &_binary_data_inside_ahx_start, (int) &_binary_data_inside_ahx_size);
+	AHX_SubSong(0);
 }
 
 void update_usb_path(char* path)
@@ -405,7 +336,7 @@ static void terminate()
 {
 	LOG("Exiting...");
 
-//	sceAudioChRelease(audio);
+	AHX_Quit();
 }
 
 static int initInternal(void)
@@ -532,11 +463,10 @@ int main(int argc, char *argv[])
 	initPad();
 
 	// Open a handle to audio output device
-//	audio = sceAudioChReserve(PSP_AUDIO_NEXT_CHANNEL, AUDIO_SAMPLES, PSP_AUDIO_FORMAT_STEREO);
-	if (audio < 0)
+	if (SifExecModuleBuffer((void*) &_binary_data_ahx_irx_start, (int) &_binary_data_ahx_irx_size, 0, NULL, NULL) < 0)
 	{
-		LOG("[ERROR] Failed to open audio on main port");
-		return audio;
+		LOG("[ERROR] Failed to load module: AHX");
+		return (-1);
 	}
 
 	// Create a window context
@@ -569,6 +499,7 @@ int main(int argc, char *argv[])
 	}
 	registerSpecialChars();
 	initMenuOptions();
+	LoadSounds();
 
 	// Load application settings
 	load_app_settings(&apollo_config);
@@ -600,7 +531,7 @@ int main(int argc, char *argv[])
 	update_callback(!apollo_config.update);
 
 	// Start BGM audio thread
-//	SDL_CreateThread(&LoadSounds, "audio_thread", &apollo_config.music);
+	music_callback(!apollo_config.music);
 	Draw_MainMenu_Ani();
 
 	while (!close_app)

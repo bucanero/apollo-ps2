@@ -3,6 +3,7 @@
 #include <string.h>
 #include <time.h>
 #include <zlib.h>
+#include <ahx_rpc.h>
 
 #include "types.h"
 #include "menu.h"
@@ -71,6 +72,11 @@ menu_option_t menu_options[] = {
 void music_callback(int sel)
 {
 	apollo_config.music = !sel;
+
+	if(apollo_config.music)
+		AHX_Play();
+	else
+		AHX_Pause();
 }
 
 void sort_callback(int sel)

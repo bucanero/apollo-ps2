@@ -3,7 +3,7 @@
 #define LOG dbglogger_log
 
 #define APOLLO_PATH				"ms0:/APOLLO/"
-#define APOLLO_APP_PATH			"ms0:/PSP/GAME/APOLLO/"
+#define APOLLO_APP_PATH			"mass:/APOLLO/"
 #define APOLLO_USER_PATH		USB_PATH "PS2/EXPORT/"
 #define APOLLO_DATA_PATH		APOLLO_APP_PATH "DATA/"
 #define APOLLO_LOCAL_CACHE		APOLLO_APP_PATH "CACHE/"

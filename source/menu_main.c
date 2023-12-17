@@ -31,7 +31,7 @@ code_entry_t* selected_centry;
 int option_index = 0;
 static hexedit_data_t hex_data;
 
-void initMenuOptions()
+void initMenuOptions(void)
 {
 	menu_options_maxopt = 0;
 	while (menu_options[menu_options_maxopt].name)
@@ -383,7 +383,7 @@ static void doSaveMenu(save_list_t * save_list)
 	Draw_UserCheatsMenu(save_list, menu_sel, 0xFF);
 }
 
-static void doMainMenu()
+static void doMainMenu(void)
 {
 	// Check the pads.
 	if(ps2PadGetButtonHold(PAD_LEFT))
@@ -405,7 +405,7 @@ static void doMainMenu()
 	Draw_MainMenu();
 }
 
-static void doAboutMenu()
+static void doAboutMenu(void)
 {
 	// Check the pads.
 	if (ps2PadGetButtonPressed(PAD_CIRCLE))
@@ -417,7 +417,7 @@ static void doAboutMenu()
 	Draw_AboutMenu();
 }
 
-static void doOptionsMenu()
+static void doOptionsMenu(void)
 {
 	// Check the pads.
 	if(ps2PadGetButtonHold(PAD_UP))
@@ -559,13 +559,12 @@ static void doHexEditor(void)
 	Draw_HexEditor(&hex_data);
 }
 
-static int count_code_lines()
+static int count_code_lines(const char * str)
 {
 	//Calc max
 	int max = 0;
-	const char * str;
 
-	for(str = selected_centry->codes; *str; ++str)
+	for(max = 0; *str; ++str)
 		max += (*str == '\n');
 
 	if (max <= 0)
@@ -574,10 +573,10 @@ static int count_code_lines()
 	return max;
 }
 
-static void doPatchViewMenu()
+static void doPatchViewMenu(void)
 {
 	// Check the pads.
-	if (updatePadSelection(count_code_lines()))
+	if (updatePadSelection(count_code_lines(selected_centry->codes)))
 		(void)0;
 
 	else if (ps2PadGetButtonPressed(PAD_CIRCLE))
@@ -589,7 +588,7 @@ static void doPatchViewMenu()
 	Draw_CheatsMenu_View("Patch view");
 }
 
-static void doCodeOptionsMenu()
+static void doCodeOptionsMenu(void)
 {
     code_entry_t* code = selected_centry;
 	// Check the pads.
@@ -646,10 +645,10 @@ static void doCodeOptionsMenu()
 	Draw_CheatsMenu_Options();
 }
 
-static void doSaveDetailsMenu()
+static void doSaveDetailsMenu(void)
 {
 	// Check the pads.
-	if (updatePadSelection(count_code_lines()))
+	if (updatePadSelection(count_code_lines(selected_centry->codes)))
 		(void)0;
 
 	if (ps2PadGetButtonPressed(PAD_CIRCLE))
@@ -661,7 +660,7 @@ static void doSaveDetailsMenu()
 	Draw_CheatsMenu_View(selected_entry->name);
 }
 
-static void doPatchMenu()
+static void doPatchMenu(void)
 {
 	// Check the pads.
 	if (updatePadSelection(list_count(selected_entry->codes)))
@@ -744,7 +743,7 @@ static void doPatchMenu()
 }
 
 // Resets new frame
-void drawScene()
+void drawScene(void)
 {
 	switch (menu_id)
 	{

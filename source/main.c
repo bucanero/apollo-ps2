@@ -13,7 +13,6 @@
 #include <libmc.h>
 
 #include "saves.h"
-#include "sfo.h"
 #include "utils.h"
 #include "common.h"
 #include "ps2pad.h"
@@ -37,7 +36,7 @@ extern const uint8_t _binary_data_inside_ahx_size;
 extern const uint8_t _binary_data_ahx_irx_start;
 extern const uint8_t _binary_data_ahx_irx_size;
 
-void *font_ttf = NULL;
+static void *font_ttf = NULL;
 
 #define load_menu_texture(name, type) \
 	({ extern const uint8_t _binary_data_##name##_##type##_start; \
@@ -55,7 +54,7 @@ app_config_t apollo_config = {
     .app_name = "APOLLO",
     .app_ver = APOLLO_VERSION,
     .save_db = ONLINE_URL,
-    .music = 0,
+    .music = 1,
     .doSort = 1,
     .doAni = 1,
     .update = 0,
@@ -154,7 +153,7 @@ save_list_t user_backup = {
 };
 
 
-static int initPad()
+static int initPad(void)
 {
     // Set sampling mode
     if (ps2PadInit() < 0)

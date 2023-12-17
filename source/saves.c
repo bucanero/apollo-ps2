@@ -8,7 +8,6 @@
 
 #include "saves.h"
 #include "common.h"
-#include "sfo.h"
 #include "settings.h"
 #include "utils.h"
 
@@ -610,7 +609,13 @@ void UnloadGameList(list_t * list)
 			free(item->title_id);
 			item->title_id = NULL;
 		}
-		
+
+		if (item->icon)
+		{
+			free(item->icon);
+			item->icon = NULL;
+		}
+
 		if (item->codes)
 		{
 			for (nc = list_head(item->codes); (code = list_get(nc)); nc = list_next(nc))

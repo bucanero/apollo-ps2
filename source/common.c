@@ -37,7 +37,7 @@ int is_char_letter(char c)
 int file_exists(const char *path)
 {
     struct stat s;
-//    if (stat(path, &s) == SUCCESS && s.st_size)
+
     if (stat(path, &s) == SUCCESS && S_ISREG(s.st_mode))
         return SUCCESS;
 

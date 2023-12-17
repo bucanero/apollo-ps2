@@ -8,8 +8,8 @@
 #include "menu.h"
 #include "common.h"
 #include "utils.h"
-#include "sfo.h"
 
+static char host_buf[256];
 
 static int _set_dest_path(char* path, int dest, const char* folder)
 {
@@ -578,64 +578,25 @@ static void copyAllSavesUSB(const save_entry_t* save, int dev, int all)
 	show_message("%d/%d Saves copied to:\n%s", done, done+err_count, dst_path);
 }
 
-static int apply_sfo_patches(save_entry_t* entry, sfo_patch_t* patch)
+static void* ps2_host_callback(int id, int* size)
 {
-    code_entry_t* code;
-    char in_file_path[256];
-    char tmp_dir[SFO_DIRECTORY_SIZE];
-    u8 tmp_psid[SFO_PSID_SIZE];
-    list_node_t* node;
+	memset(host_buf, 0, sizeof(host_buf));
 
-    if (entry->flags & SAVE_FLAG_PSP)
-        return 1;
+	switch (id)
+	{
+	case APOLLO_HOST_TEMP_PATH:
+		return APOLLO_LOCAL_CACHE;
 
-    for (node = list_head(entry->codes); (code = list_get(node)); node = list_next(node))
-    {
-        if (!code->activated || code->type != PATCH_SFO)
-            continue;
+	case APOLLO_HOST_LAN_ADDR:
+		if (1)//(sceWlanGetEtherAddr(host_buf) < 0)
+			LOG("Error getting LAN Ethernet Address");
 
-        LOG("Active: [%s]", code->name);
+		if (size) *size = 6;
+		return host_buf;
+	}
 
-        switch (code->codes[0])
-        {
-        case SFO_CHANGE_ACCOUNT_ID:
-//            if (entry->flags & SAVE_FLAG_OWNER)
-//                entry->flags ^= SAVE_FLAG_OWNER;
-
-            sscanf(code->options->value[code->options->sel], "%lx", &patch->account_id);
-            break;
-
-        case SFO_REMOVE_PSID:
-            bzero(tmp_psid, SFO_PSID_SIZE);
-            patch->psid = tmp_psid;
-            break;
-
-        case SFO_CHANGE_TITLE_ID:
-            patch->directory = strstr(entry->path, entry->title_id);
-            snprintf(in_file_path, sizeof(in_file_path), "%s", entry->path);
-            strncpy(tmp_dir, patch->directory, SFO_DIRECTORY_SIZE);
-
-            strncpy(entry->title_id, code->options[0].name[code->options[0].sel], 9);
-            strncpy(patch->directory, entry->title_id, 9);
-            strncpy(tmp_dir, entry->title_id, 9);
-            *strrchr(tmp_dir, '/') = 0;
-            patch->directory = tmp_dir;
-
-            LOG("Moving (%s) -> (%s)", in_file_path, entry->path);
-            rename(in_file_path, entry->path);
-            break;
-
-        default:
-            break;
-        }
-
-        code->activated = 0;
-    }
-
-	snprintf(in_file_path, sizeof(in_file_path), "%s" "sce_sys/param.sfo", selected_entry->path);
-	LOG("Applying SFO patches '%s'...", in_file_path);
-
-	return (patch_sfo(in_file_path, patch) == SUCCESS);
+	if (size) *size = 1;
+	return host_buf;
 }
 
 static int psp_is_decrypted(list_t* list, const char* fname)
@@ -699,7 +660,7 @@ if(0)//				if (get_psp_save_key(entry, key) && psp_DecryptSavedata(entry->path, 
 			}
 		}
 
-		if (!apply_cheat_patch_code(tmpfile, entry->title_id, code, APOLLO_LOCAL_CACHE))
+		if (!apply_cheat_patch_code(tmpfile, entry->title_id, code, &ps2_host_callback))
 		{
 			LOG("Error: failed to apply (%s)", code->name);
 			ret = 0;
@@ -729,12 +690,6 @@ if(0)//		if (!get_psp_save_key(entry, key) || !psp_EncryptSavedata(entry->path, 
 
 static void resignSave(save_entry_t* entry)
 {
-    sfo_patch_t patch = {
-        .flags = 0,
-        .user_id = apollo_config.user_id,
-        .directory = NULL,
-    };
-
     LOG("Resigning save '%s'...", entry->name);
 
 //    if ((entry->flags & SAVE_FLAG_PS1) && !apply_sfo_patches(entry, &patch))

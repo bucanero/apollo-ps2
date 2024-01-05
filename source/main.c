@@ -48,6 +48,7 @@ static void *font_ttf = NULL;
 
 void update_usb_path(char *p);
 void update_hdd_path(char *p);
+void update_vmc_path(char *p);
 void update_db_path(char *p);
 
 app_config_t apollo_config = {
@@ -116,14 +117,14 @@ save_list_t usb_saves = {
 /*
 * Trophy list
 */
-save_list_t trophies = {
+save_list_t vmc_saves = {
 	.icon_id = cat_warning_png_index,
-	.title = "Trophies",
+	.title = "Virtual MemCard",
     .list = NULL,
     .path = "",
-    .ReadList = &ReadTrophyList,
-    .ReadCodes = &ReadTrophies,
-    .UpdatePath = NULL,
+    .ReadList = &ReadVmcList,
+    .ReadCodes = &ReadVmcCodes,
+    .UpdatePath = &update_vmc_path,
 };
 
 /*
@@ -298,6 +299,14 @@ void update_hdd_path(char* path)
 
 	else if (dir_exists(MC1_PATH) == SUCCESS)
 		strcpy(path, MC1_PATH);
+}
+
+void update_vmc_path(char* path)
+{
+	if (file_exists(path) == SUCCESS)
+		return;
+
+	path[0] = 0;
 }
 
 void update_db_path(char* path)

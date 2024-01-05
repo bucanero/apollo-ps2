@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <inttypes.h>
+#include <libmc.h>
 
 struct sceMcStDateTime {
 	uint8_t  Resv2;
@@ -62,24 +63,8 @@ struct io_dirent {
 	uint32_t unknown;
 } __attribute__((packed));
 
-typedef struct {
-	struct sceMcStDateTime create;
-	struct sceMcStDateTime modified;
-	uint32_t numberOfFilesInDir;     // this is likely to be number of files in dir + 2 ("." and "..")
-	uint32_t attribute;              // (0x00008427 dir)
-	char filename[32];
-} ps2_MainDirInfo_t;
-
-typedef struct {
-	struct sceMcStDateTime create;
-	struct sceMcStDateTime modified;
-	uint32_t filesize;
-	uint32_t attribute;             // (0x00008497 file)
-	char filename[32];              // 'Real' PSV files have junk in this after text.
-	uint32_t positionInFile;
-} ps2_FileInfo_t;
-
-int mcio_init(void* vmc);
+int mcio_vmcInit(const char* vmc);
+void mcio_vmcFinish(void);
 int mcio_mcDetect(void);
 int mcio_mcGetInfo(int *pagesize, int *blocksize, int *cardsize, int *cardflags);
 int mcio_mcGetAvailableSpace(int *cardfree);

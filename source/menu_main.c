@@ -12,7 +12,7 @@
 
 extern save_list_t hdd_saves;
 extern save_list_t usb_saves;
-extern save_list_t trophies;
+extern save_list_t vmc_saves;
 extern save_list_t online_saves;
 extern save_list_t user_backup;
 
@@ -30,6 +30,8 @@ save_entry_t* selected_entry;
 code_entry_t* selected_centry;
 int option_index = 0;
 static hexedit_data_t hex_data;
+
+void mcio_vmcFinish(void);
 
 void initMenuOptions(void)
 {
@@ -117,8 +119,16 @@ static void SetMenu(int id)
 {
 	switch (menu_id) //Leaving menu
 	{
+		case MENU_VMC_SAVES:
+			if (id == MENU_MAIN_SCREEN)
+			{
+				LOG("Saving VMC changes...");
+				UnloadGameList(vmc_saves.list);
+				vmc_saves.list = NULL;
+				mcio_vmcFinish();
+			}
+
 		case MENU_MAIN_SCREEN: //Main Menu
-		case MENU_TROPHIES:
 		case MENU_USB_SAVES: //USB Saves Menu
 		case MENU_HDD_SAVES: //HHD Saves Menu
 		case MENU_ONLINE_DB: //Cheats Online Menu
@@ -166,12 +176,12 @@ static void SetMenu(int id)
 				Draw_MainMenu_Ani();
 			break;
 
-		case MENU_TROPHIES: //Trophies Menu
-			if (!trophies.list && !ReloadUserSaves(&trophies))
+		case MENU_VMC_SAVES: //Trophies Menu
+			if (!vmc_saves.list && !ReloadUserSaves(&vmc_saves))
 				return;
 
 			if (apollo_config.doAni)
-				Draw_UserCheatsMenu_Ani(&trophies);
+				Draw_UserCheatsMenu_Ani(&vmc_saves);
 			break;
 
 		case MENU_USB_SAVES: //USB saves Menu
@@ -219,7 +229,7 @@ static void SetMenu(int id)
 
 		case MENU_PATCHES: //Cheat Selection Menu
 			//if entering from game list, don't keep index, otherwise keep
-			if (menu_id == MENU_USB_SAVES || menu_id == MENU_HDD_SAVES || menu_id == MENU_ONLINE_DB || menu_id == MENU_TROPHIES)
+			if (menu_id == MENU_USB_SAVES || menu_id == MENU_HDD_SAVES || menu_id == MENU_ONLINE_DB || menu_id == MENU_VMC_SAVES)
 				menu_old_sel[MENU_PATCHES] = 0;
 
 			char iconfile[256];
@@ -343,6 +353,13 @@ static void doSaveMenu(save_list_t * save_list)
 	else if (ps2PadGetButtonPressed(PAD_CROSS))
 	{
 		selected_entry = list_get_item(save_list->list, menu_sel);
+
+		if (selected_entry->type == FILE_TYPE_VMC && selected_entry->flags & SAVE_FLAG_VMC)
+		{
+			strncpy(vmc_saves.path, selected_entry->path, sizeof(vmc_saves.path));
+			SetMenu(MENU_VMC_SAVES);
+			return;
+		}
 
 		if (!selected_entry->codes && !save_list->ReadCodes(selected_entry))
 		{
@@ -751,8 +768,8 @@ void drawScene(void)
 			doMainMenu();
 			break;
 
-		case MENU_TROPHIES: //Trophies Menu
-			doSaveMenu(&trophies);
+		case MENU_VMC_SAVES: //VMC Menu
+			doSaveMenu(&vmc_saves);
 			break;
 
 		case MENU_USB_SAVES: //USB Saves Menu

@@ -692,9 +692,6 @@ static void resignSave(save_entry_t* entry)
 {
     LOG("Resigning save '%s'...", entry->name);
 
-//    if ((entry->flags & SAVE_FLAG_PS1) && !apply_sfo_patches(entry, &patch))
-//        show_message("Error! Account changes couldn't be applied");
-
     LOG("Applying cheats to '%s'...", entry->name);
     if (!apply_cheat_patches(entry))
         show_message("Error! Cheat codes couldn't be applied");
@@ -780,31 +777,64 @@ static void export_ps2save(const save_entry_t* save, int type, int dst_id)
 		show_message("Error exporting save:\n%s", save->path);
 }
 
-static void export_vmp2mcr(const save_entry_t* save, const char* src_vmp)
+static void export_vmcsave(const save_entry_t* save, int type, int dst_id)
 {
-	char mcrPath[256], vmpPath[256];
+	int ret = 0;
+	char outPath[256];
+	struct tm t;
 
-	snprintf(vmpPath, sizeof(vmpPath), "%s%s", save->path, src_vmp);
-	snprintf(mcrPath, sizeof(mcrPath), PS1_SAVES_PATH_HDD "%s/%s", save->title_id, src_vmp);
-	strcpy(strrchr(mcrPath, '.'), ".MCR");
-	mkdirs(mcrPath);
+	_set_dest_path(outPath, dst_id, USER_PATH_USB);
+	mkdirs(outPath);
+	if (type != FILE_TYPE_PSV)
+	{
+		// build file path
+		gmtime_r(&(time_t){time(NULL)}, &t);
+		sprintf(strrchr(outPath, '/'), "/%s_%d-%02d-%02d_%02d%02d%02d.psu", save->title_id,
+			t.tm_year+1900, t.tm_mon+1, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec);
+	}
 
-	if (ps1_vmp2mcr(vmpPath, mcrPath))
-		show_message("Memory card successfully exported to:\n%s", mcrPath);
+	init_progress_bar("Exporting save ...");
+	switch (type)
+	{
+	case FILE_TYPE_PSV:
+		ret = vmc_export_psv(save->dir_name, outPath);
+		break;
+
+	case FILE_TYPE_PSU:
+		ret = vmc_export_psu(save->dir_name, outPath);
+		break;
+
+	default:
+		break;
+	}
+	end_progress_bar();
+
+	if (ret)
+		show_message("Save successfully exported to:\n%s", outPath);
 	else
-		show_message("Error exporting memory card:\n%s", vmpPath);
+		show_message("Error exporting save:\n%s", save->path);
 }
 
-static void resignVMP(const save_entry_t* save, const char* src_vmp)
+static void import_save2vmc(const char* src_psv, int type)
 {
-	char vmpPath[256];
+	int ret = 0;
 
-	snprintf(vmpPath, sizeof(vmpPath), "%s%s", save->path, src_vmp);
+	init_progress_bar("Importing save ...");
+	switch (type)
+	{
+	case FILE_TYPE_PSV:
+		ret = vmc_import_psv(src_psv);
+		break;
+	
+	default:
+		break;
+	}
+	end_progress_bar();
 
-	if (vmp_resign(vmpPath))
-		show_message("Memory card successfully resigned:\n%s", vmpPath);
+	if (ret)
+		show_message("Successfully imported to VMC:\n%s", src_psv);
 	else
-		show_message("Error resigning memory card:\n%s", vmpPath);
+		show_message("Error importing save:\n%s", src_psv);
 }
 
 static int _copy_save_file(const char* src_path, const char* dst_path, const char* filename)
@@ -927,16 +957,21 @@ void execCodeCommand(code_entry_t* code, const char* codecmd)
 			code->activated = 0;
 			break;
 
-		case CMD_EXP_VMP2MCR:
-			export_vmp2mcr(selected_entry, code->options[0].name[code->options[0].sel]);
+		case CMD_EXP_VMCSAVE:
+			export_vmcsave(selected_entry, code->options[0].id, codecmd[1]);
 			code->activated = 0;
 			break;
 
+		case CMD_IMP_VMCSAVE:
+			import_save2vmc(code->file, code->flags);
+			code->activated = 0;
+			break;
+/*
 		case CMD_RESIGN_VMP:
 			resignVMP(selected_entry, code->options[0].name[code->options[0].sel]);
 			code->activated = 0;
 			break;
-
+*/
 		case CMD_COPY_SAVES_USB:
 		case CMD_COPY_ALL_SAVES_USB:
 			copyAllSavesUSB(selected_entry, codecmd[1], codecmd[0] == CMD_COPY_ALL_SAVES_USB);

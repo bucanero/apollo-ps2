@@ -10,6 +10,7 @@
 #include "common.h"
 #include "settings.h"
 #include "utils.h"
+#include "mcio.h"
 
 #define UTF8_CHAR_STAR		"\xE2\x98\x85"
 
@@ -289,7 +290,7 @@ static void add_ps1_commands(save_entry_t* save)
 {
 	char path[256];
 	code_entry_t* cmd;
-
+/*
 	cmd = _createCmdCode(PATCH_NULL, "----- " UTF8_CHAR_STAR " VMP Memory Cards " UTF8_CHAR_STAR " -----", CMD_CODE_NULL);
 	list_append(save->codes, cmd);
 
@@ -313,7 +314,7 @@ static void add_ps1_commands(save_entry_t* save)
 	cmd->options_count = 1;
 	cmd->options = _getFileOptions(path, "*.MCR", CMD_IMP_MCR2VMP1);
 	list_append(save->codes, cmd);
-
+*/
 	return;
 }
 
@@ -326,15 +327,18 @@ static void add_ps2_commands(save_entry_t* item)
 
 	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_COPY " Export save to .PSU format", CMD_CODE_NULL);
 	cmd->options_count = 1;
-	cmd->options = _createExtOptions(2, "Export .PSU to Storage", CMD_EXP_PS2SAVE);
+	cmd->options = _createExtOptions(2, "Export .PSU to Storage", (item->flags & SAVE_FLAG_VMC) ? CMD_EXP_VMCSAVE : CMD_EXP_PS2SAVE);
 	cmd->options[0].id = FILE_TYPE_PSU;
 	list_append(item->codes, cmd);
 
 	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_COPY " Export save to .PSV format", CMD_CODE_NULL);
 	cmd->options_count = 1;
-	cmd->options = _createExtOptions(2, "Export .PSV to Storage", CMD_EXP_PS2SAVE);
+	cmd->options = _createExtOptions(2, "Export .PSV to Storage", (item->flags & SAVE_FLAG_VMC) ? CMD_EXP_VMCSAVE : CMD_EXP_PS2SAVE);
 	cmd->options[0].id = FILE_TYPE_PSV;
 	list_append(item->codes, cmd);
+
+	if (item->flags & SAVE_FLAG_VMC)
+		return;
 
 	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_COPY " Export save to .CBS format", CMD_CODE_NULL);
 	cmd->options_count = 1;
@@ -394,9 +398,105 @@ skip_end:
 	return list_count(save->codes);
 }
 
-int ReadTrophies(save_entry_t * game)
+static void add_vmc_import_saves(list_t* list, const char* path)
 {
-	return (0);
+	code_entry_t * cmd;
+	DIR *d;
+	struct dirent *dir;
+	char psvPath[256];
+	char data[64];
+	int type, toff;
+
+	snprintf(psvPath, sizeof(psvPath), "%s%s", path, PS2_SAVES_PATH_USB);
+	d = opendir(psvPath);
+
+	if (!d)
+		return;
+
+	while ((dir = readdir(d)) != NULL)
+	{
+		if (!S_ISREG(dir->d_stat.st_mode))
+			continue;
+
+		if (endsWith(dir->d_name, ".PSV"))
+		{
+			toff = 0x80;
+			type = FILE_TYPE_PSV;
+		}
+		else continue;
+/*
+		else if (endsWith(dir->d_name, ".PSU"))
+		{
+			toff = 0x40;
+			type = FILE_TYPE_PSU;
+		}
+*/
+
+		snprintf(psvPath, sizeof(psvPath), "%s%s%s", path, PS2_SAVES_PATH_USB, dir->d_name);
+		LOG("Reading %s...", psvPath);
+
+/*
+		FILE *fp = fopen(psvPath, "rb");
+		if (!fp) {
+			LOG("Unable to open '%s'", psvPath);
+			continue;
+		}
+
+		fseek(fp, toff, SEEK_SET);
+		fread(data, 1, sizeof(data), fp);
+		fclose(fp);
+*/
+
+		cmd = _createCmdCode(PATCH_COMMAND, psvPath, CMD_IMP_VMCSAVE);
+		cmd->file = strdup(psvPath);
+		cmd->flags = type;
+		sprintf(cmd->name, "%s %s", CHAR_ICON_COPY, dir->d_name);
+		list_append(list, cmd);
+
+		LOG("[%s] F(%X) name '%s'", cmd->file, cmd->flags, cmd->name+2);
+	}
+
+	closedir(d);
+}
+
+int ReadVmcCodes(save_entry_t * save)
+{
+	code_entry_t * cmd;
+	char filePath[256];
+	char * buffer = NULL;
+
+	save->codes = list_alloc();
+
+	if (save->type == FILE_TYPE_MENU)
+	{
+		add_vmc_import_saves(save->codes, save->path);
+		return list_count(save->codes);
+	}
+
+	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_USER " View Save Details", CMD_VIEW_DETAILS);
+	list_append(save->codes, cmd);
+
+	cmd = _createCmdCode(PATCH_NULL, "----- " UTF8_CHAR_STAR " File Backup " UTF8_CHAR_STAR " -----", CMD_CODE_NULL);
+	list_append(save->codes, cmd);
+
+	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_COPY " Copy save game to MemCard", CMD_CODE_NULL);
+	cmd->options_count = 1;
+	cmd->options = _createMcOptions(2, "Copy Save to Memory Card", CMD_COPY_SAVE_HDD);
+
+//	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_COPY " Copy save game to Mass Storage", CMD_CODE_NULL);
+//	cmd->options_count = 1;
+//	cmd->options = _createExtOptions(2, "Copy Save to Mass Storage", CMD_COPY_SAVE_USB);
+
+	list_append(save->codes, cmd);
+
+	if (save->flags & SAVE_FLAG_PS1)
+		add_ps1_commands(save);
+	else
+		add_ps2_commands(save);
+
+	LOG("Loaded %ld codes", list_count(save->codes));
+
+	return list_count(save->codes);
 }
 
 /*
@@ -695,6 +795,7 @@ int sortSaveList_Compare_TitleID(const void* a, const void* b)
 	return strcasecmp(ta, tb);
 }
 
+/*
 static void read_usb_encrypted_saves(const char* userPath, list_t *list, uint64_t account)
 {
 	DIR *d, *d2;
@@ -755,6 +856,7 @@ static void read_usb_encrypted_saves(const char* userPath, list_t *list, uint64_
 
 	closedir(d);
 }
+*/
 
 static void read_ps2_savegames(const char* userPath, list_t *list, int flags)
 {
@@ -809,7 +911,7 @@ static void read_usb_savegames(const char* userPath, list_t *list)
 {
 	char path[256];
 
-	snprintf(path, sizeof(path), "%sPS2/SAVEDATA/", userPath);
+	snprintf(path, sizeof(path), "%s%s", userPath, PS2_SAVES_PATH_USB);
 	read_ps2_savegames(path, list, 0);
 }
 
@@ -906,10 +1008,50 @@ static void read_psx_savegames(const char* userPath, const char* folder, list_t 
 		item->flags |= (type == FILE_TYPE_PSX || type == FILE_TYPE_MCS) ? SAVE_FLAG_PS1 : SAVE_FLAG_PS2;
 		item->type = type;
 		item->path = strdup(psvPath);
+		item->dir_name = strdup(data);
 		asprintf(&item->title_id, "%.10s", data+2);
 
 		if(item->title_id[4] == '-')
 			memmove(&item->title_id[4], &item->title_id[5], 6);
+
+		LOG("[%s] F(%X) name '%s'", item->title_id, item->flags, item->name);
+		list_append(list, item);
+	}
+
+	closedir(d);
+}
+
+static void read_vmc_files(const char* userPath, const char* folder, list_t *list)
+{
+	DIR *d;
+	struct dirent *dir;
+	save_entry_t *item;
+	char psvPath[256];
+	uint64_t size;
+
+	snprintf(psvPath, sizeof(psvPath), "%s%s", userPath, folder);
+	d = opendir(psvPath);
+
+	if (!d)
+		return;
+
+	while ((dir = readdir(d)) != NULL)
+	{
+		if (!S_ISREG(dir->d_stat.st_mode) || !(endsWith(dir->d_name, ".VMC") || endsWith(dir->d_name, ".VM2")))
+			continue;
+
+		snprintf(psvPath, sizeof(psvPath), "%s%s%s", userPath, folder, dir->d_name);
+		get_file_size(psvPath, &size);
+
+		LOG("Adding %s...", psvPath);
+		if (size != 0x840000)
+			continue;
+
+		item = _createSaveEntry(SAVE_FLAG_PS2 | SAVE_FLAG_VMC, dir->d_name);
+		item->type = FILE_TYPE_VMC;
+		item->path = strdup(psvPath);
+		item->title_id = strdup("VMC");
+		asprintf(&item->dir_name, "%s%s", userPath, folder);
 
 		LOG("[%s] F(%X) name '%s'", item->title_id, item->flags, item->name);
 		list_append(list, item);
@@ -961,7 +1103,9 @@ list_t * ReadUsbList(const char* userPath)
 	list_append(list, item);
 
 	read_usb_savegames(userPath, list);
-	read_psx_savegames(userPath, "PS2/SAVEDATA/", list);
+	read_vmc_files(userPath, "VMC/", list);
+	read_vmc_files(userPath, "PS2/VMC/", list);
+	read_psx_savegames(userPath, PS2_SAVES_PATH_USB, list);
 //	read_psx_savegames(userPath, "PS1/SAVEDATA/", list);
 
 	return list;
@@ -1107,19 +1251,25 @@ list_t * ReadOnlineList(const char* urlPath)
 	return list;
 }
 
-list_t * ReadTrophyList(const char* userPath)
+list_t * ReadVmcList(const char* userPath)
 {
 	char filePath[256];
 	save_entry_t *item;
 	code_entry_t *cmd;
 	list_t *list;
-/*
-	if ((db = open_sqlite_db(userPath)) == NULL)
+	mcIcon iconsys;
+	int r, dd, fd;
+
+	r = mcio_vmcInit(userPath);
+	if (r < 0)
+	{
+		LOG("Error: no PS2 Memory Card detected! (%d)", r);
 		return NULL;
+	}
 
 	list = list_alloc();
 
-	item = _createSaveEntry(SAVE_FLAG_PSV, CHAR_ICON_COPY " Bulk Trophy Management");
+	item = _createSaveEntry(SAVE_FLAG_PS2, CHAR_ICON_COPY " Bulk Save Management");
 	item->type = FILE_TYPE_MENU;
 	item->path = strdup(userPath);
 	item->codes = list_alloc();
@@ -1127,205 +1277,126 @@ list_t * ReadTrophyList(const char* userPath)
 	item->dir_name = malloc(sizeof(void**));
 	((void**)item->dir_name)[0] = list;
 
-	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_COPY " Backup selected Trophies to Backup Storage", CMD_CODE_NULL);
+	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_COPY " Export selected Saves to Backup Storage", CMD_CODE_NULL);
 	cmd->options_count = 1;
-	cmd->options = _createOptions(2, "Copy Trophies to Backup Storage", CMD_COPY_TROPHIES_USB);
+	cmd->options = _createExtOptions(2, "Copy Saves to Backup Storage", CMD_COPY_SAVES_VMC);
 	list_append(item->codes, cmd);
-	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_COPY " Backup all Trophies to Backup Storage", CMD_CODE_NULL);
+	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_COPY " Export all Saves to Backup Storage", CMD_CODE_NULL);
 	cmd->options_count = 1;
-	cmd->options = _createOptions(2, "Copy Trophies to Backup Storage", CMD_COPY_ALL_TROP_USB);
+	cmd->options = _createExtOptions(2, "Copy Saves to Backup Storage", CMD_COPY_ALL_SAVES_VMC);
 	list_append(item->codes, cmd);
 	list_append(list, item);
 
-	for (int i = 0; i < 3; i++)
-	{
-		snprintf(filePath, sizeof(filePath), "%s" TROPHIES_PATH_USB, dev[i]);
-		if (i && dir_exists(filePath) != SUCCESS)
-			continue;
+	item = _createSaveEntry(SAVE_FLAG_PS2, CHAR_ICON_COPY " Import Saves to Virtual Card");
+	item->path = strdup(userPath);
+	strchr(item->path, '/')[1] = 0;
+	asprintf(&item->title_id, " %s", item->path);
+	item->type = FILE_TYPE_MENU;
+	list_append(list, item);
 
-		item = _createSaveEntry(SAVE_FLAG_PSV | SAVE_FLAG_TROPHY, CHAR_ICON_COPY " Import Trophies");
-		asprintf(&item->path, "%s" TROPHIES_PATH_USB, dev[i]);
-		asprintf(&item->title_id, " %s", dev[i]);
-		item->type = FILE_TYPE_MENU;
-		list_append(list, item);
+	dd = mcio_mcDopen("/");
+	if (dd >= 0)
+	{
+		struct io_dirent dirent;
+
+		do {
+			r = mcio_mcDread(dd, &dirent);
+			if ((r) && (strcmp(dirent.name, ".")) && (strcmp(dirent.name, "..")))
+			{
+				snprintf(filePath, sizeof(filePath), "%s/icon.sys", dirent.name);
+				LOG("Reading %s...", filePath);
+
+				fd = mcio_mcOpen(filePath, sceMcFileAttrReadable | sceMcFileAttrFile);
+				if (fd < 0) {
+					LOG("Unable to read from '%s'", filePath);
+					continue;
+				}
+
+				r = mcio_mcRead(fd, &iconsys, sizeof(mcIcon));
+				mcio_mcClose(fd);
+
+				if (r != sizeof(mcIcon))
+					continue;
+
+				if (iconsys.nlOffset)
+				{
+					iconsys.nlOffset /= 2;
+					memmove(&iconsys.title[iconsys.nlOffset+1], &iconsys.title[iconsys.nlOffset], sizeof(iconsys.title) - iconsys.nlOffset*2);
+					iconsys.title[iconsys.nlOffset] = 0x5081;
+				}
+				sjis2ascii((uint8_t*) iconsys.title);
+				item = _createSaveEntry(SAVE_FLAG_PS2 | SAVE_FLAG_VMC, (char*) iconsys.title);
+				item->type = FILE_TYPE_PS2;
+				item->icon = strdup(iconsys.copy);
+				item->dir_name = strdup(dirent.name);
+				asprintf(&item->title_id, "%.10s", dirent.name+2);
+				asprintf(&item->path, "%s\n%s/", userPath, dirent.name);
+
+				if(item->title_id[4] == '-')
+					memmove(&item->title_id[4], &item->title_id[5], 6);
+
+				LOG("[%s] F(%X) name '%s'", item->title_id, item->flags, item->name);
+				list_append(list, item);
+			}
+		} while (r);
+
+		mcio_mcDclose(dd);
 	}
 
-	sqlite3_create_collation(db, "trophy_collator", SQLITE_UTF8, NULL, &sqlite_trophy_collate);
-	int rc = sqlite3_prepare_v2(db, "SELECT id, npcommid, title FROM tbl_trophy_title WHERE status = 0", -1, &res, NULL);
-	if (rc != SQLITE_OK)
-	{
-		LOG("Failed to fetch data: %s", sqlite3_errmsg(db));
-		sqlite3_close(db);
-		return NULL;
-	}
-
-	while (sqlite3_step(res) == SQLITE_ROW)
-	{
-		item = _createSaveEntry(SAVE_FLAG_PSV | SAVE_FLAG_TROPHY | SAVE_FLAG_HDD, (const char*) sqlite3_column_text(res, 2));
-		item->blocks = sqlite3_column_int(res, 0);
-		item->title_id = strdup((const char*) sqlite3_column_text(res, 1));
-		asprintf(&item->path, TROPHY_PATH_HDD "data/%s/", apollo_config.user_id, item->title_id);
-		item->type = FILE_TYPE_TRP;
-
-		LOG("[%s] F(%X) name '%s'", item->title_id, item->flags, item->name);
-		list_append(list, item);
-	}
-
-	sqlite3_finalize(res);
-	sqlite3_close(db);
-*/
 	return list;
 }
 
 int get_save_details(const save_entry_t* save, char **details)
 {
-	char sfoPath[256];
-	sdslot_dat_t* sdslot;
-	size_t size;
-
-	if (save->flags & SAVE_FLAG_PSP || save->flags & SAVE_FLAG_PS1)
+	if (save->flags & SAVE_FLAG_PACKED)
 	{
-		snprintf(sfoPath, sizeof(sfoPath), "%sPARAM.SFO", save->path);
-		LOG("Save Details :: Reading %s...", sfoPath);
+		asprintf(details, "%s\n----- Packed PS2 Save -----\n"
+			"File: %s\n"
+			"Title ID: %s\n"
+			"Folder: %s\n",
+			save->path,
+			save->name,
+			save->title_id,
+			save->dir_name);
 
-		sfo_context_t* sfo = sfo_alloc();
-		if (sfo_read(sfo, sfoPath) < 0) {
-			LOG("Unable to read from '%s'", sfoPath);
-			sfo_free(sfo);
-			return 0;
-		}
+		return 1;
+	}
 
-		asprintf(details, "%s\n----- PSP Save -----\n"
+	if(save->type == FILE_TYPE_VMC)
+	{
+		asprintf(details, "%s\n----- Virtual Mem Card -----\n"
+			"File: %s\n"
+			"Folder: %s\n",
+			save->path,
+			save->title_id,
+			save->dir_name);
+
+		return 1;
+	}
+
+	if (save->flags & SAVE_FLAG_PS2)
+	{
+		asprintf(details, "%s\n----- PS2 Save -----\n"
 			"Game: %s\n"
 			"Title ID: %s\n"
 			"Folder: %s\n"
-			"Title: %s\n"
-			"Details: %s\n",
+			"Icon: %s\n",
 			save->path,
 			save->name,
 			save->title_id,
 			save->dir_name,
-			(char*)sfo_get_param_value(sfo, "SAVEDATA_TITLE"),
-			(char*)sfo_get_param_value(sfo, "SAVEDATA_DETAIL"));
-
-		sfo_free(sfo);
-		return 1;
-	}
-
-	if (!(save->flags & SAVE_FLAG_PSP))
-	{
-		asprintf(details, "%s\n\nTitle: %s\n", save->path, save->name);
-		return 1;
-	}
-/*
-	if (save->flags & SAVE_FLAG_TROPHY)
-	{
-		snprintf(sfoPath, sizeof(sfoPath), TROPHY_PATH_HDD "db/trophy_local.db", apollo_config.user_id);
-		if ((db = open_sqlite_db(sfoPath)) == NULL)
-			return 0;
-
-		char* query = sqlite3_mprintf("SELECT id, description, trophy_num, unlocked_trophy_num, progress,"
-			"platinum_num, unlocked_platinum_num, gold_num, unlocked_gold_num, silver_num, unlocked_silver_num,"
-			"bronze_num, unlocked_bronze_num FROM tbl_trophy_title WHERE id = %d", save->blocks);
-
-		if (sqlite3_prepare_v2(db, query, -1, &res, NULL) != SQLITE_OK || sqlite3_step(res) != SQLITE_ROW)
-		{
-			LOG("Failed to fetch data: %s", sqlite3_errmsg(db));
-			sqlite3_free(query);
-			sqlite3_close(db);
-			return 0;
-		}
-
-		asprintf(details, "Trophy-Set Details\n\n"
-			"Title: %s\n"
-			"Description: %s\n"
-			"NP Comm ID: %s\n"
-			"Progress: %d/%d - %d%%\n"
-			"%c Platinum: %d/%d\n"
-			"%c Gold: %d/%d\n"
-			"%c Silver: %d/%d\n"
-			"%c Bronze: %d/%d\n",
-			save->name, sqlite3_column_text(res, 1), save->title_id,
-			sqlite3_column_int(res, 3), sqlite3_column_int(res, 2), sqlite3_column_int(res, 4),
-			CHAR_TRP_PLATINUM, sqlite3_column_int(res, 6), sqlite3_column_int(res, 5),
-			CHAR_TRP_GOLD, sqlite3_column_int(res, 8), sqlite3_column_int(res, 7),
-			CHAR_TRP_SILVER, sqlite3_column_int(res, 10), sqlite3_column_int(res, 9),
-			CHAR_TRP_BRONZE, sqlite3_column_int(res, 12), sqlite3_column_int(res, 11));
-
-		sqlite3_free(query);
-		sqlite3_finalize(res);
-		sqlite3_close(db);
+			save->icon);
 
 		return 1;
 	}
 
-	if(save->flags & SAVE_FLAG_LOCKED)
-	{
-		asprintf(details, "%s\n\n"
-			"Title ID: %s\n"
-			"Dir Name: %s\n"
-			"Blocks: %d\n"
-			"Account ID: %.16s\n",
-			save->path,
-			save->title_id,
-			save->dir_name,
-			save->blocks,
-			save->path + 23);
-
-		return 1;
-	}
-*/
-
-	snprintf(sfoPath, sizeof(sfoPath), "%ssce_sys/param.sfo", save->path);
-	LOG("Save Details :: Reading %s...", sfoPath);
-
-	sfo_context_t* sfo = sfo_alloc();
-	if (sfo_read(sfo, sfoPath) < 0) {
-		LOG("Unable to read from '%s'", sfoPath);
-		sfo_free(sfo);
-		return 0;
-	}
-
-	strcpy(strrchr(sfoPath, '/'), "/sdslot.dat");
-	LOG("Save Details :: Reading %s...", sfoPath);
-	if (read_buffer(sfoPath, (uint8_t**) &sdslot, &size) != SUCCESS) {
-		LOG("Unable to read from '%s'", sfoPath);
-		sfo_free(sfo);
-		return 0;
-	}
-
-	if (sdslot->header.magic == 0x4C534453)
-		memcpy(sfoPath, sdslot->header.active_slots, sizeof(sfoPath));
-	else
-		memset(sfoPath, 0, sizeof(sfoPath));
-
-	char* out = *details = (char*) sdslot;
-	uint64_t* account_id = (uint64_t*) sfo_get_param_value(sfo, "ACCOUNT_ID");
-
-	out += sprintf(out, "%s\n----- Save -----\n"
+	asprintf(details, "%s\n----- Save -----\n"
 		"Title: %s\n"
 		"Title ID: %s\n"
-		"Dir Name: %s\n"
-		"Account ID: %016llx\n",
+		"Dir Name: %s\n",
 		save->path, save->name,
 		save->title_id,
-		save->dir_name,
-		*account_id);
+		save->dir_name);
 
-	for (int i = 0; (i < 256) && sfoPath[i]; i++)
-	{
-		out += sprintf(out, "----- Slot %03d -----\n"
-			"Date: %d/%02d/%02d %02d:%02d:%02d\n"
-			"Title: %s\n"
-			"Subtitle: %s\n"
-			"Details: %s\n",
-			(i+1), sdslot->slots[i].year, sdslot->slots[i].month, sdslot->slots[i].day,
-			sdslot->slots[i].hour, sdslot->slots[i].min, sdslot->slots[i].sec,
-			sdslot->slots[i].title,
-			sdslot->slots[i].subtitle,
-			sdslot->slots[i].description);
-	}
-
-	sfo_free(sfo);
 	return 1;
 }

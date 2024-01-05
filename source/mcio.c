@@ -22,6 +22,7 @@
 
 #include "mcio.h"
 #include "utils.h"
+#include "ps2mc.h"
 
 #include <stdio.h>
 #include <time.h>
@@ -44,7 +45,7 @@
 static const char SUPERBLOCK_MAGIC[]   = "Sony PS2 Memory Card Format ";
 static const char SUPERBLOCK_VERSION[] = "1.2.0.0\0\0\0\0";
 
-static uint8_t *vmc_data = NULL;
+static FILE *vmc_fp = NULL;
 
 struct MCDevInfo {			/* size = 384 */
 	uint8_t  magic[28];		/* Superblock magic, on PS2 MC : "Sony PS2 Memory Card Format " */
@@ -330,6 +331,11 @@ static void mcio_copy_mcentry(struct MCFsEntry *fse, const struct io_dirent *dir
 
 static int Card_GetSpecs(uint16_t *pagesize, uint16_t *blocksize, int32_t *cardsize, uint8_t *flags)
 {
+	uint8_t vmc_data[1024];
+
+	fseek(vmc_fp, 0, SEEK_SET);
+	fread(vmc_data, sizeof(vmc_data), 1, vmc_fp);
+
 	if (memcmp(SUPERBLOCK_MAGIC, vmc_data, 28) != 0)
 		return sceMcResFailDetect2;
 
@@ -354,11 +360,14 @@ static int Card_EraseBlock(int32_t block, uint8_t **pagebuf, uint8_t *eccbuf)
 	int ecc = (mcdi->cardflags & CF_USE_ECC) ? 1 : 0;
 	int val = (mcdi->cardflags & CF_ERASE_ZEROES) ? 0x00 : 0xFF;
 	int sparesize = pagesize >> 5;
+	uint8_t *vmc_data = malloc(pagesize);
 
 	page = block * blocksize;
 
 	for (int i = 0; i < blocksize; i++, page++) {
-		memset(&vmc_data[page * (pagesize + ecc*sparesize)], val, pagesize);
+		memset(vmc_data, val, pagesize);
+		fseek(vmc_fp, page * (pagesize + ecc*sparesize), SEEK_SET);
+		fwrite(vmc_data, pagesize, 1, vmc_fp);
 
 		if (mcdi->cardflags & CF_USE_ECC)
 		{
@@ -367,12 +376,12 @@ static int Card_EraseBlock(int32_t block, uint8_t **pagebuf, uint8_t *eccbuf)
 			size = 0;
 
 			while (size < pagesize) {
-				Card_DataChecksum(&vmc_data[page * (pagesize + ecc*sparesize)] + size, p_ecc);
+				Card_DataChecksum(vmc_data + size, p_ecc);
 				size += 128;
 				p_ecc += 3;
 			}
 
-			memcpy(&vmc_data[page * (pagesize + ecc*sparesize) + pagesize], tmp_ecc, sparesize);
+			fwrite(tmp_ecc, sparesize, 1, vmc_fp);
 			free(tmp_ecc);
 		}
 	}
@@ -399,6 +408,7 @@ static int Card_EraseBlock(int32_t block, uint8_t **pagebuf, uint8_t *eccbuf)
 			page++;
 		}
 	}
+	free(vmc_data);
 
 	return sceMcResSucceed;
 }
@@ -411,10 +421,11 @@ static int Card_WritePageData(int32_t page, uint8_t *pagebuf, uint8_t *eccbuf)
 	int ecc = (mcdi->cardflags & CF_USE_ECC) ? 1 : 0;
 	int sparesize = pagesize >> 5;
 
-	memcpy(&vmc_data[page * (pagesize + ecc*sparesize)], pagebuf, pagesize);
+	fseek(vmc_fp, page * (pagesize + ecc*sparesize), SEEK_SET);
+	fwrite(pagebuf, pagesize, 1, vmc_fp);
 
 	if (mcdi->cardflags & CF_USE_ECC)
-		memcpy(&vmc_data[page * (pagesize + ecc*sparesize) + pagesize], eccbuf, sparesize);
+		fwrite(eccbuf, sparesize, 1, vmc_fp);
 
 	return sceMcResSucceed;
 }
@@ -427,10 +438,11 @@ static int Card_ReadPageData(int32_t page, uint8_t *pagebuf, uint8_t *eccbuf)
 	int ecc = (mcdi->cardflags & CF_USE_ECC) ? 1 : 0;
 	int sparesize = pagesize >> 5;
 
-	memcpy(pagebuf, &vmc_data[page * (pagesize + ecc*sparesize)], pagesize);
+	fseek(vmc_fp, page * (pagesize + ecc*sparesize), SEEK_SET);
+	fread(pagebuf, pagesize, 1, vmc_fp);
 
 	if (mcdi->cardflags & CF_USE_ECC)
-		memcpy(eccbuf, &vmc_data[page * (pagesize + ecc*sparesize) + pagesize], sparesize);
+		fread(eccbuf, sparesize, 1, vmc_fp);
 
 	return sceMcResSucceed;
 }
@@ -2986,11 +2998,17 @@ static int Card_FileWrite(int fd, void *buffer, int nbyte)
 }
 
 
-int mcio_init(void* vmc)
+int mcio_vmcInit(const char* vmc)
 {
 	int r;
 
-	vmc_data = vmc;
+	if (vmc_fp)
+		fclose(vmc_fp);
+
+	vmc_fp = fopen(vmc, "r+b");
+	if (!vmc_fp)
+		return sceMcResFailIO;
+
 	Card_InitCache();
 
 	r = mcio_mcDetect();
@@ -2998,6 +3016,14 @@ int mcio_init(void* vmc)
 		return sceMcResSucceed;
 
 	return r;
+}
+
+void mcio_vmcFinish(void)
+{
+	if (vmc_fp)
+		fclose(vmc_fp);
+
+	vmc_fp = NULL;
 }
 
 int mcio_mcDetect(void)

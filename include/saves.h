@@ -60,6 +60,7 @@ enum cmd_code_enum
     CMD_DOWNLOAD_HDD,
     CMD_COPY_SAVE_USB,
     CMD_COPY_SAVE_HDD,
+    CMD_COPY_SAVE_VMC,
     CMD_EXPORT_ZIP_USB,
     CMD_VIEW_DETAILS,
     CMD_VIEW_RAW_PATCH,
@@ -244,6 +245,7 @@ int importPSU(const char *save, const char *mc_path);
 int importXPS(const char *save, const char *mc_path);
 int importMAX(const char *save, const char *mc_path);
 int importPSV(const char *save, const char *mc_path);
+int importVMC(const char *save, const char *mc_path);
 
 int exportPSU(const char *mc_save, const char* out_path);
 int exportPSV(const char *mc_save, const char* out_path);

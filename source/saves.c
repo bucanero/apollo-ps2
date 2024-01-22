@@ -481,7 +481,7 @@ int ReadVmcCodes(save_entry_t * save)
 
 	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_COPY " Copy save game to MemCard", CMD_CODE_NULL);
 	cmd->options_count = 1;
-	cmd->options = _createMcOptions(2, "Copy Save to Memory Card", CMD_COPY_SAVE_HDD);
+	cmd->options = _createMcOptions(2, "Copy Save to Memory Card", CMD_COPY_SAVE_VMC);
 
 //	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_COPY " Copy save game to Mass Storage", CMD_CODE_NULL);
 //	cmd->options_count = 1;

@@ -837,6 +837,18 @@ static void import_save2vmc(const char* src_psv, int type)
 		show_message("Error importing save:\n%s", src_psv);
 }
 
+static void copyVmcSave(const save_entry_t* save, const char* mc_path)
+{
+	init_progress_bar("Copying save game...");
+	int ret = importVMC(save->dir_name, mc_path);
+	end_progress_bar();
+
+	if (ret)
+		show_message("Files successfully copied to:\n%s%s", mc_path, save->dir_name);
+	else
+		show_message("Error! Can't copy Save-game folder:\n%s", save->path);
+}
+
 static int _copy_save_file(const char* src_path, const char* dst_path, const char* filename)
 {
 	char src[256], dst[256];
@@ -985,6 +997,11 @@ void execCodeCommand(code_entry_t* code, const char* codecmd)
 
 		case CMD_RESIGN_SAVE:
 			resignSave(selected_entry);
+			code->activated = 0;
+			break;
+
+		case CMD_COPY_SAVE_VMC:
+			copyVmcSave(selected_entry, codecmd[1] ? MC1_PATH : MC0_PATH);
 			code->activated = 0;
 			break;
 

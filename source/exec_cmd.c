@@ -240,6 +240,61 @@ static void copyAllSavesMC(const save_entry_t* save, int dev, int all)
 	show_message("%d/%d Saves copied to Memory Card %d", done, done+err_count, dev+1);
 }
 
+static void copyAllSavesVMC(const save_entry_t* save, int dev, int all)
+{
+	char mc_path[32];
+	int done = 0, err_count = 0;
+	list_node_t *node;
+	save_entry_t *item;
+	uint64_t progress = 0;
+	list_t *list = ((void**)save->dir_name)[0];
+
+	init_progress_bar("Copying all saves...");
+	_set_dest_path(mc_path, dev, "");
+
+	LOG("Copying all saves from '%s' to mc%d:/...", save->path, dev);
+	for (node = list_head(list); (item = list_get(node)); node = list_next(node))
+	{
+		update_progress_bar(progress++, list_count(list), item->name);
+		if (!all && !(item->flags & SAVE_FLAG_SELECTED))
+			continue;
+
+		(importVMC(item->dir_name, mc_path) ? done++ : err_count++);
+	}
+
+	end_progress_bar();
+
+	show_message("%d/%d Saves copied to Memory Card %d", done, done+err_count, dev+1);
+}
+
+static void exportAllSavesVMC(const save_entry_t* save, int dev, int all)
+{
+	char outPath[256];
+	int done = 0, err_count = 0;
+	list_node_t *node;
+	save_entry_t *item;
+	uint64_t progress = 0;
+	list_t *list = ((void**)save->dir_name)[0];
+
+	init_progress_bar("Exporting all VMC saves...");
+	_set_dest_path(outPath, dev, PS2_SAVES_PATH_USB);
+	mkdirs(outPath);
+
+	LOG("Exporting all saves from '%s' to mc%d:/...", save->path, dev);
+	for (node = list_head(list); (item = list_get(node)); node = list_next(node))
+	{
+		update_progress_bar(progress++, list_count(list), item->name);
+		if (!all && !(item->flags & SAVE_FLAG_SELECTED))
+			continue;
+
+		(vmc_export_psv(item->dir_name, outPath) ? done++ : err_count++);
+	}
+
+	end_progress_bar();
+
+	show_message("%d/%d Saves exported to\n%s", done, done+err_count, outPath);
+}
+
 static void extractArchive(const char* file_path)
 {
 	int ret = 0;
@@ -840,7 +895,7 @@ static void import_save2vmc(const char* src_psv, int type)
 static void copyVmcSave(const save_entry_t* save, const char* mc_path)
 {
 	init_progress_bar("Copying save game...");
-	int ret = importVMC(save->dir_name, mc_path);
+	int ret = (dir_exists(mc_path) == SUCCESS) && importVMC(save->dir_name, mc_path);
 	end_progress_bar();
 
 	if (ret)
@@ -1014,6 +1069,18 @@ void execCodeCommand(code_entry_t* code, const char* codecmd)
 		case CMD_COPY_SAVES_HDD:
 		case CMD_COPY_ALL_SAVES_HDD:
 			copyAllSavesMC(selected_entry, codecmd[1], codecmd[0] == CMD_COPY_ALL_SAVES_HDD);
+			code->activated = 0;
+			break;
+
+		case CMD_COPY_SAVES_VMC:
+		case CMD_COPY_ALL_SAVES_VMC:
+			copyAllSavesVMC(selected_entry, codecmd[1], codecmd[0] == CMD_COPY_ALL_SAVES_VMC);
+			code->activated = 0;
+			break;
+
+		case CMD_EXP_SAVES_VMC:
+		case CMD_EXP_ALL_SAVES_VMC:
+			exportAllSavesVMC(selected_entry, codecmd[1], codecmd[0] == CMD_COPY_ALL_SAVES_VMC);
 			code->activated = 0;
 			break;
 

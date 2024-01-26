@@ -332,7 +332,10 @@ static void mcio_copy_mcentry(struct MCFsEntry *fse, const struct io_dirent *dir
 static int Card_GetSpecs(uint16_t *pagesize, uint16_t *blocksize, int32_t *cardsize, uint8_t *flags)
 {
 	uint8_t vmc_data[1024];
+	long vmc_size;
 
+	fseek(vmc_fp, 0, SEEK_END);
+	vmc_size = ftell(vmc_fp);
 	fseek(vmc_fp, 0, SEEK_SET);
 	fread(vmc_data, sizeof(vmc_data), 1, vmc_fp);
 
@@ -341,7 +344,8 @@ static int Card_GetSpecs(uint16_t *pagesize, uint16_t *blocksize, int32_t *cards
 
 	struct MCDevInfo *mcdi = (struct MCDevInfo *)vmc_data;
 
-	*flags = mcdi->cardflags;
+	// check for non-ECC images
+	*flags = mcdi->cardflags & ((vmc_size % 0x800000 == 0) ? ~CF_USE_ECC : 0xFF);
 	*pagesize = read_le_uint16((uint8_t*)&mcdi->pagesize);
 	*blocksize = read_le_uint16((uint8_t*)&mcdi->blocksize);
 	*cardsize = read_le_uint32((uint8_t*)&mcdi->clusters_per_card) * read_le_uint16((uint8_t*)&mcdi->pages_per_cluster);
@@ -514,6 +518,7 @@ static int Card_ReadPage(int32_t page, uint8_t *pagebuf)
 				if ((retries == 4) && (!(ecres < -2)))
 					break;
 			}
+			else break;
 		}
 	} while (++retries < 5);
 

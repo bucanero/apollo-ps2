@@ -515,6 +515,37 @@ int importPSV(const char *save, const char* mc_path)
     return 1;
 }
 
+uint8_t* loadVmcIcon(const char *save, const char* icon)
+{
+    int r, fd;
+    char filepath[128];
+    struct io_dirent dirent;
+
+    snprintf(filepath, sizeof(filepath), "%s/%s", save, icon);
+    LOG("Reading '%s'...", filepath);
+
+    // Read icon entry
+    mcio_mcStat(filepath, &dirent);
+    fd = mcio_mcOpen(filepath, sceMcFileAttrReadable | sceMcFileAttrFile);
+    if (fd < 0)
+        return NULL;
+
+    uint8_t *p = malloc(dirent.stat.size);
+    if (p == NULL)
+        return NULL;
+
+    r = mcio_mcRead(fd, p, dirent.stat.size);
+    mcio_mcClose(fd);
+
+    if (r != (int)dirent.stat.size)
+    {
+        free(p);
+        return NULL;
+    }
+
+    return p;
+}
+
 int importVMC(const char *save, const char* mc_path)
 {
 	int r, fd, dd;
@@ -584,14 +615,15 @@ int importVMC(const char *save, const char* mc_path)
 
             snprintf(filepath, sizeof(filepath), "%s%s/%s", mc_path, dirEntry.name, entry.name);
             if(!(outFile = fopen(filepath, "wb")))
-                LOG("[!] Error writing %s", filepath);
-            else
             {
-                r = fwrite(p, 1, entry.length, outFile);
-                fclose(outFile);
-
-                setMcTblEntryInfo(filepath, &entry);
+                LOG("[!] Error writing %s", filepath);
+                i = 0;
+                break;
             }
+            r = fwrite(p, 1, entry.length, outFile);
+            fclose(outFile);
+
+            setMcTblEntryInfo(filepath, &entry);
             free(p);
 
             if (r != (int)dirent.stat.size) {

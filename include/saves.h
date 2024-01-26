@@ -73,6 +73,8 @@ enum cmd_code_enum
 // Bulk commands
     CMD_EXPORT_SAVES,
     CMD_EXPORT_ALL_SAVES,
+    CMD_EXP_SAVES_VMC,
+    CMD_EXP_ALL_SAVES_VMC,
     CMD_COPY_SAVES_USB,
     CMD_COPY_ALL_SAVES_USB,
     CMD_COPY_SAVES_HDD,
@@ -255,6 +257,7 @@ int vmc_export_psv(const char* save, const char* out_path);
 int vmc_export_psu(const char* path, const char* output);
 int vmc_import_psv(const char *input);
 
+uint8_t* loadVmcIcon(const char *save, const char* icon);
 int sjis2ascii(uint8_t* bData);
 int vmp_resign(const char *src_vmp);
 int ps1_mcr2vmp(const char* mcrfile, const char* vmp_path);

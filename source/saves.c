@@ -1037,14 +1037,14 @@ static void read_vmc_files(const char* userPath, const char* folder, list_t *lis
 
 	while ((dir = readdir(d)) != NULL)
 	{
-		if (!S_ISREG(dir->d_stat.st_mode) || !(endsWith(dir->d_name, ".VMC") || endsWith(dir->d_name, ".VM2")))
+		if (!S_ISREG(dir->d_stat.st_mode) || !(endsWith(dir->d_name, ".VMC") || endsWith(dir->d_name, ".VM2") || endsWith(dir->d_name, ".BIN")))
 			continue;
 
 		snprintf(psvPath, sizeof(psvPath), "%s%s%s", userPath, folder, dir->d_name);
 		get_file_size(psvPath, &size);
 
 		LOG("Adding %s...", psvPath);
-		if (size != 0x840000)
+		if (size % 0x840000 != 0 && size % 0x800000 != 0)
 			continue;
 
 		item = _createSaveEntry(SAVE_FLAG_PS2 | SAVE_FLAG_VMC, dir->d_name);
@@ -1277,13 +1277,22 @@ list_t * ReadVmcList(const char* userPath)
 	item->dir_name = malloc(sizeof(void**));
 	((void**)item->dir_name)[0] = list;
 
+	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_COPY " Copy selected Saves to Memory Card", CMD_CODE_NULL);
+	cmd->options_count = 1;
+	cmd->options = _createMcOptions(2, "Copy Saves to MemCard", CMD_COPY_SAVES_VMC);
+	list_append(item->codes, cmd);
+	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_COPY " Copy all Saves to Memory Card", CMD_CODE_NULL);
+	cmd->options_count = 1;
+	cmd->options = _createMcOptions(2, "Copy Saves to MemCard", CMD_COPY_ALL_SAVES_VMC);
+	list_append(item->codes, cmd);
+
 	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_COPY " Export selected Saves to Backup Storage", CMD_CODE_NULL);
 	cmd->options_count = 1;
-	cmd->options = _createExtOptions(2, "Copy Saves to Backup Storage", CMD_COPY_SAVES_VMC);
+	cmd->options = _createExtOptions(2, "Copy Saves to Backup Storage", CMD_EXP_SAVES_VMC);
 	list_append(item->codes, cmd);
 	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_COPY " Export all Saves to Backup Storage", CMD_CODE_NULL);
 	cmd->options_count = 1;
-	cmd->options = _createExtOptions(2, "Copy Saves to Backup Storage", CMD_COPY_ALL_SAVES_VMC);
+	cmd->options = _createExtOptions(2, "Copy Saves to Backup Storage", CMD_EXP_ALL_SAVES_VMC);
 	list_append(item->codes, cmd);
 	list_append(list, item);
 

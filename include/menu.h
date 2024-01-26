@@ -250,6 +250,7 @@ extern void Draw_HexEditor(const hexedit_data_t* hex);
 extern void Draw_HexEditor_Ani(const hexedit_data_t* hex);
 int LoadMenuTexture(const char* path, int idx);
 int LoadIconTexture(const char* path, int idx);
+int LoadRawIconTexture(uint8_t* icon, int idx);
 void initMenuOptions(void);
 
 void drawScene(void);

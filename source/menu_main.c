@@ -232,8 +232,9 @@ static void SetMenu(int id)
 			if (menu_id == MENU_USB_SAVES || menu_id == MENU_HDD_SAVES || menu_id == MENU_ONLINE_DB || menu_id == MENU_VMC_SAVES)
 				menu_old_sel[MENU_PATCHES] = 0;
 
-			char iconfile[256];
+			char iconfile[256] = {0};
 
+			menu_textures[icon_png_file_index].size = 0;
 			if (selected_entry->flags & SAVE_FLAG_ONLINE)
 			{
 				snprintf(iconfile, sizeof(iconfile), APOLLO_LOCAL_CACHE "%s.PNG", selected_entry->title_id);
@@ -244,13 +245,15 @@ static void SetMenu(int id)
 //				if (selected_entry->flags & SAVE_FLAG_PSV && file_exists(iconfile) != SUCCESS)
 //					http_download(selected_entry->path, "icon0.png", iconfile, 0);
 			}
+			else if (selected_entry->flags & SAVE_FLAG_VMC)
+			{
+				LoadRawIconTexture(loadVmcIcon(selected_entry->dir_name, selected_entry->icon), icon_png_file_index);
+			}
 			else if (selected_entry->flags & (SAVE_FLAG_PS2 | SAVE_FLAG_PS1) && selected_entry->icon)
 				snprintf(iconfile, sizeof(iconfile), "%s%s", selected_entry->path, selected_entry->icon);
 
 			if (file_exists(iconfile) == SUCCESS)
 				LoadIconTexture(iconfile, icon_png_file_index);
-			else
-				menu_textures[icon_png_file_index].size = 0;
 
 			if (apollo_config.doAni && menu_id != MENU_PATCH_VIEW && menu_id != MENU_CODE_OPTIONS)
 				Draw_CheatsMenu_Selection_Ani();
@@ -550,6 +553,7 @@ static void doHexEditor(void)
 //			selected_centry->options[option_index].value[menu_sel][1] = CMD_IMPORT_DATA_FILE;
 //			execCodeCommand(selected_centry, selected_centry->options[option_index].value[menu_sel]+1);
 		}
+		selected_centry->activated = 0;
 		free(hex_data.data);
 
 		SetMenu(MENU_PATCHES);

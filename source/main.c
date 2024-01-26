@@ -340,7 +340,7 @@ static void registerSpecialChars(void)
 	RegisterSpecialCharacter(CHAR_TRP_SYNC, 0, 1.2f, &menu_textures[trp_sync_png_index]);
 }
 
-static void terminate()
+static void terminate(void)
 {
 	LOG("Exiting...");
 

@@ -172,17 +172,14 @@ static void rawImageTexture(const rawImage_t *img, png_texture *tex)
 	SDL_FreeSurface(surface);
 }
 
-int LoadIconTexture(const char* fname, int idx)
+int LoadRawIconTexture(uint8_t* icon, int idx)
 {
 	rawImage_t raw;
-	uint8_t* icon;
-	size_t len;
 
-	LOG("Loading '%s'", fname);
 	if (menu_textures[idx].texture)
 		SDL_DestroyTexture(menu_textures[idx].texture);
 
-	if (read_buffer(fname, &icon, &len) < 0)
+	if (!icon)
 		return 0;
 
 	raw.datap = (uint32_t*) ps2IconTexture(icon);
@@ -201,6 +198,18 @@ int LoadIconTexture(const char* fname, int idx)
 	rawImageTexture(&raw, &menu_textures[idx]);
 	free(raw.datap);
 	return 1;
+}
+
+int LoadIconTexture(const char* fname, int idx)
+{
+	uint8_t* icon;
+	size_t len;
+
+	LOG("Loading '%s'", fname);
+	if (read_buffer(fname, &icon, &len) < 0)
+		return 0;
+
+	return (LoadRawIconTexture(icon, idx));
 }
 
 int LoadMenuTexture(const char* path, int idx)

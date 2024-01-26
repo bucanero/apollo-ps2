@@ -46,10 +46,13 @@ int file_exists(const char *path)
 
 int dir_exists(const char *path)
 {
-    struct stat s;
+    DIR *d;
 
-    if (stat(path, &s) == SUCCESS && S_ISDIR(s.st_mode))
+    if ((d = opendir(path)) != NULL)
+    {
+        closedir(d);
         return SUCCESS;
+    }
 
     return FAILED;
 }

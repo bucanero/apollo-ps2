@@ -75,7 +75,7 @@ add_executable(${PROJECT_NAME}
   source/menu_main.c
   source/saves.c
   source/settings.c
-  source/sfo.c
+  source/mcio.c
   source/ttf_fonts.c
   source/util.c
   source/ps2pad.c

@@ -14,7 +14,6 @@
 #include <iopcontrol.h>
 
 #include "saves.h"
-#include "sfo.h"
 #include "utils.h"
 #include "common.h"
 #include "ps2pad.h"
@@ -38,7 +37,7 @@ extern const uint8_t _binary_data_inside_ahx_size;
 extern const uint8_t _binary_data_ahx_irx_start;
 extern const uint8_t _binary_data_ahx_irx_size;
 
-void *font_ttf = NULL;
+static void *font_ttf = NULL;
 
 #define load_menu_texture(name, type) \
 	({ extern const uint8_t _binary_data_##name##_##type##_start; \
@@ -50,13 +49,14 @@ void *font_ttf = NULL;
 
 void update_usb_path(char *p);
 void update_hdd_path(char *p);
+void update_vmc_path(char *p);
 void update_db_path(char *p);
 
 app_config_t apollo_config = {
     .app_name = "APOLLO",
     .app_ver = APOLLO_VERSION,
     .save_db = ONLINE_URL,
-    .music = 0,
+    .music = 1,
     .doSort = 1,
     .doAni = 1,
     .update = 0,
@@ -118,14 +118,14 @@ save_list_t usb_saves = {
 /*
 * Trophy list
 */
-save_list_t trophies = {
+save_list_t vmc_saves = {
 	.icon_id = cat_warning_png_index,
-	.title = "Trophies",
+	.title = "Virtual MemCard",
     .list = NULL,
     .path = "",
-    .ReadList = &ReadTrophyList,
-    .ReadCodes = &ReadTrophies,
-    .UpdatePath = NULL,
+    .ReadList = &ReadVmcList,
+    .ReadCodes = &ReadVmcCodes,
+    .UpdatePath = &update_vmc_path,
 };
 
 /*
@@ -155,7 +155,7 @@ save_list_t user_backup = {
 };
 
 
-static int initPad()
+static int initPad(void)
 {
     // Set sampling mode
     if (ps2PadInit() < 0)
@@ -302,6 +302,14 @@ void update_hdd_path(char* path)
 		strcpy(path, MC1_PATH);
 }
 
+void update_vmc_path(char* path)
+{
+	if (file_exists(path) == SUCCESS)
+		return;
+
+	path[0] = 0;
+}
+
 void update_db_path(char* path)
 {
 	strcpy(path, apollo_config.save_db);
@@ -333,7 +341,7 @@ static void registerSpecialChars(void)
 	RegisterSpecialCharacter(CHAR_TRP_SYNC, 0, 1.2f, &menu_textures[trp_sync_png_index]);
 }
 
-static void terminate()
+static void terminate(void)
 {
 	LOG("Exiting...");
 

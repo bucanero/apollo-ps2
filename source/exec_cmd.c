@@ -8,8 +8,8 @@
 #include "menu.h"
 #include "common.h"
 #include "utils.h"
-#include "sfo.h"
 
+static char host_buf[256];
 
 static int _set_dest_path(char* path, int dest, const char* folder)
 {
@@ -238,6 +238,61 @@ static void copyAllSavesMC(const save_entry_t* save, int dev, int all)
 	end_progress_bar();
 
 	show_message("%d/%d Saves copied to Memory Card %d", done, done+err_count, dev+1);
+}
+
+static void copyAllSavesVMC(const save_entry_t* save, int dev, int all)
+{
+	char mc_path[32];
+	int done = 0, err_count = 0;
+	list_node_t *node;
+	save_entry_t *item;
+	uint64_t progress = 0;
+	list_t *list = ((void**)save->dir_name)[0];
+
+	init_progress_bar("Copying all saves...");
+	_set_dest_path(mc_path, dev, "");
+
+	LOG("Copying all saves from '%s' to mc%d:/...", save->path, dev);
+	for (node = list_head(list); (item = list_get(node)); node = list_next(node))
+	{
+		update_progress_bar(progress++, list_count(list), item->name);
+		if (!all && !(item->flags & SAVE_FLAG_SELECTED))
+			continue;
+
+		(importVMC(item->dir_name, mc_path) ? done++ : err_count++);
+	}
+
+	end_progress_bar();
+
+	show_message("%d/%d Saves copied to Memory Card %d", done, done+err_count, dev+1);
+}
+
+static void exportAllSavesVMC(const save_entry_t* save, int dev, int all)
+{
+	char outPath[256];
+	int done = 0, err_count = 0;
+	list_node_t *node;
+	save_entry_t *item;
+	uint64_t progress = 0;
+	list_t *list = ((void**)save->dir_name)[0];
+
+	init_progress_bar("Exporting all VMC saves...");
+	_set_dest_path(outPath, dev, PS2_SAVES_PATH_USB);
+	mkdirs(outPath);
+
+	LOG("Exporting all saves from '%s' to mc%d:/...", save->path, dev);
+	for (node = list_head(list); (item = list_get(node)); node = list_next(node))
+	{
+		update_progress_bar(progress++, list_count(list), item->name);
+		if (!all && !(item->flags & SAVE_FLAG_SELECTED))
+			continue;
+
+		(vmc_export_psv(item->dir_name, outPath) ? done++ : err_count++);
+	}
+
+	end_progress_bar();
+
+	show_message("%d/%d Saves exported to\n%s", done, done+err_count, outPath);
 }
 
 static void extractArchive(const char* file_path)
@@ -578,64 +633,25 @@ static void copyAllSavesUSB(const save_entry_t* save, int dev, int all)
 	show_message("%d/%d Saves copied to:\n%s", done, done+err_count, dst_path);
 }
 
-static int apply_sfo_patches(save_entry_t* entry, sfo_patch_t* patch)
+static void* ps2_host_callback(int id, int* size)
 {
-    code_entry_t* code;
-    char in_file_path[256];
-    char tmp_dir[SFO_DIRECTORY_SIZE];
-    u8 tmp_psid[SFO_PSID_SIZE];
-    list_node_t* node;
+	memset(host_buf, 0, sizeof(host_buf));
 
-    if (entry->flags & SAVE_FLAG_PSP)
-        return 1;
+	switch (id)
+	{
+	case APOLLO_HOST_TEMP_PATH:
+		return APOLLO_LOCAL_CACHE;
 
-    for (node = list_head(entry->codes); (code = list_get(node)); node = list_next(node))
-    {
-        if (!code->activated || code->type != PATCH_SFO)
-            continue;
+	case APOLLO_HOST_LAN_ADDR:
+		if (1)//(sceWlanGetEtherAddr(host_buf) < 0)
+			LOG("Error getting LAN Ethernet Address");
 
-        LOG("Active: [%s]", code->name);
+		if (size) *size = 6;
+		return host_buf;
+	}
 
-        switch (code->codes[0])
-        {
-        case SFO_CHANGE_ACCOUNT_ID:
-//            if (entry->flags & SAVE_FLAG_OWNER)
-//                entry->flags ^= SAVE_FLAG_OWNER;
-
-            sscanf(code->options->value[code->options->sel], "%lx", &patch->account_id);
-            break;
-
-        case SFO_REMOVE_PSID:
-            bzero(tmp_psid, SFO_PSID_SIZE);
-            patch->psid = tmp_psid;
-            break;
-
-        case SFO_CHANGE_TITLE_ID:
-            patch->directory = strstr(entry->path, entry->title_id);
-            snprintf(in_file_path, sizeof(in_file_path), "%s", entry->path);
-            strncpy(tmp_dir, patch->directory, SFO_DIRECTORY_SIZE);
-
-            strncpy(entry->title_id, code->options[0].name[code->options[0].sel], 9);
-            strncpy(patch->directory, entry->title_id, 9);
-            strncpy(tmp_dir, entry->title_id, 9);
-            *strrchr(tmp_dir, '/') = 0;
-            patch->directory = tmp_dir;
-
-            LOG("Moving (%s) -> (%s)", in_file_path, entry->path);
-            rename(in_file_path, entry->path);
-            break;
-
-        default:
-            break;
-        }
-
-        code->activated = 0;
-    }
-
-	snprintf(in_file_path, sizeof(in_file_path), "%s" "sce_sys/param.sfo", selected_entry->path);
-	LOG("Applying SFO patches '%s'...", in_file_path);
-
-	return (patch_sfo(in_file_path, patch) == SUCCESS);
+	if (size) *size = 1;
+	return host_buf;
 }
 
 static int psp_is_decrypted(list_t* list, const char* fname)
@@ -699,7 +715,7 @@ if(0)//				if (get_psp_save_key(entry, key) && psp_DecryptSavedata(entry->path, 
 			}
 		}
 
-		if (!apply_cheat_patch_code(tmpfile, entry->title_id, code, APOLLO_LOCAL_CACHE))
+		if (!apply_cheat_patch_code(tmpfile, entry->title_id, code, &ps2_host_callback))
 		{
 			LOG("Error: failed to apply (%s)", code->name);
 			ret = 0;
@@ -729,16 +745,7 @@ if(0)//		if (!get_psp_save_key(entry, key) || !psp_EncryptSavedata(entry->path, 
 
 static void resignSave(save_entry_t* entry)
 {
-    sfo_patch_t patch = {
-        .flags = 0,
-        .user_id = apollo_config.user_id,
-        .directory = NULL,
-    };
-
     LOG("Resigning save '%s'...", entry->name);
-
-//    if ((entry->flags & SAVE_FLAG_PS1) && !apply_sfo_patches(entry, &patch))
-//        show_message("Error! Account changes couldn't be applied");
 
     LOG("Applying cheats to '%s'...", entry->name);
     if (!apply_cheat_patches(entry))
@@ -825,31 +832,76 @@ static void export_ps2save(const save_entry_t* save, int type, int dst_id)
 		show_message("Error exporting save:\n%s", save->path);
 }
 
-static void export_vmp2mcr(const save_entry_t* save, const char* src_vmp)
+static void export_vmcsave(const save_entry_t* save, int type, int dst_id)
 {
-	char mcrPath[256], vmpPath[256];
+	int ret = 0;
+	char outPath[256];
+	struct tm t;
 
-	snprintf(vmpPath, sizeof(vmpPath), "%s%s", save->path, src_vmp);
-	snprintf(mcrPath, sizeof(mcrPath), PS1_SAVES_PATH_HDD "%s/%s", save->title_id, src_vmp);
-	strcpy(strrchr(mcrPath, '.'), ".MCR");
-	mkdirs(mcrPath);
+	_set_dest_path(outPath, dst_id, USER_PATH_USB);
+	mkdirs(outPath);
+	if (type != FILE_TYPE_PSV)
+	{
+		// build file path
+		gmtime_r(&(time_t){time(NULL)}, &t);
+		sprintf(strrchr(outPath, '/'), "/%s_%d-%02d-%02d_%02d%02d%02d.psu", save->title_id,
+			t.tm_year+1900, t.tm_mon+1, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec);
+	}
 
-	if (ps1_vmp2mcr(vmpPath, mcrPath))
-		show_message("Memory card successfully exported to:\n%s", mcrPath);
+	init_progress_bar("Exporting save ...");
+	switch (type)
+	{
+	case FILE_TYPE_PSV:
+		ret = vmc_export_psv(save->dir_name, outPath);
+		break;
+
+	case FILE_TYPE_PSU:
+		ret = vmc_export_psu(save->dir_name, outPath);
+		break;
+
+	default:
+		break;
+	}
+	end_progress_bar();
+
+	if (ret)
+		show_message("Save successfully exported to:\n%s", outPath);
 	else
-		show_message("Error exporting memory card:\n%s", vmpPath);
+		show_message("Error exporting save:\n%s", save->path);
 }
 
-static void resignVMP(const save_entry_t* save, const char* src_vmp)
+static void import_save2vmc(const char* src_psv, int type)
 {
-	char vmpPath[256];
+	int ret = 0;
 
-	snprintf(vmpPath, sizeof(vmpPath), "%s%s", save->path, src_vmp);
+	init_progress_bar("Importing save ...");
+	switch (type)
+	{
+	case FILE_TYPE_PSV:
+		ret = vmc_import_psv(src_psv);
+		break;
+	
+	default:
+		break;
+	}
+	end_progress_bar();
 
-	if (vmp_resign(vmpPath))
-		show_message("Memory card successfully resigned:\n%s", vmpPath);
+	if (ret)
+		show_message("Successfully imported to VMC:\n%s", src_psv);
 	else
-		show_message("Error resigning memory card:\n%s", vmpPath);
+		show_message("Error importing save:\n%s", src_psv);
+}
+
+static void copyVmcSave(const save_entry_t* save, const char* mc_path)
+{
+	init_progress_bar("Copying save game...");
+	int ret = (dir_exists(mc_path) == SUCCESS) && importVMC(save->dir_name, mc_path);
+	end_progress_bar();
+
+	if (ret)
+		show_message("Files successfully copied to:\n%s%s", mc_path, save->dir_name);
+	else
+		show_message("Error! Can't copy Save-game folder:\n%s", save->path);
 }
 
 static int _copy_save_file(const char* src_path, const char* dst_path, const char* filename)
@@ -972,16 +1024,21 @@ void execCodeCommand(code_entry_t* code, const char* codecmd)
 			code->activated = 0;
 			break;
 
-		case CMD_EXP_VMP2MCR:
-			export_vmp2mcr(selected_entry, code->options[0].name[code->options[0].sel]);
+		case CMD_EXP_VMCSAVE:
+			export_vmcsave(selected_entry, code->options[0].id, codecmd[1]);
 			code->activated = 0;
 			break;
 
+		case CMD_IMP_VMCSAVE:
+			import_save2vmc(code->file, code->flags);
+			code->activated = 0;
+			break;
+/*
 		case CMD_RESIGN_VMP:
 			resignVMP(selected_entry, code->options[0].name[code->options[0].sel]);
 			code->activated = 0;
 			break;
-
+*/
 		case CMD_COPY_SAVES_USB:
 		case CMD_COPY_ALL_SAVES_USB:
 			copyAllSavesUSB(selected_entry, codecmd[1], codecmd[0] == CMD_COPY_ALL_SAVES_USB);
@@ -998,6 +1055,11 @@ void execCodeCommand(code_entry_t* code, const char* codecmd)
 			code->activated = 0;
 			break;
 
+		case CMD_COPY_SAVE_VMC:
+			copyVmcSave(selected_entry, codecmd[1] ? MC1_PATH : MC0_PATH);
+			code->activated = 0;
+			break;
+
 		case CMD_EXPORT_SAVES:
 		case CMD_EXPORT_ALL_SAVES:
 			exportAllSaves(selected_entry, codecmd[1], codecmd[0] == CMD_EXPORT_ALL_SAVES);
@@ -1007,6 +1069,18 @@ void execCodeCommand(code_entry_t* code, const char* codecmd)
 		case CMD_COPY_SAVES_HDD:
 		case CMD_COPY_ALL_SAVES_HDD:
 			copyAllSavesMC(selected_entry, codecmd[1], codecmd[0] == CMD_COPY_ALL_SAVES_HDD);
+			code->activated = 0;
+			break;
+
+		case CMD_COPY_SAVES_VMC:
+		case CMD_COPY_ALL_SAVES_VMC:
+			copyAllSavesVMC(selected_entry, codecmd[1], codecmd[0] == CMD_COPY_ALL_SAVES_VMC);
+			code->activated = 0;
+			break;
+
+		case CMD_EXP_SAVES_VMC:
+		case CMD_EXP_ALL_SAVES_VMC:
+			exportAllSavesVMC(selected_entry, codecmd[1], codecmd[0] == CMD_COPY_ALL_SAVES_VMC);
 			code->activated = 0;
 			break;
 

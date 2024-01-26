@@ -30,7 +30,7 @@
 #define IMPORT_RAP_PATH_USB     USB_PATH PS3_LICENSE_PATH
 
 #define ONLINE_URL              "https://bucanero.github.io/apollo-saves/"
-#define ONLINE_PATCH_URL        "https://bucanero.github.io/apollo-patches/PSP/"
+#define ONLINE_PATCH_URL        "https://bucanero.github.io/apollo-patches/PS2/"
 #define ONLINE_CACHE_TIMEOUT    24*3600     // 1-day local cache
 
 #define OWNER_XML_FILE          "owners.xml"
@@ -60,11 +60,11 @@ enum cmd_code_enum
     CMD_DOWNLOAD_HDD,
     CMD_COPY_SAVE_USB,
     CMD_COPY_SAVE_HDD,
+    CMD_COPY_SAVE_VMC,
     CMD_EXPORT_ZIP_USB,
     CMD_VIEW_DETAILS,
     CMD_VIEW_RAW_PATCH,
     CMD_RESIGN_VMP,
-    CMD_EXP_FINGERPRINT,
     CMD_CONVERT_TO_PSV,
     CMD_HEX_EDIT_FILE,
     CMD_EXPORT_DATA_FILE,
@@ -73,32 +73,31 @@ enum cmd_code_enum
 // Bulk commands
     CMD_EXPORT_SAVES,
     CMD_EXPORT_ALL_SAVES,
+    CMD_EXP_SAVES_VMC,
+    CMD_EXP_ALL_SAVES_VMC,
     CMD_COPY_SAVES_USB,
     CMD_COPY_ALL_SAVES_USB,
     CMD_COPY_SAVES_HDD,
     CMD_COPY_ALL_SAVES_HDD,
+    CMD_COPY_SAVES_VMC,
+    CMD_COPY_ALL_SAVES_VMC,
     CMD_DUMP_FINGERPRINTS,
     CMD_SAVE_WEBSERVER,
 
 // Export commands
-    CMD_EXP_KEYSTONE,
-    CMD_SETUP_PLUGIN,
     CMD_EXP_VMP2MCR,
     CMD_EXP_PS2SAVE,
-    CMD_DUMP_PSPKEY,
+    CMD_EXP_VMCSAVE,
 
 // Import commands
     CMD_IMP_SAVE_MC,
-    CMD_IMP_MCR2VMP0,
-    CMD_IMP_MCR2VMP1,
+    CMD_IMP_VMCSAVE,
     CMD_EXTRACT_ARCHIVE,
     CMD_URL_DOWNLOAD,
     CMD_NET_WEBSERVER,
 
 // SFO patches
     SFO_UNLOCK_COPY,
-    SFO_CHANGE_ACCOUNT_ID,
-    SFO_REMOVE_PSID,
     SFO_CHANGE_TITLE_ID,
 };
 
@@ -112,6 +111,7 @@ enum cmd_code_enum
 #define SAVE_FLAG_PACKED        64
 #define SAVE_FLAG_LOCKED        128
 #define SAVE_FLAG_ONLINE        256
+#define SAVE_FLAG_VMC           512
 
 enum save_type_enum
 {
@@ -119,6 +119,7 @@ enum save_type_enum
     FILE_TYPE_PSV,
     FILE_TYPE_MENU,
     FILE_TYPE_PS2,
+    FILE_TYPE_VMC,
 
     // PS1 File Types
     FILE_TYPE_MCS,
@@ -203,14 +204,14 @@ list_t * ReadUsbList(const char* userPath);
 list_t * ReadUserList(const char* userPath);
 list_t * ReadOnlineList(const char* urlPath);
 list_t * ReadBackupList(const char* userPath);
-list_t * ReadTrophyList(const char* userPath);
+list_t * ReadVmcList(const char* userPath);
 void UnloadGameList(list_t * list);
 char * readTextFile(const char * path, long* size);
 int sortSaveList_Compare(const void* A, const void* B);
 int sortSaveList_Compare_TitleID(const void* A, const void* B);
 int sortCodeList_Compare(const void* A, const void* B);
 int ReadCodes(save_entry_t * save);
-int ReadTrophies(save_entry_t * game);
+int ReadVmcCodes(save_entry_t * game);
 int ReadOnlineSaves(save_entry_t * game);
 int ReadBackupCodes(save_entry_t * bup);
 
@@ -246,14 +247,17 @@ int importPSU(const char *save, const char *mc_path);
 int importXPS(const char *save, const char *mc_path);
 int importMAX(const char *save, const char *mc_path);
 int importPSV(const char *save, const char *mc_path);
+int importVMC(const char *save, const char *mc_path);
 
 int exportPSU(const char *mc_save, const char* out_path);
 int exportPSV(const char *mc_save, const char* out_path);
 int exportCBS(const char *mc_save, const char* out_path, const char* title);
 
-int psp_DecryptSavedata(const char* fpath, const char* fname, uint8_t* key);
-int psp_EncryptSavedata(const char* fpath, const char* fname, uint8_t* key);
+int vmc_export_psv(const char* save, const char* out_path);
+int vmc_export_psu(const char* path, const char* output);
+int vmc_import_psv(const char *input);
 
+uint8_t* loadVmcIcon(const char *save, const char* icon);
 int sjis2ascii(uint8_t* bData);
 int vmp_resign(const char *src_vmp);
 int ps1_mcr2vmp(const char* mcrfile, const char* vmp_path);

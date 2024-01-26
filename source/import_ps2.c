@@ -9,6 +9,7 @@
 #include <libmc.h>
 #include <polarssl/arc4.h>
 
+#include "mcio.h"
 #include "utils.h"
 #include "lzari.h"
 #include "ps2mc.h"
@@ -512,6 +513,132 @@ int importPSV(const char *save, const char* mc_path)
     setMcTblEntryInfo(dstName, &entry);
 
     return 1;
+}
+
+uint8_t* loadVmcIcon(const char *save, const char* icon)
+{
+    int r, fd;
+    char filepath[128];
+    struct io_dirent dirent;
+
+    snprintf(filepath, sizeof(filepath), "%s/%s", save, icon);
+    LOG("Reading '%s'...", filepath);
+
+    // Read icon entry
+    mcio_mcStat(filepath, &dirent);
+    fd = mcio_mcOpen(filepath, sceMcFileAttrReadable | sceMcFileAttrFile);
+    if (fd < 0)
+        return NULL;
+
+    uint8_t *p = malloc(dirent.stat.size);
+    if (p == NULL)
+        return NULL;
+
+    r = mcio_mcRead(fd, p, dirent.stat.size);
+    mcio_mcClose(fd);
+
+    if (r != (int)dirent.stat.size)
+    {
+        free(p);
+        return NULL;
+    }
+
+    return p;
+}
+
+int importVMC(const char *save, const char* mc_path)
+{
+	int r, fd, dd;
+	uint32_t i = 0;
+	struct io_dirent dirent;
+    char filepath[128];
+    FILE *outFile;
+    McFsEntry entry, dirEntry;
+
+	LOG("Copying '%s' to %s...", save, mc_path);
+
+	dd = mcio_mcDopen(save);
+	if (dd < 0)
+		return 0;
+
+    // Read main directory entry
+    mcio_mcStat(save, &dirent);
+
+	memset(&dirEntry, 0, sizeof(McFsEntry));
+	memcpy(&dirEntry.created, &dirent.stat.ctime, sizeof(struct sceMcStDateTime));
+	memcpy(&dirEntry.modified, &dirent.stat.mtime, sizeof(struct sceMcStDateTime));
+	memcpy(dirEntry.name, dirent.name, sizeof(entry.name));
+	dirEntry.mode = dirent.stat.mode;
+	dirEntry.length = dirent.stat.size;
+
+    snprintf(filepath, sizeof(filepath), "%s%s", mc_path, save);
+    mkdir(filepath, 0777);
+
+    // Copy each file entry
+    do {
+        r = mcio_mcDread(dd, &dirent);
+        if (r && (strcmp(dirent.name, ".")) && (strcmp(dirent.name, "..")))
+        {
+            snprintf(filepath, sizeof(filepath), "%s/%s", save, dirent.name);
+            LOG("Copy %-48s | %8d bytes", filepath, dirent.stat.size);
+            update_progress_bar(++i, dirEntry.length - 2, dirent.name);
+
+            mcio_mcStat(filepath, &dirent);
+
+            memset(&entry, 0, sizeof(McFsEntry));
+            memcpy(&entry.created, &dirent.stat.ctime, sizeof(struct sceMcStDateTime));
+            memcpy(&entry.modified, &dirent.stat.mtime, sizeof(struct sceMcStDateTime));
+            memcpy(entry.name, dirent.name, sizeof(entry.name));
+            entry.mode = dirent.stat.mode;
+            entry.length = dirent.stat.size;
+
+            fd = mcio_mcOpen(filepath, sceMcFileAttrReadable | sceMcFileAttrFile);
+            if (fd < 0) {
+                i = 0;
+                break;
+            }
+
+            uint8_t *p = malloc(dirent.stat.size);
+            if (p == NULL) {
+                i = 0;
+                break;
+            }
+
+            r = mcio_mcRead(fd, p, dirent.stat.size);
+            mcio_mcClose(fd);
+
+            if (r != (int)dirent.stat.size) {
+                free(p);
+                i = 0;
+                break;
+            }
+
+            snprintf(filepath, sizeof(filepath), "%s%s/%s", mc_path, dirEntry.name, entry.name);
+            if(!(outFile = fopen(filepath, "wb")))
+            {
+                LOG("[!] Error writing %s", filepath);
+                i = 0;
+                break;
+            }
+            r = fwrite(p, 1, entry.length, outFile);
+            fclose(outFile);
+
+            setMcTblEntryInfo(filepath, &entry);
+            free(p);
+
+            if (r != (int)dirent.stat.size) {
+                i = 0;
+                break;
+            }
+        }
+    } while (r);
+
+    mcio_mcDclose(dd);
+
+    snprintf(filepath, sizeof(filepath), "%s%s", mc_path, dirEntry.name);
+    setMcTblEntryInfo(filepath, &dirEntry);
+
+    return (i > 0);
 }
 
 static void setMcFsEntryValues(McFsEntry *entry, sceMcTblGetDir *mcDir)

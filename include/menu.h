@@ -17,7 +17,7 @@ extern SDL_Renderer* renderer;
 enum menu_screen_ids
 {
 	MENU_MAIN_SCREEN,		/* 0 - Main Menu */
-	MENU_TROPHIES,			/* 1 - Trophies */
+	MENU_VMC_SAVES,			/* 1 - Trophies */
 	MENU_USB_SAVES,			/* 2 - USB Menu (User List) */
 	MENU_HDD_SAVES,			/* 3 - HDD Menu (User List) */
 	MENU_ONLINE_DB,			/* 4 - Online Menu (Online List) */
@@ -250,6 +250,7 @@ extern void Draw_HexEditor(const hexedit_data_t* hex);
 extern void Draw_HexEditor_Ani(const hexedit_data_t* hex);
 int LoadMenuTexture(const char* path, int idx);
 int LoadIconTexture(const char* path, int idx);
+int LoadRawIconTexture(uint8_t* icon, int idx);
 void initMenuOptions(void);
 
 void drawScene(void);

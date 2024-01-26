@@ -37,7 +37,7 @@ int is_char_letter(char c)
 int file_exists(const char *path)
 {
     struct stat s;
-//    if (stat(path, &s) == SUCCESS && s.st_size)
+
     if (stat(path, &s) == SUCCESS && S_ISREG(s.st_mode))
         return SUCCESS;
 
@@ -46,10 +46,13 @@ int file_exists(const char *path)
 
 int dir_exists(const char *path)
 {
-    struct stat s;
+    DIR *d;
 
-    if (stat(path, &s) == SUCCESS && S_ISDIR(s.st_mode))
+    if ((d = opendir(path)) != NULL)
+    {
+        closedir(d);
         return SUCCESS;
+    }
 
     return FAILED;
 }

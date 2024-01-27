@@ -423,14 +423,12 @@ static void add_vmc_import_saves(list_t* list, const char* path)
 			toff = 0x80;
 			type = FILE_TYPE_PSV;
 		}
-		else continue;
-/*
 		else if (endsWith(dir->d_name, ".PSU"))
 		{
 			toff = 0x40;
 			type = FILE_TYPE_PSU;
 		}
-*/
+		else continue;
 
 		snprintf(psvPath, sizeof(psvPath), "%s%s%s", path, PS2_SAVES_PATH_USB, dir->d_name);
 		LOG("Reading %s...", psvPath);
@@ -449,7 +447,7 @@ static void add_vmc_import_saves(list_t* list, const char* path)
 
 		cmd = _createCmdCode(PATCH_COMMAND, psvPath, CMD_IMP_VMCSAVE);
 		cmd->file = strdup(psvPath);
-		cmd->flags = type;
+		cmd->codes[1] = type;
 		sprintf(cmd->name, "%s %s", CHAR_ICON_COPY, dir->d_name);
 		list_append(list, cmd);
 

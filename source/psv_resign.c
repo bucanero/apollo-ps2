@@ -681,6 +681,93 @@ int vmc_import_psv(const char *input)
 	return 1;
 }
 
+int vmc_import_psu(const char *input)
+{
+	int fd, r;
+	char filepath[256];
+	struct io_dirent entry;
+	McFsEntry psu_entry, file_entry;
+
+	FILE *fh = fopen(input, "rb");
+	if (fh == NULL)
+		return 0;
+
+	fseek(fh, 0, SEEK_END);
+	r = ftell(fh);
+
+	if (!r || r % 512) {
+		printf("Not a .PSU file\n");
+		fclose(fh);
+		return 0;
+	}
+
+	LOG("Reading file: '%s'...", input);
+	fseek(fh, 0, SEEK_SET);
+
+	r = fread(&psu_entry, sizeof(McFsEntry), 1, fh);
+	if (!r) {
+		fclose(fh);
+		return 0;
+	}
+
+	// Skip "." and ".."
+	fseek(fh, sizeof(McFsEntry)*2, SEEK_CUR);
+
+	LOG("Writing data to: '/%s'...", psu_entry.name);
+
+	r = mcio_mcMkDir(psu_entry.name);
+	if (r < 0)
+		LOG("Error: can't create directory '%s'... (%d)", psu_entry.name, r);
+	else
+		mcio_mcClose(r);
+
+	for (int total = (psu_entry.length - 2), i = 0; i < total; i++)
+	{
+		fread(&file_entry, 1, sizeof(McFsEntry), fh);
+
+		snprintf(filepath, sizeof(filepath), "%s/%s", psu_entry.name, file_entry.name);
+		LOG("Adding %-48s | %8d bytes", filepath, file_entry.length);
+		update_progress_bar(i+1, total, filepath);
+
+		fd = mcio_mcOpen(filepath, sceMcFileCreateFile | sceMcFileAttrWriteable | sceMcFileAttrFile);
+		if (fd < 0)
+			return 0;
+
+		uint8_t *p = malloc(file_entry.length);
+		if (!p)
+		{
+			mcio_mcClose(fd);
+			return 0;
+		}
+
+		fread(p, 1, file_entry.length, fh);
+		r = mcio_mcWrite(fd, p, file_entry.length);
+		mcio_mcClose(fd);
+		free(p);
+
+		if (r != (int)file_entry.length)
+			return 0;
+
+		mcio_mcStat(filepath, &entry);
+		memcpy(&entry.stat.ctime, &file_entry.created, sizeof(struct sceMcStDateTime));
+		memcpy(&entry.stat.mtime, &file_entry.modified, sizeof(struct sceMcStDateTime));
+		entry.stat.mode = file_entry.mode;
+		mcio_mcSetStat(filepath, &entry);
+
+		r = 1024 - (file_entry.length % 1024);
+		if(r < 1024)
+			fseek(fh, r, SEEK_CUR);
+	}
+
+	mcio_mcStat(psu_entry.name, &entry);
+	memcpy(&entry.stat.ctime, &psu_entry.created, sizeof(struct sceMcStDateTime));
+	memcpy(&entry.stat.mtime, &psu_entry.modified, sizeof(struct sceMcStDateTime));
+	entry.stat.mode = psu_entry.mode;
+	mcio_mcSetStat(psu_entry.name, &entry);
+
+	return 1;
+}
+
 int vmc_export_psv(const char* save, const char* out_path)
 {
 	FILE *psvFile;

@@ -870,7 +870,7 @@ static void export_vmcsave(const save_entry_t* save, int type, int dst_id)
 		show_message("Error exporting save:\n%s", save->path);
 }
 
-static void import_save2vmc(const char* src_psv, int type)
+static void import_save2vmc(const char* src, int type)
 {
 	int ret = 0;
 
@@ -878,18 +878,22 @@ static void import_save2vmc(const char* src_psv, int type)
 	switch (type)
 	{
 	case FILE_TYPE_PSV:
-		ret = vmc_import_psv(src_psv);
+		ret = vmc_import_psv(src);
 		break;
-	
+
+	case FILE_TYPE_PSU:
+		ret = vmc_import_psu(src);
+		break;
+
 	default:
 		break;
 	}
 	end_progress_bar();
 
 	if (ret)
-		show_message("Successfully imported to VMC:\n%s", src_psv);
+		show_message("Successfully imported to VMC:\n%s", src);
 	else
-		show_message("Error importing save:\n%s", src_psv);
+		show_message("Error importing save:\n%s", src);
 }
 
 static void copyVmcSave(const save_entry_t* save, const char* mc_path)
@@ -1030,7 +1034,7 @@ void execCodeCommand(code_entry_t* code, const char* codecmd)
 			break;
 
 		case CMD_IMP_VMCSAVE:
-			import_save2vmc(code->file, code->flags);
+			import_save2vmc(code->file, codecmd[1]);
 			code->activated = 0;
 			break;
 /*

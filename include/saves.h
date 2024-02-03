@@ -17,6 +17,7 @@
 
 #define PS1_SAVES_PATH_USB      "PS1/SAVEDATA/"
 #define PS2_SAVES_PATH_USB      "PS2/SAVEDATA/"
+#define PS3_SAVES_PATH_USB      "PS3/EXPORT/PSV/"
 
 #define PS1_SAVES_PATH_HDD      APOLLO_PATH "PS1/"
 #define PSP_SAVES_PATH_HDD      USB_PATH USER_PATH_USB
@@ -26,8 +27,8 @@
 #define EXPORT_PATH             "APOLLO/EXPORT/"
 #define EXPORT_ZRIF_PATH        APOLLO_PATH "zrif/"
 
-#define IMP_PS2VMC_PATH_USB     USB_PATH "PS2/VMC/"
-#define IMPORT_RAP_PATH_USB     USB_PATH PS3_LICENSE_PATH
+#define IMP_PS2VMC_PATH_USB     "PS2/VMC/"
+#define IMP_OPLVMC_PATH_USB     "VMC/"
 
 #define ONLINE_URL              "https://bucanero.github.io/apollo-saves/"
 #define ONLINE_PATCH_URL        "https://bucanero.github.io/apollo-patches/PS2/"

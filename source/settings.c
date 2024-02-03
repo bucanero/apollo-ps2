@@ -41,6 +41,7 @@ menu_option_t menu_options[] = {
 		.value = &apollo_config.storage,
 		.callback = owner_callback
 	},
+/*
 	{ .name = "Version Update Check", 
 		.options = NULL, 
 		.type = APP_OPTION_BOOL, 
@@ -53,6 +54,7 @@ menu_option_t menu_options[] = {
 		.value = NULL, 
 		.callback = upd_appdata_callback 
 	},
+*/
 	{ .name = "Clear Local Cache", 
 		.options = NULL, 
 		.type = APP_OPTION_CALL, 

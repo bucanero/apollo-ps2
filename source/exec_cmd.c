@@ -277,7 +277,7 @@ static void exportAllSavesVMC(const save_entry_t* save, int dev, int all)
 	list_t *list = ((void**)save->dir_name)[0];
 
 	init_progress_bar("Exporting all VMC saves...");
-	_set_dest_path(outPath, dev, PS2_SAVES_PATH_USB);
+	_set_dest_path(outPath, dev, PS3_SAVES_PATH_USB);
 	mkdirs(outPath);
 
 	LOG("Exporting all saves from '%s' to mc%d:/...", save->path, dev);
@@ -794,7 +794,7 @@ static void export_ps2save(const save_entry_t* save, int type, int dst_id)
 	char outPath[256];
 	struct tm t;
 
-	_set_dest_path(outPath, dst_id, USER_PATH_USB);
+	_set_dest_path(outPath, dst_id, (type == FILE_TYPE_PSV) ? PS3_SAVES_PATH_USB : USER_PATH_USB);
 	mkdirs(outPath);
 	if (type != FILE_TYPE_PSV)
 	{
@@ -838,7 +838,7 @@ static void export_vmcsave(const save_entry_t* save, int type, int dst_id)
 	char outPath[256];
 	struct tm t;
 
-	_set_dest_path(outPath, dst_id, USER_PATH_USB);
+	_set_dest_path(outPath, dst_id, (type == FILE_TYPE_PSV) ? PS3_SAVES_PATH_USB : USER_PATH_USB);
 	mkdirs(outPath);
 	if (type != FILE_TYPE_PSV)
 	{

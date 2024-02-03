@@ -398,7 +398,7 @@ skip_end:
 	return list_count(save->codes);
 }
 
-static void add_vmc_import_saves(list_t* list, const char* path)
+static void add_vmc_import_saves(list_t* list, const char* path, const char* folder)
 {
 	code_entry_t * cmd;
 	DIR *d;
@@ -407,7 +407,7 @@ static void add_vmc_import_saves(list_t* list, const char* path)
 	char data[64];
 	int type, toff;
 
-	snprintf(psvPath, sizeof(psvPath), "%s%s", path, PS2_SAVES_PATH_USB);
+	snprintf(psvPath, sizeof(psvPath), "%s%s", path, folder);
 	d = opendir(psvPath);
 
 	if (!d)
@@ -430,7 +430,7 @@ static void add_vmc_import_saves(list_t* list, const char* path)
 		}
 		else continue;
 
-		snprintf(psvPath, sizeof(psvPath), "%s%s%s", path, PS2_SAVES_PATH_USB, dir->d_name);
+		snprintf(psvPath, sizeof(psvPath), "%s%s%s", path, folder, dir->d_name);
 		LOG("Reading %s...", psvPath);
 
 /*
@@ -467,7 +467,10 @@ int ReadVmcCodes(save_entry_t * save)
 
 	if (save->type == FILE_TYPE_MENU)
 	{
-		add_vmc_import_saves(save->codes, save->path);
+		add_vmc_import_saves(save->codes, save->path, PS2_SAVES_PATH_USB);
+		add_vmc_import_saves(save->codes, save->path, PS3_SAVES_PATH_USB);
+		list_bubbleSort(save->codes, &sortCodeList_Compare);
+
 		return list_count(save->codes);
 	}
 
@@ -1035,7 +1038,7 @@ static void read_vmc_files(const char* userPath, const char* folder, list_t *lis
 
 	while ((dir = readdir(d)) != NULL)
 	{
-		if (!S_ISREG(dir->d_stat.st_mode) || !(endsWith(dir->d_name, ".VMC") || endsWith(dir->d_name, ".VM2") || endsWith(dir->d_name, ".BIN")))
+		if (!S_ISREG(dir->d_stat.st_mode) || !(endsWith(dir->d_name, ".VMC") || endsWith(dir->d_name, ".VM2") || endsWith(dir->d_name, ".BIN") || endsWith(dir->d_name, ".PS2")))
 			continue;
 
 		snprintf(psvPath, sizeof(psvPath), "%s%s%s", userPath, folder, dir->d_name);
@@ -1101,10 +1104,10 @@ list_t * ReadUsbList(const char* userPath)
 	list_append(list, item);
 
 	read_usb_savegames(userPath, list);
-	read_vmc_files(userPath, "VMC/", list);
-	read_vmc_files(userPath, "PS2/VMC/", list);
+	read_vmc_files(userPath, IMP_OPLVMC_PATH_USB, list);
+	read_vmc_files(userPath, IMP_PS2VMC_PATH_USB, list);
 	read_psx_savegames(userPath, PS2_SAVES_PATH_USB, list);
-//	read_psx_savegames(userPath, "PS1/SAVEDATA/", list);
+	read_psx_savegames(userPath, PS3_SAVES_PATH_USB, list);
 
 	return list;
 }

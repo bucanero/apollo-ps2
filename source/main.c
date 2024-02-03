@@ -355,12 +355,13 @@ static int initInternal(void)
 	// Initialise
 	SifInitRpc(0);
 
-	ret = SifLoadModule("rom0:XSIO2MAN", 0, NULL);
+	ret = SifLoadModule("rom0:SIO2MAN", 0, NULL);
 	if (ret < 0) {
 		LOG("Failed to load module: SIO2MAN");
 		return(0);
 	}
 
+/*
 	ret = SifLoadModule("rom0:XMCMAN", 0, NULL);
 	if (ret < 0) {
 		LOG("Failed to load module: MCMAN");
@@ -372,6 +373,7 @@ static int initInternal(void)
 		LOG("Failed to load module: MCSERV");
 		return(0);
 	}
+*/
 
 	if(mcInit(MC_TYPE_XMC) < 0) {
 		LOG("Failed to initialise memcard server!");
@@ -455,7 +457,7 @@ int main(int argc, char *argv[])
 	uint32_t startFrameTicks = 0;
 	uint32_t deltaFrameTicks = 0;
 
-	dbglogger_init_mode(TTY_LOGGER, "host:/apollo-psp.log", 0);
+	dbglogger_init_mode(TTY_LOGGER, NULL, 0);
 #endif
 
 	// Initialize SDL functions

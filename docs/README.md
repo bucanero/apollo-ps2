@@ -2,10 +2,11 @@
 
 [![Downloads][img_downloads]][app_downloads] [![Release][img_latest]][app_latest] [![License][img_license]][app_license]
 [![Build app package](https://github.com/bucanero/apollo-ps2/actions/workflows/build.yml/badge.svg)](https://github.com/bucanero/apollo-ps2/actions/workflows/build.yml)
+[![Twitter](https://img.shields.io/twitter/follow/dparrino?label=Follow)](https://twitter.com/dparrino)
 
 **Apollo Save Tool** is an application to manage save-game files on the PlayStation 2.
 
-This homebrew app allows to download, unlock, patch and resign save-game files directly on your PS2.
+This homebrew app allows you to download, unlock, patch and resign save-game files directly on your PS2.
 
 ![image](./screenshots/screenshot-main.png)
 
@@ -22,7 +23,14 @@ This homebrew app allows to download, unlock, patch and resign save-game files d
 * **Save files listing:** quick access to all the save files on Memory Cards and external devices (+ file details)
 * **Save files patching:** complete support for Save Wizard and [Bruteforce Save Data](https://bruteforcesavedata.forumms.net/) cheat patches to enhance your save-games.
 * **Save import/export:** allows the user export save files to `.PSU`, `.PSV`, `.CBS` formats, and import saves from other tools and consoles (`.PSU`, `.PSV`, `.CBS`, `.MAX`, `.XPS`, `.SPS` supported).
+<!--
 * **Save downloading:** easy access to an Online Database of save-game files to download straight to your PS2.
+-->
+
+## Virtual Memory Card (VMC) Management
+
+* **VMC saves listing:** quick access to all save files on Virtual Memory Cards images (+ file details)
+* **VMC saves import/export:** allows the user export saves on VMC images to `.PSU`, `.PSV` formats, and import saves to VMCs from other tools and consoles (`.PSU`, `.PSV` supported).
 
 # Download
 
@@ -38,7 +46,7 @@ My GitHub projects are open to a [sponsor program](https://patreon.com/dparrino)
 
 # Setup instructions
 
-No special setup is needed. Just download the latest `apollo-ps2.zip` package and install it on your PlayStation 2.
+No special setup is needed. Just download the latest `apollo-ps2.zip` package and install `APOLLO.ELF` on your PlayStation 2.
 On first run, the application will detect and setup the required user settings.
 
 ## Data folders
@@ -49,6 +57,7 @@ On first run, the application will detect and setup the required user settings.
 |-----|--------|
 | **External saves** | your saves must be stored on `<mass/host/cdfs>:/PS2/SAVEDATA/`. |
 | **Memory Card saves** | save-games will be scanned from `mc0:/` and `mc1:/`. |
+| **Virtual Memory Cards** | VMC images will be scanned from `<mass/host>:/VMC/` and `/PS2/VMC/`. |
 
 # Usage
 
@@ -60,12 +69,14 @@ It will open the context menu on the screen. Press ![O button](https://github.co
  - To reload the list, press ![Square](https://github.com/bucanero/pkgi-ps3/raw/master/data/SQUARE.png).
  - Press <kbd>L1</kbd>/<kbd>L2</kbd> or <kbd>R1</kbd>/<kbd>R2</kbd> trigger buttons to move pages up or down.
 
+<!--
 # Online Database
 
 The application also provides direct access to the [Apollo online database](https://github.com/bucanero/apollo-saves) of save-game files for PlayStation Portable games.
 These usually offer additional features such as completed games that can save you many hours of playing.
 
 The Online Database project aims to [add more save-games](https://github.com/bucanero/apollo-saves/issues/new/choose) shared by the community.
+-->
 
 # FAQs
 
@@ -110,7 +121,7 @@ UDP multicast address `239.255.0.100:30000`. To receive them you can use [socat]
 
 # License
 
-[Apollo Save Tool](https://github.com/bucanero/apollo-ps2/) (PS2) - Copyright (C) 2020-2023  [Damian Parrino](https://twitter.com/dparrino)
+[Apollo Save Tool](https://github.com/bucanero/apollo-ps2/) (PS2) - Copyright (C) 2020-2024 [Damian Parrino](https://twitter.com/dparrino)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the [GNU General Public License][app_license] as published by

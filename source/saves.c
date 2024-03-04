@@ -469,6 +469,13 @@ int ReadVmcCodes(save_entry_t * save)
 	{
 		add_vmc_import_saves(save->codes, save->path, PS2_SAVES_PATH_USB);
 		add_vmc_import_saves(save->codes, save->path, PS3_SAVES_PATH_USB);
+
+		if (!list_count(save->codes))
+		{
+			list_free(save->codes);
+			save->codes = NULL;
+			return 0;
+		}
 		list_bubbleSort(save->codes, &sortCodeList_Compare);
 
 		return list_count(save->codes);

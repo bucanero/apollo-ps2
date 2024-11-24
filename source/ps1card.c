@@ -979,15 +979,8 @@ int saveMemoryCard(const char* fileName, int memoryCardType, int fixData)
     //File is sucesfully saved, close the stream
     fclose(binWriter);
 
-//    if (memoryCardType == PS1CARD_VMP)
-//        return vmp_resign(fileName);
-/*
-
-POPS/Crash Bandicoot.VCD
-POPS/Crash Bandicoot/SLOT0.VMC
-POPS/Crash Bandicoot/SLOT1.VMC
-
-*/
+    if (memoryCardType == PS1CARD_VMP)
+        return vmp_resign(fileName);
 
     return true;
 }

@@ -699,7 +699,7 @@ static int apply_cheat_patches(const save_entry_t* entry)
 			snprintf(tmpfile, sizeof(tmpfile), "%s%s", entry->path, filename);
 			LOG("Decrypting file '%s'", tmpfile);
 
-			if (entry->flags & SAVE_FLAG_PSP && !psp_is_decrypted(decrypted_files, filename))
+if(0)//			if (entry->flags & SAVE_FLAG_PSP && !psp_is_decrypted(decrypted_files, filename))
 			{
 if(0)//				if (get_psp_save_key(entry, key) && psp_DecryptSavedata(entry->path, tmpfile, key))
 				{
@@ -1028,12 +1028,12 @@ void execCodeCommand(code_entry_t* code, const char* codecmd)
 			code->activated = 0;
 			break;
 
-		case CMD_EXP_VMCSAVE:
+		case CMD_EXP_VMC2SAVE:
 			export_vmcsave(selected_entry, code->options[0].id, codecmd[1]);
 			code->activated = 0;
 			break;
 
-		case CMD_IMP_VMCSAVE:
+		case CMD_IMP_VMC2SAVE:
 			import_save2vmc(code->file, codecmd[1]);
 			code->activated = 0;
 			break;

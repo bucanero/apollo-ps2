@@ -327,13 +327,13 @@ static void add_ps2_commands(save_entry_t* item)
 
 	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_COPY " Export save to .PSU format", CMD_CODE_NULL);
 	cmd->options_count = 1;
-	cmd->options = _createExtOptions(2, "Export .PSU to Storage", (item->flags & SAVE_FLAG_VMC) ? CMD_EXP_VMCSAVE : CMD_EXP_PS2SAVE);
+	cmd->options = _createExtOptions(2, "Export .PSU to Storage", (item->flags & SAVE_FLAG_VMC) ? CMD_EXP_VMC2SAVE : CMD_EXP_PS2SAVE);
 	cmd->options[0].id = FILE_TYPE_PSU;
 	list_append(item->codes, cmd);
 
 	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_COPY " Export save to .PSV format", CMD_CODE_NULL);
 	cmd->options_count = 1;
-	cmd->options = _createExtOptions(2, "Export .PSV to Storage", (item->flags & SAVE_FLAG_VMC) ? CMD_EXP_VMCSAVE : CMD_EXP_PS2SAVE);
+	cmd->options = _createExtOptions(2, "Export .PSV to Storage", (item->flags & SAVE_FLAG_VMC) ? CMD_EXP_VMC2SAVE : CMD_EXP_PS2SAVE);
 	cmd->options[0].id = FILE_TYPE_PSV;
 	list_append(item->codes, cmd);
 
@@ -445,7 +445,7 @@ static void add_vmc_import_saves(list_t* list, const char* path, const char* fol
 		fclose(fp);
 */
 
-		cmd = _createCmdCode(PATCH_COMMAND, psvPath, CMD_IMP_VMCSAVE);
+		cmd = _createCmdCode(PATCH_COMMAND, psvPath, CMD_IMP_VMC2SAVE);
 		cmd->file = strdup(psvPath);
 		cmd->codes[1] = type;
 		sprintf(cmd->name, "%s %s", CHAR_ICON_COPY, dir->d_name);
@@ -457,7 +457,7 @@ static void add_vmc_import_saves(list_t* list, const char* path, const char* fol
 	closedir(d);
 }
 
-int ReadVmcCodes(save_entry_t * save)
+int ReadVmc2Codes(save_entry_t * save)
 {
 	code_entry_t * cmd;
 	char filePath[256];
@@ -1274,7 +1274,7 @@ list_t * ReadOnlineList(const char* urlPath)
 	return list;
 }
 
-list_t * ReadVmcList(const char* userPath)
+list_t * ReadVmc2List(const char* userPath)
 {
 	char filePath[256];
 	save_entry_t *item;

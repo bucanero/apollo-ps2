@@ -79,6 +79,8 @@ static int ReloadUserSaves(save_list_t* save_list)
 		list_bubbleSort(save_list->list, &sortSaveList_Compare);
 	else if (apollo_config.doSort == SORT_BY_TITLE_ID)
 		list_bubbleSort(save_list->list, &sortSaveList_Compare_TitleID);
+	else if (apollo_config.doSort == SORT_BY_TYPE)
+		list_bubbleSort(save_list->list, &sortSaveList_Compare_Type);
 
     stop_loading_screen();
 
@@ -711,8 +713,7 @@ static void doPatchMenu(void)
 				list_node_t* node;
 
 				for (node = list_head(selected_entry->codes); (code = list_get(node)); node = list_next(node))
-					if (wildcard_match_icase(code->name, "*(REQUIRED)*"))
-					// && !strchr(code->file, '*')
+					if (wildcard_match_icase(code->name, "*(REQUIRED)*") && code->options_count == 0)
 						code->activated = 1;
 			}
 			/*

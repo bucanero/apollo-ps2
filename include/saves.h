@@ -49,6 +49,7 @@ enum save_sort_enum
     SORT_DISABLED,
     SORT_BY_NAME,
     SORT_BY_TITLE_ID,
+    SORT_BY_TYPE,
 };
 
 enum cmd_code_enum
@@ -117,17 +118,17 @@ enum cmd_code_enum
 enum save_type_enum
 {
     FILE_TYPE_NULL,
-    FILE_TYPE_PSV,
     FILE_TYPE_MENU,
     FILE_TYPE_PS2,
     FILE_TYPE_VMC,
+    FILE_TYPE_PSV,
 
     // PS1 File Types
     FILE_TYPE_MCS,
     FILE_TYPE_PSX,
     FILE_TYPE_ZIP,
 
-    // License Files
+    // PS2 File Types
     FILE_TYPE_MAX,
     FILE_TYPE_CBS,
     FILE_TYPE_XPS,
@@ -144,7 +145,7 @@ enum char_flag_enum
     CHAR_TAG_PS1,
     CHAR_TAG_PS2,
     CHAR_TAG_UNUSED1,
-    CHAR_TAG_PSP,
+    CHAR_TAG_VMC,
     CHAR_TAG_UNUSED2,
     CHAR_TAG_APPLY,
     CHAR_TAG_OWNER,
@@ -209,6 +210,7 @@ list_t * ReadVmcList(const char* userPath);
 void UnloadGameList(list_t * list);
 char * readTextFile(const char * path, long* size);
 int sortSaveList_Compare(const void* A, const void* B);
+int sortSaveList_Compare_Type(const void* A, const void* B);
 int sortSaveList_Compare_TitleID(const void* A, const void* B);
 int sortCodeList_Compare(const void* A, const void* B);
 int ReadCodes(save_entry_t * save);

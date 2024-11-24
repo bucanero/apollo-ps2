@@ -247,7 +247,7 @@ static int LoadTextures_Menu(void)
 	load_menu_texture(tag_pack, png);
 	load_menu_texture(tag_ps1, png);
 	load_menu_texture(tag_ps2, png);
-	load_menu_texture(tag_psp, png);
+	load_menu_texture(tag_vmc, png);
 	load_menu_texture(tag_warning, png);
 	load_menu_texture(tag_zip, png);
 	load_menu_texture(tag_net, png);
@@ -319,7 +319,7 @@ static void registerSpecialChars(void)
 	// Register save tags
 	RegisterSpecialCharacter(CHAR_TAG_PS1, 0, 1.5, &menu_textures[tag_ps1_png_index]);
 	RegisterSpecialCharacter(CHAR_TAG_PS2, 0, 1.5, &menu_textures[tag_ps2_png_index]);
-	RegisterSpecialCharacter(CHAR_TAG_PSP, 0, 1.5, &menu_textures[tag_psp_png_index]);
+	RegisterSpecialCharacter(CHAR_TAG_VMC, 0, 1.0, &menu_textures[tag_vmc_png_index]);
 	RegisterSpecialCharacter(CHAR_TAG_PACK, 0, 0.8, &menu_textures[tag_pack_png_index]);
 	RegisterSpecialCharacter(CHAR_TAG_LOCKED, 0, 1.3, &menu_textures[tag_lock_png_index]);
 	RegisterSpecialCharacter(CHAR_TAG_OWNER, 0, 1.3, &menu_textures[tag_own_png_index]);
@@ -552,7 +552,7 @@ int main(int argc, char *argv[])
         lastFrameTicks  = startFrameTicks;
 #endif
 		// Clear the canvas
-		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0xFF);
+		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0x80);
 		SDL_RenderClear(renderer);
 
 		ps2PadUpdate();

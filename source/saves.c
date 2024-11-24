@@ -789,6 +789,19 @@ int sortSaveList_Compare(const void* a, const void* b)
 	return strcasecmp(((save_entry_t*) a)->name, ((save_entry_t*) b)->name);
 }
 
+int sortSaveList_Compare_Type(const void* a, const void* b)
+{
+	int ta = ((save_entry_t*) a)->type;
+	int tb = ((save_entry_t*) b)->type;
+
+	if (ta == tb)
+		return sortSaveList_Compare(a, b);
+	else if (ta < tb)
+		return -1;
+	else
+		return 1;
+}
+
 int sortSaveList_Compare_TitleID(const void* a, const void* b)
 {
 	char* ta = ((save_entry_t*) a)->title_id;
@@ -800,7 +813,9 @@ int sortSaveList_Compare_TitleID(const void* a, const void* b)
 	if (!tb)
 		return (1);
 
-	return strcasecmp(ta, tb);
+	int ret = strcasecmp(ta, tb);
+
+	return (ret ? ret : sortSaveList_Compare(a, b));
 }
 
 /*

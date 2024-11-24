@@ -75,7 +75,7 @@ enum texture_index
 	tag_pack_png_index,
 	tag_ps1_png_index,
 	tag_ps2_png_index,
-	tag_psp_png_index,
+	tag_vmc_png_index,
 	tag_warning_png_index,
 	tag_transfer_png_index,
 	tag_zip_png_index,
@@ -115,7 +115,7 @@ enum texture_index
 #define RGBA_R(c)		(uint8_t)((c & 0xFF000000) >> 24)
 #define RGBA_G(c)		(uint8_t)((c & 0x00FF0000) >> 16)
 #define RGBA_B(c)		(uint8_t)((c & 0x0000FF00) >> 8)
-#define RGBA_A(c)		(uint8_t) (c & 0x000000FF)
+#define RGBA_A(c)		(uint8_t) (((c & 0x000000FF) > 0x80) ? 0x80 : (c & 0x000000FF))
 
 #define DIALOG_TYPE_OK						0
 #define DIALOG_TYPE_YESNO					1

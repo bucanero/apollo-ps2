@@ -11,6 +11,7 @@
 #include <sifrpc.h>
 #include <loadfile.h>
 #include <libmc.h>
+#include <iopcontrol.h>
 
 #include "saves.h"
 #include "utils.h"
@@ -458,6 +459,10 @@ int main(int argc, char *argv[])
 	uint32_t deltaFrameTicks = 0;
 
 	dbglogger_init_mode(TTY_LOGGER, NULL, 0);
+#else //Only reboot if we dont need host0: Access via ps2client
+    SifInitRpc(0);
+    while (!SifIopReset("", 0)) {};
+    while (!SifIopSync()) {};
 #endif
 
 	// Initialize SDL functions

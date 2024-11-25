@@ -83,7 +83,6 @@ add_executable(${PROJECT_NAME}
   source/import_ps2.c
   source/psv_resign.c
   source/zip_util.c
-  source/vmp_resign.c
 )
 
 target_link_libraries(${PROJECT_NAME}
@@ -114,15 +113,20 @@ add_custom_target(createzip
   COMMAND @zip -r apollo-psp.zip APOLLO/
 )
 
-add_custom_target(copy
-  COMMAND @echo "Copying to $$PSPMS/PSP/GAME/APOLLO/EBOOT.PBP ..."
-  COMMAND @mkdir -p $$PSPMS/PSP/GAME/APOLLO
-  COMMAND @cp -v EBOOT.PBP $$PSPMS/PSP/GAME/APOLLO/EBOOT.PBP
+add_custom_target(packelf
+  COMMAND @echo "Packing release ELF ..."
+  COMMAND @${PS2DEV}/bin/ps2-packer-lite ${PROJECT_NAME} APOLLO.ELF
   DEPENDS ${PROJECT_NAME}
 )
 
 add_custom_target(release
   COMMAND @echo "Packing release ELF ..."
   COMMAND @${PS2DEV}/bin/ps2-packer-lite ${PROJECT_NAME} APOLLO.ELF
+  COMMAND @echo "Copying to /APOLLO-99PS2/ ..."
+  COMMAND @mkdir -p APOLLO-99PS2/
+  COMMAND @cp -v APOLLO.ELF APOLLO-99PS2/APOLLO.ELF
+  COMMAND @cp -v ${CMAKE_SOURCE_DIR}/icon.sys APOLLO-99PS2/icon.sys
+  COMMAND @cp -v ${CMAKE_SOURCE_DIR}/icon.ico APOLLO-99PS2/icon.ico
+  COMMAND @zip -r apollo-ps2.zip APOLLO-99PS2/
   DEPENDS ${PROJECT_NAME}
 )

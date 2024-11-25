@@ -17,6 +17,7 @@
 
 #define PS1_SAVES_PATH_USB      "PS1/SAVEDATA/"
 #define PS2_SAVES_PATH_USB      "PS2/SAVEDATA/"
+#define PS3_SAVES_PATH_USB      "PS3/EXPORT/PSV/"
 
 #define PS1_SAVES_PATH_HDD      APOLLO_PATH "PS1/"
 #define PSP_SAVES_PATH_HDD      USB_PATH USER_PATH_USB
@@ -26,8 +27,8 @@
 #define EXPORT_PATH             "APOLLO/EXPORT/"
 #define EXPORT_ZRIF_PATH        APOLLO_PATH "zrif/"
 
-#define IMP_PS2VMC_PATH_USB     USB_PATH "PS2/VMC/"
-#define IMPORT_RAP_PATH_USB     USB_PATH PS3_LICENSE_PATH
+#define IMP_PS2VMC_PATH_USB     "PS2/VMC/"
+#define IMP_OPLVMC_PATH_USB     "VMC/"
 
 #define ONLINE_URL              "https://bucanero.github.io/apollo-saves/"
 #define ONLINE_PATCH_URL        "https://bucanero.github.io/apollo-patches/PS2/"
@@ -48,6 +49,7 @@ enum save_sort_enum
     SORT_DISABLED,
     SORT_BY_NAME,
     SORT_BY_TITLE_ID,
+    SORT_BY_TYPE,
 };
 
 enum cmd_code_enum
@@ -116,17 +118,17 @@ enum cmd_code_enum
 enum save_type_enum
 {
     FILE_TYPE_NULL,
-    FILE_TYPE_PSV,
     FILE_TYPE_MENU,
     FILE_TYPE_PS2,
     FILE_TYPE_VMC,
+    FILE_TYPE_PSV,
 
     // PS1 File Types
     FILE_TYPE_MCS,
     FILE_TYPE_PSX,
     FILE_TYPE_ZIP,
 
-    // License Files
+    // PS2 File Types
     FILE_TYPE_MAX,
     FILE_TYPE_CBS,
     FILE_TYPE_XPS,
@@ -143,7 +145,7 @@ enum char_flag_enum
     CHAR_TAG_PS1,
     CHAR_TAG_PS2,
     CHAR_TAG_UNUSED1,
-    CHAR_TAG_PSP,
+    CHAR_TAG_VMC,
     CHAR_TAG_UNUSED2,
     CHAR_TAG_APPLY,
     CHAR_TAG_OWNER,
@@ -208,6 +210,7 @@ list_t * ReadVmcList(const char* userPath);
 void UnloadGameList(list_t * list);
 char * readTextFile(const char * path, long* size);
 int sortSaveList_Compare(const void* A, const void* B);
+int sortSaveList_Compare_Type(const void* A, const void* B);
 int sortSaveList_Compare_TitleID(const void* A, const void* B);
 int sortCodeList_Compare(const void* A, const void* B);
 int ReadCodes(save_entry_t * save);
@@ -256,6 +259,7 @@ int exportCBS(const char *mc_save, const char* out_path, const char* title);
 int vmc_export_psv(const char* save, const char* out_path);
 int vmc_export_psu(const char* path, const char* output);
 int vmc_import_psv(const char *input);
+int vmc_import_psu(const char *input);
 
 uint8_t* loadVmcIcon(const char *save, const char* icon);
 int sjis2ascii(uint8_t* bData);

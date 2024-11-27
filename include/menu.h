@@ -230,7 +230,6 @@ extern int menu_id;
 extern int menu_sel;
 extern int menu_old_sel[]; 
 extern int last_menu_id[];
-extern const char * menu_pad_help[];
 
 extern struct save_entry * selected_entry;
 extern struct code_entry * selected_centry;
@@ -250,8 +249,8 @@ extern void Draw_MainMenu_Ani(void);
 extern void Draw_HexEditor(const hexedit_data_t* hex);
 extern void Draw_HexEditor_Ani(const hexedit_data_t* hex);
 int LoadMenuTexture(const char* path, int idx);
-int LoadIconTexture(const char* path, int idx);
-int LoadRawIconTexture(uint8_t* icon, int idx);
+int LoadIconTexture(const char* path);
+int LoadRawIconTexture(int w, int h, uint8_t* icon);
 void initMenuOptions(void);
 
 void drawScene(void);

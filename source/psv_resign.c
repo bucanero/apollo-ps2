@@ -209,7 +209,7 @@ int psv_resign(const char *src_psv)
 	return 1;
 }
 
-void get_psv_filename(char* psvName, const char* path, const char* dirName)
+static void get_psv_filename(char* psvName, const char* path, const char* dirName)
 {
 	char tmpName[13];
 	const char *ch = &dirName[12];

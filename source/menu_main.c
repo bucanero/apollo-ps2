@@ -281,19 +281,19 @@ static void SetMenu(int id)
 			}
 			else if (selected_entry->flags & SAVE_FLAG_VMC && selected_entry->type == FILE_TYPE_PS2)
 			{
-				LoadRawIconTexture(loadVmcIcon(selected_entry->dir_name, selected_entry->icon), icon_png_file_index);
+				LoadRawIconTexture(128, 128, loadVmcIcon(selected_entry->dir_name, selected_entry->icon));
 			}
 			else if (selected_entry->flags & SAVE_FLAG_VMC && selected_entry->type == FILE_TYPE_PS1)
 			{
-//				LoadVmcTexture(16, 16, getIconRGBA(selected_entry->dir_name[0], 0));
-				menu_textures[icon_png_file_index].width = 128;
-				menu_textures[icon_png_file_index].height = 128;
+				LoadRawIconTexture(16, 16, getIconRGBA(selected_entry->icon[0], 0));
+				menu_textures[icon_png_file_index].width = 64;
+				menu_textures[icon_png_file_index].height = 64;
 			}
-			else if (selected_entry->flags & (SAVE_FLAG_PS2 | SAVE_FLAG_PS1) && selected_entry->icon)
+			else if ((selected_entry->flags & SAVE_FLAG_PS2) && selected_entry->icon)
 				snprintf(iconfile, sizeof(iconfile), "%s%s", selected_entry->path, selected_entry->icon);
 
 			if (file_exists(iconfile) == SUCCESS)
-				LoadIconTexture(iconfile, icon_png_file_index);
+				LoadIconTexture(iconfile);
 
 			if (apollo_config.doAni && menu_id != MENU_PATCH_VIEW && menu_id != MENU_CODE_OPTIONS)
 				Draw_CheatsMenu_Selection_Ani();
@@ -399,8 +399,17 @@ static void doSaveMenu(save_list_t * save_list)
 
 		if (selected_entry->type == FILE_TYPE_VMC && selected_entry->flags & SAVE_FLAG_VMC)
 		{
-			strncpy(vmc2_saves.path, selected_entry->path, sizeof(vmc2_saves.path));
-			SetMenu(MENU_PS2VMC_SAVES);
+			if (selected_entry->flags & SAVE_FLAG_PS1)
+			{
+				strncpy(vmc1_saves.path, selected_entry->path, sizeof(vmc1_saves.path));
+				SetMenu(MENU_PS1VMC_SAVES);
+			}
+			else
+			{
+				strncpy(vmc2_saves.path, selected_entry->path, sizeof(vmc2_saves.path));
+				SetMenu(MENU_PS2VMC_SAVES);
+			}
+
 			return;
 		}
 

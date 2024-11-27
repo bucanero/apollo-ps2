@@ -172,44 +172,47 @@ static void rawImageTexture(const rawImage_t *img, png_texture *tex)
 	SDL_FreeSurface(surface);
 }
 
-int LoadRawIconTexture(uint8_t* icon, int idx)
+int LoadRawIconTexture(int w, int h, uint8_t* icon)
 {
-	rawImage_t raw;
+	rawImage_t raw = {
+		.datap = (uint32_t*) icon,
+		.width = w,
+		.height = h
+	};
 
-	if (menu_textures[idx].texture)
-		SDL_DestroyTexture(menu_textures[idx].texture);
+	if (menu_textures[icon_png_file_index].texture)
+		SDL_DestroyTexture(menu_textures[icon_png_file_index].texture);
 
 	if (!icon)
 		return 0;
 
-	raw.datap = (uint32_t*) ps2IconTexture(icon);
+	rawImageTexture(&raw, &menu_textures[icon_png_file_index]);
+	menu_textures[icon_png_file_index].size = 1;
 	free(icon);
 
-	if (!raw.datap)
-	{
-		LOG("Invalid icon file!");
-		return 0;
-	}
-
-	raw.width = 128;
-	raw.height = 128;
-	menu_textures[idx].size = 1;
-
-	rawImageTexture(&raw, &menu_textures[idx]);
-	free(raw.datap);
 	return 1;
 }
 
-int LoadIconTexture(const char* fname, int idx)
+int LoadIconTexture(const char* fname)
 {
 	uint8_t* icon;
+	uint8_t* tex;
 	size_t len;
 
 	LOG("Loading '%s'", fname);
 	if (read_buffer(fname, &icon, &len) < 0)
 		return 0;
 
-	return (LoadRawIconTexture(icon, idx));
+	tex = ps2IconTexture(icon);
+	free(icon);
+
+	if (!tex)
+	{
+		LOG("Invalid icon file!");
+		return 0;
+	}
+
+	return (LoadRawIconTexture(128, 128, tex));
 }
 
 int LoadMenuTexture(const char* path, int idx)

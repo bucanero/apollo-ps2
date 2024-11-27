@@ -301,7 +301,7 @@ static void loadPalette(void)
             if ((redChannel | greenChannel | blueChannel | blackFlag) == 0)
                 ps1saves[slotNumber].iconPalette[colorCounter] = 0x00000000;
             else
-                ps1saves[slotNumber].iconPalette[colorCounter] = (redChannel << 24) | (greenChannel << 16) | (blueChannel << 8) | 0xFF;
+                ps1saves[slotNumber].iconPalette[colorCounter] = redChannel | (greenChannel << 8) | (blueChannel << 16) | 0xFF000000;
 
             colorCounter++;
         }
@@ -718,6 +718,8 @@ uint8_t* getIconRGBA(int slotNumber, int frame)
         return NULL;
 
     iconBytes = malloc(16 * 16 * sizeof(uint32_t));
+    if (!iconBytes)
+        return NULL;
 
     //Copy bytes from the given slot
     for (int i = 0; i < 256; i++)

@@ -25,8 +25,9 @@
 #define PS1_IMP_PATH_USB        "PS1/SAVEDATA/"
 
 #define EXPORT_PATH             "APOLLO/EXPORT/"
-#define EXPORT_ZRIF_PATH        APOLLO_PATH "zrif/"
 
+#define IMP_PS1VMC_PATH_USB     "PS1/VMC/"
+#define IMP_POPS_PATH_USB       "POPS/"
 #define IMP_PS2VMC_PATH_USB     "PS2/VMC/"
 #define IMP_OPLVMC_PATH_USB     "VMC/"
 
@@ -92,6 +93,8 @@ enum cmd_code_enum
     CMD_EXP_PS2SAVE,
     CMD_EXP_VMC2SAVE,
     CMD_EXP_VMC1SAVE,
+    CMD_EXP_PS1_VMP,
+    CMD_EXP_PS1_VM1,
 
 // Import commands
     CMD_IMP_SAVE_MC,

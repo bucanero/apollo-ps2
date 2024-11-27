@@ -14,6 +14,7 @@
 #include "lzari.h"
 #include "ps2mc.h"
 #include "saves.h"
+#include "ps2icon.h"
 
 #define  MAX_HEADER_MAGIC   "Ps2PowerSave"
 #define  CBS_HEADER_MAGIC   "CFU\0"
@@ -543,7 +544,10 @@ uint8_t* loadVmcIcon(const char *save, const char* icon)
         return NULL;
     }
 
-    return p;
+	uint8_t* tex = ps2IconTexture(p);
+	free(p);
+
+    return tex;
 }
 
 int importVMC(const char *save, const char* mc_path)

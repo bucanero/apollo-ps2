@@ -213,6 +213,7 @@ static option_entry_t* _getFileOptions(const char* save_path, const char* mask, 
 static void _addBackupCommands(save_entry_t* item)
 {
 	code_entry_t* cmd;
+	const char* filter = (item->flags & SAVE_FLAG_PS1) ? item->dir_name : "*";
 
 	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_SIGN " Apply Changes", CMD_RESIGN_SAVE);
 	list_append(item->codes, cmd);
@@ -237,17 +238,17 @@ static void _addBackupCommands(save_entry_t* item)
 
 	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_COPY " Export single save files", CMD_CODE_NULL);
 	cmd->options_count = 1;
-	cmd->options = _getFileOptions(item->path, "*", CMD_EXPORT_DATA_FILE);
+	cmd->options = _getFileOptions(item->path, filter, CMD_EXPORT_DATA_FILE);
 	list_append(item->codes, cmd);
 
 	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_COPY " Import single save files", CMD_CODE_NULL);
 	cmd->options_count = 1;
-	cmd->options = _getFileOptions(item->path, "*", CMD_IMPORT_DATA_FILE);
+	cmd->options = _getFileOptions(item->path, filter, CMD_IMPORT_DATA_FILE);
 	list_append(item->codes, cmd);
 
 	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_SIGN " Hex Edit save game files", CMD_CODE_NULL);
 	cmd->options_count = 1;
-	cmd->options = _getFileOptions(item->path, "*", CMD_HEX_EDIT_FILE);
+	cmd->options = _getFileOptions(item->path, filter, CMD_HEX_EDIT_FILE);
 	list_append(item->codes, cmd);
 }
 
@@ -292,31 +293,28 @@ static void add_ps1_commands(save_entry_t* save)
 {
 	char path[256];
 	code_entry_t* cmd;
-/*
-	cmd = _createCmdCode(PATCH_NULL, "----- " UTF8_CHAR_STAR " VMP Memory Cards " UTF8_CHAR_STAR " -----", CMD_CODE_NULL);
+
+	cmd = _createCmdCode(PATCH_NULL, "----- " UTF8_CHAR_STAR " Save Game Exports " UTF8_CHAR_STAR " -----", CMD_CODE_NULL);
 	list_append(save->codes, cmd);
 
-	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_SIGN " Resign Memory Card", CMD_CODE_NULL);
+	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_COPY " Export save to .MCS format", CMD_CODE_NULL);
 	cmd->options_count = 1;
-	cmd->options = _getFileOptions(save->path, "*.VMP", CMD_RESIGN_VMP);
+	cmd->options = _createExtOptions(2, "Export .MCS to Storage", (save->flags & SAVE_FLAG_VMC) ? CMD_EXP_VMC1SAVE : CMD_EXP_PS1SAVE);
+	cmd->options[0].id = PS1SAVE_MCS;
 	list_append(save->codes, cmd);
 
-	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_COPY " Export Memory Card to .MCR", CMD_CODE_NULL);
+	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_COPY " Export save to .PSX format", CMD_CODE_NULL);
 	cmd->options_count = 1;
-	cmd->options = _getFileOptions(save->path, "*.VMP", CMD_EXP_VMP2MCR);
+	cmd->options = _createExtOptions(2, "Export .PSX to Storage", (save->flags & SAVE_FLAG_VMC) ? CMD_EXP_VMC1SAVE : CMD_EXP_PS1SAVE);
+	cmd->options[0].id = PS1SAVE_AR;
 	list_append(save->codes, cmd);
 
-	snprintf(path, sizeof(path), PS1_SAVES_PATH_HDD "%s/", save->title_id);
-	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_COPY " Import .MCR files to SCEVMC0.VMP", CMD_CODE_NULL);
+	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_COPY " Export save to .PSV format", CMD_CODE_NULL);
 	cmd->options_count = 1;
-	cmd->options = _getFileOptions(path, "*.MCR", CMD_IMP_MCR2VMP0);
+	cmd->options = _createExtOptions(2, "Export .PSV to Storage", (save->flags & SAVE_FLAG_VMC) ? CMD_EXP_VMC1SAVE : CMD_EXP_PS1SAVE);
+	cmd->options[0].id = PS1SAVE_PSV;
 	list_append(save->codes, cmd);
 
-	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_COPY " Import .MCR files to SCEVMC1.VMP", CMD_CODE_NULL);
-	cmd->options_count = 1;
-	cmd->options = _getFileOptions(path, "*.MCR", CMD_IMP_MCR2VMP1);
-	list_append(save->codes, cmd);
-*/
 	return;
 }
 
@@ -351,7 +349,7 @@ static void add_ps2_commands(save_entry_t* item)
 	return;
 }
 
-option_entry_t* get_file_entries(const char* path, const char* mask)
+static option_entry_t* get_file_entries(const char* path, const char* mask)
 {
 	return _getFileOptions(path, mask, CMD_CODE_NULL);
 }
@@ -919,68 +917,31 @@ int sortSaveList_Compare_TitleID(const void* a, const void* b)
 	return (ret ? ret : sortSaveList_Compare(a, b));
 }
 
-/*
-static void read_usb_encrypted_saves(const char* userPath, list_t *list, uint64_t account)
+static void check_ps1_savegame(const char* path, const char* d_name, list_t *list, int flags)
 {
-	DIR *d, *d2;
-	struct dirent *dir, *dir2;
+	uint64_t size = 0;
 	save_entry_t *item;
 	char savePath[256];
+	char buf[128];
 
-	d = opendir(userPath);
+	snprintf(savePath, sizeof(savePath), "%s%s", path, d_name);
+	LOG("Checking PS1 save '%s'...", savePath);
 
-	if (!d)
+	get_file_size(savePath, &size);
+	if (!size || size % 0x2000 != 0 || size > 0x20000 || read_file(savePath, buf, sizeof(buf)) < 0)
 		return;
 
-	while ((dir = readdir(d)) != NULL)
-	{
-		if (S_ISDIR(dir->d_stat.st_mode) || strcmp(dir->d_name, ".") == 0 || strcmp(dir->d_name, "..") == 0)
-			continue;
+	sjis2ascii(buf+4);
+	item = _createSaveEntry(SAVE_FLAG_PS1 | flags, buf+4);
+	item->path = strdup(path);
+	item->type = FILE_TYPE_PS1;
+	item->dir_name = strdup(d_name);
+	asprintf(&item->icon, "%c", 0);
+	asprintf(&item->title_id, "%.10s", d_name+((strlen(d_name) < 12) ? 0 : 2));
 
-		snprintf(savePath, sizeof(savePath), "%s%s", userPath, dir->d_name);
-		d2 = opendir(savePath);
-
-		if (!d2)
-			continue;
-
-		LOG("Reading %s...", savePath);
-
-		while ((dir2 = readdir(d2)) != NULL)
-		{
-			if (!S_ISDIR(dir2->d_stat.st_mode) || endsWith(dir2->d_name, ".bin"))
-				continue;
-
-			snprintf(savePath, sizeof(savePath), "%s%s/%s.bin", userPath, dir->d_name, dir2->d_name);
-			if (file_exists(savePath) != SUCCESS)
-				continue;
-
-			snprintf(savePath, sizeof(savePath), "(Encrypted) %s/%s", dir->d_name, dir2->d_name);
-			item = _createSaveEntry(SAVE_FLAG_PSP | 0, savePath);
-			item->type = FILE_TYPE_PSV;
-
-			asprintf(&item->path, "%s%s/", userPath, dir->d_name);
-			asprintf(&item->title_id, "%.9s", dir->d_name);
-			item->dir_name = strdup(dir2->d_name);
-
-//			if (apollo_config.account_id == account)
-//				item->flags |= SAVE_FLAG_OWNER;
-
-			snprintf(savePath, sizeof(savePath), "%s%s/%s", userPath, dir->d_name, dir2->d_name);
-			
-			uint64_t size = 0;
-			get_file_size(savePath, &size);
-//			item->blocks = size / ORBIS_SAVE_DATA_BLOCK_SIZE;
-
-			LOG("[%s] F(%X) name '%s'", item->title_id, item->flags, item->name);
-			list_append(list, item);
-
-		}
-		closedir(d2);
-	}
-
-	closedir(d);
+	LOG("[%s] F(%X) name '%s'", item->title_id, item->flags, item->name);
+	list_append(list, item);
 }
-*/
 
 static void read_ps2_savegames(const char* userPath, list_t *list, int flags)
 {
@@ -996,29 +957,39 @@ static void read_ps2_savegames(const char* userPath, list_t *list, int flags)
 
 	while ((dir = readdir(d)) != NULL)
 	{
-		if (!S_ISDIR(dir->d_stat.st_mode) || strcmp(dir->d_name, ".") == 0 || strcmp(dir->d_name, "..") == 0)
+		if (strcmp(dir->d_name, ".") == 0 || strcmp(dir->d_name, "..") == 0)
 			continue;
+
+		else if (!S_ISDIR(dir->d_stat.st_mode))
+		{
+			check_ps1_savegame(userPath, dir->d_name, list, flags);
+			continue;
+		}
 
 		snprintf(sysPath, sizeof(sysPath), "%s%s/icon.sys", userPath, dir->d_name);
 
 		LOG("Reading %s...", sysPath);
 		if (read_file(sysPath, (uint8_t*) &iconsys, sizeof(mcIcon)) < 0) {
 			LOG("Unable to read from '%s'", sysPath);
+
+			// check PS1 save on PS2 memcard
+			snprintf(sysPath, sizeof(sysPath), "%s%s/", userPath, dir->d_name);
+			check_ps1_savegame(sysPath, dir->d_name, list, flags);
 			continue;
 		}
 
+		memcpy(sysPath, iconsys.title, sizeof(iconsys.title));
 		if (iconsys.nlOffset)
 		{
-			iconsys.nlOffset /= 2;
-			memmove(&iconsys.title[iconsys.nlOffset+1], &iconsys.title[iconsys.nlOffset], sizeof(iconsys.title) - iconsys.nlOffset*2);
-			iconsys.title[iconsys.nlOffset] = 0x5081;
+			memmove(&sysPath[iconsys.nlOffset+2], &sysPath[iconsys.nlOffset], sizeof(iconsys.title) - iconsys.nlOffset);
+			memcpy(&sysPath[iconsys.nlOffset], "\x81\x50", 2);
 		}
-		sjis2ascii((uint8_t*) iconsys.title);
-		item = _createSaveEntry(SAVE_FLAG_PS2 | flags, (char*) iconsys.title);
+		sjis2ascii(sysPath);
+		item = _createSaveEntry(SAVE_FLAG_PS2 | flags, sysPath);
 		item->type = FILE_TYPE_PS2;
-		item->icon = strdup(iconsys.copy);
+		item->icon = strdup(iconsys.view);
 		item->dir_name = strdup(dir->d_name);
-		asprintf(&item->title_id, "%.10s", dir->d_name+2);
+		asprintf(&item->title_id, "%.10s", dir->d_name+((strlen(dir->d_name) < 12) ? 0 : 2));
 		asprintf(&item->path, "%s%s/", userPath, dir->d_name);
 
 		if(item->title_id[4] == '-')
@@ -1102,7 +1073,9 @@ static void read_psx_savegames(const char* userPath, const char* folder, list_t 
 		}
 		else if (endsWith(dir->d_name, ".PSV"))
 		{
-			toff = 0x80;
+			snprintf(psvPath, sizeof(psvPath), "%s%s%s", userPath, folder, dir->d_name);
+			read_file(psvPath, (uint8_t*) data, sizeof(data));
+			toff = (data[0x3C] == 0x01) ? 0x64 : 0x80;
 			type = FILE_TYPE_PSV;
 		}
 		else if (endsWith(dir->d_name, ".XPS") || endsWith(dir->d_name, ".SPS"))
@@ -1129,7 +1102,7 @@ static void read_psx_savegames(const char* userPath, const char* folder, list_t 
 		item = _createSaveEntry(SAVE_FLAG_PACKED, dir->d_name);
 		set_psx_import_codes(item);
 
-		item->flags |= (type == FILE_TYPE_PSX || type == FILE_TYPE_MCS) ? SAVE_FLAG_PS1 : SAVE_FLAG_PS2;
+		item->flags |= (type == FILE_TYPE_PSX || type == FILE_TYPE_MCS || toff == 0x64) ? SAVE_FLAG_PS1 : SAVE_FLAG_PS2;
 		item->type = type;
 		item->path = strdup(psvPath);
 		item->dir_name = strdup(data);
@@ -1266,6 +1239,7 @@ list_t * ReadUsbList(const char* userPath)
 	read_vmc_files(userPath, IMP_PS2VMC_PATH_USB, list);
 	read_vmc_files(userPath, IMP_PS1VMC_PATH_USB, list);
 	read_vmc_files(userPath, IMP_POPS_PATH_USB, list);
+	read_psx_savegames(userPath, PS1_SAVES_PATH_USB, list);
 	read_psx_savegames(userPath, PS2_SAVES_PATH_USB, list);
 	read_psx_savegames(userPath, PS3_SAVES_PATH_USB, list);
 
@@ -1470,26 +1444,13 @@ list_t * ReadVmc1List(const char* userPath)
 	list_append(item->codes, cmd);
 	list_append(list, item);
 
-	item = _createSaveEntry(SAVE_FLAG_PS1, CHAR_ICON_COPY " Import Saves to Virtual MemCard");
-	item->path = strdup(USB_PATH);
-	item->title_id = strdup("HDD");
+	item = _createSaveEntry(SAVE_FLAG_PS1, CHAR_ICON_COPY " Import Saves to Virtual Card");
 	item->dir_name = strdup(userPath);
+	item->path = strdup(userPath);
+	strchr(item->path, '/')[1] = 0;
+	asprintf(&item->title_id, " %s", item->path);
 	item->type = FILE_TYPE_MENU;
 	list_append(list, item);
-
-	for (int i = 0; i <= MAX_USB_DEVICES; i++)
-	{
-		snprintf(filePath, sizeof(filePath), USB_PATH PS1_SAVES_PATH_USB, i);
-		if (i && dir_exists(filePath) != SUCCESS)
-			continue;
-
-		item = _createSaveEntry(SAVE_FLAG_PS1, CHAR_ICON_COPY " Import Saves to Virtual MemCard");
-		asprintf(&item->path, USB_PATH, i);
-		asprintf(&item->title_id, "USB %d", i);
-		item->dir_name = strdup(userPath);
-		item->type = FILE_TYPE_MENU;
-		list_append(list, item);
-	}
 
 	for (int i = 0; i < PS1CARD_MAX_SLOTS; i++)
 	{
@@ -1590,18 +1551,18 @@ list_t * ReadVmc2List(const char* userPath)
 				if (r != sizeof(mcIcon))
 					continue;
 
+				memcpy(filePath, iconsys.title, sizeof(iconsys.title));
 				if (iconsys.nlOffset)
 				{
-					iconsys.nlOffset /= 2;
-					memmove(&iconsys.title[iconsys.nlOffset+1], &iconsys.title[iconsys.nlOffset], sizeof(iconsys.title) - iconsys.nlOffset*2);
-					iconsys.title[iconsys.nlOffset] = 0x5081;
+					memmove(&filePath[iconsys.nlOffset+2], &filePath[iconsys.nlOffset], sizeof(iconsys.title) - iconsys.nlOffset);
+					memcpy(&filePath[iconsys.nlOffset], "\x81\x50", 2);
 				}
-				sjis2ascii((uint8_t*) iconsys.title);
-				item = _createSaveEntry(SAVE_FLAG_PS2 | SAVE_FLAG_VMC, (char*) iconsys.title);
+				sjis2ascii(filePath);
+				item = _createSaveEntry(SAVE_FLAG_PS2 | SAVE_FLAG_VMC, filePath);
 				item->type = FILE_TYPE_PS2;
-				item->icon = strdup(iconsys.copy);
+				item->icon = strdup(iconsys.view);
 				item->dir_name = strdup(dirent.name);
-				asprintf(&item->title_id, "%.10s", dirent.name+2);
+				asprintf(&item->title_id, "%.10s", dirent.name+((strlen(dirent.name) < 12) ? 0 : 2));
 				asprintf(&item->path, "%s\n%s/", userPath, dirent.name);
 
 				if(item->title_id[4] == '-')
@@ -1622,11 +1583,12 @@ int get_save_details(const save_entry_t* save, char **details)
 {
 	if (save->flags & SAVE_FLAG_PACKED)
 	{
-		asprintf(details, "%s\n----- Packed PS2 Save -----\n"
+		asprintf(details, "%s\n\n----- Packed PS%d Save -----\n"
 			"File: %s\n"
 			"Title ID: %s\n"
 			"Folder: %s\n",
 			save->path,
+			(save->flags & SAVE_FLAG_PS1) ? 1 : 2,
 			save->name,
 			save->title_id,
 			save->dir_name);
@@ -1651,12 +1613,10 @@ int get_save_details(const save_entry_t* save, char **details)
 		asprintf(details, "%s\n\n----- PS1 Save -----\n"
 			"Game: %s\n"
 			"Title ID: %s\n"
-			"Block #: %d\n"
 			"File: %s\n",
 			save->path,
 			save->name,
 			save->title_id,
-			save->icon[0],
 			save->dir_name);
 
 		return 1;

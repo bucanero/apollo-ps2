@@ -82,6 +82,9 @@ void setIconBytes(int slotNumber, uint8_t* iconBytes);
 //Return all bytes of the specified save
 uint8_t* getSaveBytes(int slotNumber, uint32_t* saveLen);
 
+//Input given bytes back to the Memory Card
+int setSaveBytes(const uint8_t* saveBytes, int saveBytes_Length, int* reqSlots);
+
 //Toggle deleted/undeleted status
 void toggleDeleteSave(int slotNumber);
 

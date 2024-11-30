@@ -91,6 +91,7 @@ enum cmd_code_enum
 // Export commands
     CMD_EXP_VMP2MCR,
     CMD_EXP_PS2SAVE,
+    CMD_EXP_PS1SAVE,
     CMD_EXP_VMC2SAVE,
     CMD_EXP_VMC1SAVE,
     CMD_EXP_PS1_VMP,
@@ -274,5 +275,3 @@ uint8_t* loadVmcIcon(const char *save, const char* icon);
 int sjis2ascii(uint8_t* bData);
 int psv_resign(const char *src_psv);
 int vmp_resign(const char *src_vmp);
-int ps1_mcr2vmp(const char* mcrfile, const char* vmp_path);
-int ps1_vmp2mcr(const char* vmpfile, const char* mcr_path);

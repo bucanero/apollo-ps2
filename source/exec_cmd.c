@@ -964,13 +964,6 @@ static int _copy_save_file(const char* src_path, const char* dst_path, const cha
 static void exportSaveFile(const save_entry_t* entry, const char* filename)
 {
 	char path[256];
-	uint8_t key[16];
-
-if(0)//	if (entry->flags & SAVE_FLAG_PSP && !get_psp_save_key(entry, key))
-	{
-		show_message("Error! No game decryption key available for %s", entry->title_id);
-		return;
-	}
 
 	snprintf(path, sizeof(path), APOLLO_USER_PATH "%s/", entry->title_id);
 	mkdirs(path);
@@ -992,18 +985,11 @@ if(0)//		if (entry->flags & SAVE_FLAG_PSP && !psp_DecryptSavedata(entry->path, p
 static void importSaveFile(const save_entry_t* entry, const char* filename)
 {
 	char path[256];
-	uint8_t key[16];
-
-if(0)//	if (entry->flags & SAVE_FLAG_PSP && !get_psp_save_key(entry, key))
-	{
-		show_message("Error! No game decryption key available for %s", entry->title_id);
-		return;
-	}
 
 	snprintf(path, sizeof(path), APOLLO_USER_PATH "%s/%s", entry->title_id, filename);
 	if (file_exists(path) != SUCCESS)
 	{
-		show_message("Error! Can't find decrypted save-game file:\n%s", path);
+		show_message("Error! Can't find save-game file:\n%s", path);
 		return;
 	}
 

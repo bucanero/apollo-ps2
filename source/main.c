@@ -103,8 +103,8 @@ save_list_t usb_saves = {
 * PS1 VMC list
 */
 save_list_t vmc1_saves = {
-	.icon_id = cat_warning_png_index,
-	.title = "Virtual MemCard",
+    .icon_id = cat_warning_png_index,
+    .title = "Virtual MemCard",
     .list = NULL,
     .path = "",
     .ReadList = &ReadVmc1List,
@@ -116,8 +116,8 @@ save_list_t vmc1_saves = {
 * PS2 VMC list
 */
 save_list_t vmc2_saves = {
-	.icon_id = cat_warning_png_index,
-	.title = "Virtual MemCard",
+    .icon_id = cat_warning_png_index,
+    .title = "Virtual MemCard",
     .list = NULL,
     .path = "",
     .ReadList = &ReadVmc2List,

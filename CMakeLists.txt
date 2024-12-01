@@ -78,9 +78,11 @@ add_executable(${PROJECT_NAME}
   source/mcio.c
   source/ttf_fonts.c
   source/util.c
+  source/ps1card.c
   source/ps2pad.c
   source/ps2icon.c
   source/import_ps2.c
+  source/import_ps1.c
   source/psv_resign.c
   source/zip_util.c
 )

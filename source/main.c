@@ -32,7 +32,7 @@
 extern const uint8_t _binary_data_inside_ahx_start;
 extern const uint8_t _binary_data_inside_ahx_size;
 
-// Audio handle
+// Audio player
 extern const uint8_t _binary_data_ahx_irx_start;
 extern const uint8_t _binary_data_ahx_irx_size;
 
@@ -73,21 +73,6 @@ uint32_t* texture_mem;                      // Pointers to texture memory
 uint32_t* free_mem;                         // Pointer after last texture
 
 
-const char * menu_pad_help[TOTAL_MENU_IDS] = { NULL,												//Main
-								"\x10 Select    \x13 Back    \x12 Details    \x11 Refresh",			//Trophy list
-								"\x10 Select    \x13 Back    \x12 Details    \x11 Refresh",			//USB list
-								"\x10 Select    \x13 Back    \x12 Details    \x11 Refresh",			//HDD list
-								"\x10 Select    \x13 Back    \x11 Refresh",							//Online list
-								"\x10 Select    \x13 Back    \x11 Refresh",							//User backup
-								"\x10 Select    \x13 Back",											//Options
-								"\x13 Back",														//About
-								"\x10 Select    \x12 View Code    \x13 Back",						//Select Cheats
-								"\x13 Back",														//View Cheat
-								"\x10 Select    \x13 Back",											//Cheat Option
-								"\x13 Back",														//View Details
-								"\x10 Value Up  \x11 Value Down   \x13 Exit",						//Hex Editor
-								};
-
 /*
 * HDD save list
 */
@@ -115,15 +100,28 @@ save_list_t usb_saves = {
 };
 
 /*
-* Trophy list
+* PS1 VMC list
 */
-save_list_t vmc_saves = {
-	.icon_id = cat_warning_png_index,
-	.title = "Virtual MemCard",
+save_list_t vmc1_saves = {
+    .icon_id = cat_warning_png_index,
+    .title = "Virtual MemCard",
     .list = NULL,
     .path = "",
-    .ReadList = &ReadVmcList,
-    .ReadCodes = &ReadVmcCodes,
+    .ReadList = &ReadVmc1List,
+    .ReadCodes = &ReadVmc1Codes,
+    .UpdatePath = &update_vmc_path,
+};
+
+/*
+* PS2 VMC list
+*/
+save_list_t vmc2_saves = {
+    .icon_id = cat_warning_png_index,
+    .title = "Virtual MemCard",
+    .list = NULL,
+    .path = "",
+    .ReadList = &ReadVmc2List,
+    .ReadCodes = &ReadVmc2Codes,
     .UpdatePath = &update_vmc_path,
 };
 
@@ -153,6 +151,39 @@ save_list_t user_backup = {
     .UpdatePath = NULL,
 };
 
+
+static const char* get_menu_help(int id)
+{
+	switch (id)
+	{
+	case MENU_PS1VMC_SAVES:
+	case MENU_PS2VMC_SAVES:
+	case MENU_USB_SAVES:
+	case MENU_HDD_SAVES:
+	case MENU_ONLINE_DB:
+		return "\x10 Select    \x13 Back    \x12 Details    \x11 Refresh";
+
+	case MENU_HEX_EDITOR:
+		return "\x10 Value Up  \x11 Value Down   \x13 Exit";
+
+	case MENU_CREDITS:
+	case MENU_PATCH_VIEW:
+	case MENU_SAVE_DETAILS:
+		return "\x13 Back";
+
+	case MENU_USER_BACKUP:
+		return "\x10 Select    \x13 Back    \x11 Refresh";
+
+	case MENU_SETTINGS:
+	case MENU_CODE_OPTIONS:
+		return "\x10 Select    \x13 Back";
+
+	case MENU_PATCHES:
+		return "\x10 Select    \x12 View Code    \x13 Back";
+	}
+
+	return "";
+}
 
 static int initPad(void)
 {
@@ -355,95 +386,12 @@ static int initInternal(void)
 	// Initialise
 	SifInitRpc(0);
 
-	ret = SifLoadModule("rom0:SIO2MAN", 0, NULL);
-	if (ret < 0) {
-		LOG("Failed to load module: SIO2MAN");
-		return(0);
-	}
-
-/*
-	ret = SifLoadModule("rom0:XMCMAN", 0, NULL);
-	if (ret < 0) {
-		LOG("Failed to load module: MCMAN");
-		return(0);
-	}
-
-	ret = SifLoadModule("rom0:XMCSERV", 0, NULL);
-	if (ret < 0) {
-		LOG("Failed to load module: MCSERV");
-		return(0);
-	}
-*/
-
 	if(mcInit(MC_TYPE_XMC) < 0) {
 		LOG("Failed to initialise memcard server!");
 		return(0);
 	}
 
 	return 1;
-}
-
-static int initialize_vitashell_modules()
-{
-	/*
-	SceUID kern_modid, user_modid;
-	char module_path[60] = {0};
-	int search_unk[2];
-	int res = 0;
-
-	// Load kernel module
-	if (_vshKernelSearchModuleByName("VitaShellKernel2", search_unk) < 0)
-	{
-		snprintf(module_path, sizeof(module_path), "ux0:VitaShell/module/kernel.skprx");
-		if (file_exists(module_path) != SUCCESS)
-		{
-			snprintf(module_path, sizeof(module_path), APOLLO_APP_PATH "sce_module/kernel.skprx");
-			if (file_exists(module_path) != SUCCESS)
-			{
-				LOG("Kernel module not found!");
-				return 0;
-			}
-		}
-
-		kern_modid = taiLoadKernelModule(module_path, 0, NULL);
-		if (kern_modid >= 0)
-		{
-			res = taiStartKernelModule(kern_modid, 0, NULL, 0, NULL, NULL);
-			if (res < 0)
-				taiStopUnloadKernelModule(kern_modid, 0, NULL, 0, NULL, NULL);
-		}
-
-		if (kern_modid < 0 || res < 0)
-		{
-			LOG("Kernel module load error: %x\nPlease reboot.", kern_modid);
-			return 0;
-		}
-	}
-
-	// Load user module
-	snprintf(module_path, sizeof(module_path), "ux0:VitaShell/module/user.suprx");
-	if (file_exists(module_path) != SUCCESS)
-	{
-		snprintf(module_path, sizeof(module_path), APOLLO_APP_PATH "sce_module/user.suprx");
-		if (file_exists(module_path) != SUCCESS)
-		{
-			LOG("User module not found!");
-			return 0;
-		}
-	}
-
-	user_modid = sceKernelLoadStartModule(module_path, 0, NULL, 0, NULL, NULL);
-	if (user_modid < 0)
-	{
-		LOG("User module load %s error: %x\nPlease reboot.", module_path, user_modid);
-		return 0;
-	}
-
-	// Allow writing to ux0:app/NP0APOLLO
-	sceAppMgrUmount("app0:");
-	sceAppMgrUmount("savedata0:");
-*/
-    return 1;
 }
 
 /*
@@ -493,10 +441,6 @@ int main(int argc, char *argv[])
 		LOG("SDL_CreateRenderer: %s", SDL_GetError());
 		return (-1);
 	}
-
-	// Initialize jailbreak
-	if (!initialize_vitashell_modules())
-		LOG("Error loading VitaShell modules!");
 
 	mkdirs(APOLLO_DATA_PATH);
 	mkdirs(APOLLO_LOCAL_CACHE);
@@ -559,22 +503,20 @@ int main(int argc, char *argv[])
 		drawScene();
 
 		//Draw help
-		if (menu_pad_help[menu_id])
+		if (menu_id)
 		{
 			u8 alpha = 0xFF;
 			if (ps2PadGetConf()->idle > 0x100)
 			{
 				int dec = (ps2PadGetConf()->idle - 0x100) * 4;
-				if (dec > alpha)
-					dec = alpha;
-				alpha -= dec;
+				alpha = (dec > 0xFF) ? 0 : (alpha - dec);
 			}
 			
 			SetFontSize(APP_FONT_SIZE_DESCRIPTION);
 			SetCurrentFont(font_adonais_regular);
 			SetFontAlign(FONT_ALIGN_SCREEN_CENTER);
 			SetFontColor(APP_FONT_COLOR | alpha, 0);
-			DrawString(0, SCREEN_HEIGHT - 40, (char *)menu_pad_help[menu_id]);
+			DrawString(0, SCREEN_HEIGHT - 40, get_menu_help(menu_id));
 			SetFontAlign(FONT_ALIGN_LEFT);
 		}
 

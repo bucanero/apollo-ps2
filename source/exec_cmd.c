@@ -1078,6 +1078,7 @@ void execCodeCommand(code_entry_t* code, const char* codecmd)
 			code->activated = 0;
 			break;
 
+		case CMD_EXP_PS1SAVE:
 		case CMD_EXP_VMC1SAVE:
 			exportVmc1Save(selected_entry, code->options[0].id, codecmd[1]);
 			code->activated = 0;

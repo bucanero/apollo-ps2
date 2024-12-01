@@ -283,7 +283,7 @@ static void SetMenu(int id)
 			{
 				LoadRawIconTexture(128, 128, loadVmcIcon(selected_entry->dir_name, selected_entry->icon));
 			}
-			else if (selected_entry->flags & SAVE_FLAG_VMC && selected_entry->type == FILE_TYPE_PS1)
+			else if (selected_entry->flags & SAVE_FLAG_PS1 && selected_entry->type == FILE_TYPE_PS1)
 			{
 				LoadRawIconTexture(16, 16, getIconRGBA(selected_entry->icon[0], 0));
 				menu_textures[icon_png_file_index].width = 64;

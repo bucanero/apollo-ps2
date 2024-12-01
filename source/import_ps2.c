@@ -555,8 +555,8 @@ uint8_t* loadVmcIcon(const char *save, const char* icon)
         return NULL;
     }
 
-	uint8_t* tex = ps2IconTexture(p);
-	free(p);
+    uint8_t* tex = ps2IconTexture(p);
+    free(p);
 
     return tex;
 }

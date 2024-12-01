@@ -582,7 +582,18 @@ static void importSave(const save_entry_t* save, const char* mc_path)
 		break;
 
 	case FILE_TYPE_PSV:
-		ret = importPSV(save->path, mc_path);
+		if (save->flags & SAVE_FLAG_PS1)
+			ret = importPS1psv(save->path, mc_path, save->dir_name);
+		else
+			ret = importPSV(save->path, mc_path);
+		break;
+
+	case FILE_TYPE_MCS:
+		ret = importPS1mcs(save->path, mc_path, save->dir_name);
+		break;
+
+	case FILE_TYPE_PSX:
+		ret = importPS1psx(save->path, mc_path, save->dir_name);
 		break;
 
 	default:

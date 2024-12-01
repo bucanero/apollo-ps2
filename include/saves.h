@@ -121,6 +121,7 @@ enum cmd_code_enum
 #define SAVE_FLAG_LOCKED        128
 #define SAVE_FLAG_ONLINE        256
 #define SAVE_FLAG_VMC           512
+#define SAVE_FLAG_PS1CARD       1024
 
 enum save_type_enum
 {
@@ -252,7 +253,7 @@ void stop_loading_screen(void);
 
 void execCodeCommand(code_entry_t* code, const char* codecmd);
 
-int create_savegame_folder(const char* folder);
+int check_memcard_type(const char *mcpath);
 int get_save_details(const save_entry_t *save, char** details);
 
 int importCBS(const char *save, const char *mc_path);
@@ -275,3 +276,7 @@ uint8_t* loadVmcIcon(const char *save, const char* icon);
 int sjis2ascii(uint8_t* bData);
 int psv_resign(const char *src_psv);
 int vmp_resign(const char *src_vmp);
+
+int importPS1psv(const char *save, const char* mc_path, const char* fname);
+int importPS1mcs(const char *save, const char* mc_path, const char* fname);
+int importPS1psx(const char *save, const char* mc_path, const char* fname);

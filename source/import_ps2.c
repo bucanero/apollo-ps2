@@ -61,6 +61,17 @@ static const uint8_t cbsKey[256] = {
     0x6b, 0x93, 0x32, 0x48, 0xb6, 0x30, 0x43, 0xa5
 };
 
+
+int check_memcard_type(const char *mcpath)
+{
+    int val, type;
+
+    mcGetInfo(mcpath[2] - '0', 0, &type, &val, &val);
+    mcSync(0, NULL, &val);
+
+    return type;
+}
+
 static void printMAXHeader(const maxHeader_t *header)
 {
     if(!header)
@@ -453,8 +464,8 @@ int importPSV(const char *save, const char* mc_path)
     if(!psvFile)
         return 0;
 
-    fread(&dataPos, 1, sizeof(uint32_t), psvFile);
-    if (dataPos != 0x50535600)
+    fread(dstName, 1, sizeof(dstName), psvFile);
+    if ((memcmp(dstName, PSV_MAGIC, 4) != 0) || (dstName[0x3C] != 0x02))
     {
         fclose(psvFile);
         return 0;

@@ -399,6 +399,9 @@ int ReadCodes(save_entry_t * save)
 	code = _createCmdCode(PATCH_COMMAND, CHAR_ICON_USER " View Save Details", CMD_VIEW_DETAILS);
 	list_append(save->codes, code);
 
+	code = _createCmdCode(PATCH_COMMAND, CHAR_ICON_WARN " Delete Save Game", CMD_DELETE_SAVE);
+	list_append(save->codes, code);
+
 	if (save->flags & SAVE_FLAG_PS1)
 	{
 		add_ps1_commands(save);

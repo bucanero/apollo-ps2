@@ -780,6 +780,7 @@ static void resignSave(save_entry_t* entry)
 
 static int deleteSave(const save_entry_t* save)
 {
+	char path[256];
 	int ret = 0;
 
 	if (!show_dialog(DIALOG_TYPE_YESNO, "Do you want to delete %s?", save->dir_name))
@@ -787,6 +788,20 @@ static int deleteSave(const save_entry_t* save)
 
 	if (save->flags & SAVE_FLAG_VMC)
 		ret = (save->flags & SAVE_FLAG_PS1) ? formatSave(save->icon[0]) : vmc_delete_save(save->dir_name);
+
+	else if (save->flags & SAVE_FLAG_MEMCARD)
+	{
+		if (save->flags & SAVE_FLAG_PS1CARD)
+		{
+			snprintf(path, sizeof(path), "%s%s", save->path, save->dir_name);
+			ret = (remove(path) == SUCCESS);
+		}
+		else
+		{
+			clean_directory(save->path);
+			ret = (remove(save->path) == SUCCESS);
+		}
+	}
 
 	if (ret)
 		show_message("Save successfully deleted:\n%s", save->dir_name);

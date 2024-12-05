@@ -1063,7 +1063,7 @@ int vmc_export_psu(const char* path, const char* output)
 			}
 			free(p);
 
-			entry.length = 1024 - (dirent.stat.size % 1024);
+			entry.length = (1024 - (dirent.stat.size % 1024)) % 1024;
 			while(entry.length--)
 				fputc(0xFF, fh);
 		}

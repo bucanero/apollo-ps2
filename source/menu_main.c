@@ -153,17 +153,26 @@ static void SetMenu(int id)
 			break;
 
 		case MENU_PATCHES: //Cheat Selection Menu
-			if (selected_entry->flags & SAVE_FLAG_UPDATED && id == MENU_PS2VMC_SAVES)
+			if (selected_entry->flags & SAVE_FLAG_UPDATED)
 			{
+				switch (id)
+				{
+				case MENU_PS2VMC_SAVES:
+					mcio_vmcFinish();
+					ReloadUserSaves(&vmc2_saves);
+					break;
+				
+				case MENU_PS1VMC_SAVES:
+					saveMemoryCard(vmc1_saves.path, 0, 0);
+					ReloadUserSaves(&vmc1_saves);
+					break;
+
+				case MENU_HDD_SAVES:
+					ReloadUserSaves(&hdd_saves);
+					break;
+				}
+
 				selected_entry->flags ^= SAVE_FLAG_UPDATED;
-				mcio_vmcFinish();
-				ReloadUserSaves(&vmc2_saves);
-			}
-			else if (selected_entry->flags & SAVE_FLAG_UPDATED && id == MENU_PS1VMC_SAVES)
-			{
-				selected_entry->flags ^= SAVE_FLAG_UPDATED;
-				saveMemoryCard(vmc1_saves.path, 0, 0);
-				ReloadUserSaves(&vmc1_saves);
 			}
 			break;
 

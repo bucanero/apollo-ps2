@@ -142,7 +142,7 @@ static void SetMenu(int id)
 
 		case MENU_MAIN_SCREEN: //Main Menu
 		case MENU_USB_SAVES: //USB Saves Menu
-		case MENU_HDD_SAVES: //HHD Saves Menu
+		case MENU_MEMCARD_SAVES: //HHD Saves Menu
 		case MENU_ONLINE_DB: //Cheats Online Menu
 		case MENU_USER_BACKUP: //Backup Menu
 			menu_textures[icon_png_file_index].size = 0;
@@ -167,7 +167,7 @@ static void SetMenu(int id)
 					ReloadUserSaves(&vmc1_saves);
 					break;
 
-				case MENU_HDD_SAVES:
+				case MENU_MEMCARD_SAVES:
 					ReloadUserSaves(&hdd_saves);
 					break;
 				}
@@ -235,7 +235,7 @@ static void SetMenu(int id)
 				Draw_UserCheatsMenu_Ani(&usb_saves);
 			break;
 
-		case MENU_HDD_SAVES: //HDD saves Menu
+		case MENU_MEMCARD_SAVES: //HDD saves Menu
 			if (!hdd_saves.list && !ReloadUserSaves(&hdd_saves))
 				return;
 
@@ -272,7 +272,7 @@ static void SetMenu(int id)
 
 		case MENU_PATCHES: //Cheat Selection Menu
 			//if entering from game list, don't keep index, otherwise keep
-			if (menu_id == MENU_USB_SAVES || menu_id == MENU_HDD_SAVES || menu_id == MENU_ONLINE_DB || 
+			if (menu_id == MENU_USB_SAVES || menu_id == MENU_MEMCARD_SAVES || menu_id == MENU_ONLINE_DB || 
 				menu_id == MENU_PS2VMC_SAVES || menu_id == MENU_PS1VMC_SAVES)
 				menu_old_sel[MENU_PATCHES] = 0;
 
@@ -849,7 +849,7 @@ void drawScene(void)
 			doSaveMenu(&usb_saves);
 			break;
 
-		case MENU_HDD_SAVES: //HDD Saves Menu
+		case MENU_MEMCARD_SAVES: //HDD Saves Menu
 			doSaveMenu(&hdd_saves);
 			break;
 

@@ -780,6 +780,13 @@ static void doPatchMenu(void)
 				return;
 			}
 
+			if (selected_centry->codes[0] == CMD_DELETE_SAVE)
+			{
+				selected_centry->activated = 0;
+				SetMenu(last_menu_id[MENU_PATCHES]);
+				return;
+			}
+
 			if (selected_centry->codes[0] == CMD_VIEW_RAW_PATCH)
 			{
 				selected_centry->activated = 0;

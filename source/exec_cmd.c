@@ -778,6 +778,24 @@ static void resignSave(save_entry_t* entry)
     show_message("Save %s successfully modified!", entry->title_id);
 }
 
+static int deleteSave(const save_entry_t* save)
+{
+	int ret = 0;
+
+	if (!show_dialog(DIALOG_TYPE_YESNO, "Do you want to delete %s?", save->dir_name))
+		return 0;
+
+	if (save->flags & SAVE_FLAG_VMC)
+		ret = (save->flags & SAVE_FLAG_PS1) ? formatSave(save->icon[0]) : vmc_delete_save(save->dir_name);
+
+	if (ret)
+		show_message("Save successfully deleted:\n%s", save->dir_name);
+	else
+		show_message("Error! Couldn't delete save:\n%s", save->dir_name);
+
+	return ret;
+}
+
 static void exportAllSaves(const save_entry_t* save, int dev, int all)
 {
 	struct tm t;
@@ -1138,6 +1156,13 @@ void execCodeCommand(code_entry_t* code, const char* codecmd)
 		case CMD_RESIGN_SAVE:
 			resignSave(selected_entry);
 			code->activated = 0;
+			break;
+
+		case CMD_DELETE_SAVE:
+			if (deleteSave(selected_entry))
+				selected_entry->flags |= SAVE_FLAG_UPDATED;
+			else
+				code->activated = 0;
 			break;
 
 		case CMD_COPY_SAVE_VMC:

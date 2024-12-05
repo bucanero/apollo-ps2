@@ -266,6 +266,7 @@ int importVMC(const char *save, const char *mc_path);
 int exportPSU(const char *mc_save, const char* out_path);
 int exportPSV(const char *mc_save, const char* out_path);
 int exportCBS(const char *mc_save, const char* out_path, const char* title);
+int exportMCS(const char* path, const char* fname, const char* dstName);
 
 int vmc_export_psv(const char* save, const char* out_path);
 int vmc_export_psu(const char* path, const char* output);

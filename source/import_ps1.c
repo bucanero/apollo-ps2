@@ -116,3 +116,41 @@ int importPS1psx(const char *save, const char* mc_path, const char* fname)
 
     return ret;
 }
+
+int exportMCS(const char* path, const char* fname, const char* dstName)
+{
+    char srcName[256];
+    uint8_t mcshdr[128];
+    size_t sz;
+    uint8_t *input;
+    FILE *pf;
+
+    snprintf(srcName, sizeof(srcName), "%s%s", path, fname);
+    if(read_buffer(srcName, &input, &sz) < 0)
+        return 0;
+
+    pf = fopen(dstName, "wb");
+    if (!pf) {
+        LOG("Failed to open output file");
+        free(input);
+        return 0;
+    }
+    
+    memset(mcshdr, 0, sizeof(mcshdr));
+    memcpy(mcshdr + 4, &sz, 4);
+    memcpy(mcshdr + 10, fname, strlen(fname));
+    mcshdr[0] = 0x51;
+    mcshdr[8] = 0xFF;
+    mcshdr[9] = 0xFF;
+
+    for (int x=0; x<127; x++)
+        mcshdr[127] ^= mcshdr[x];
+
+    fwrite(mcshdr, sizeof(mcshdr), 1, pf);
+    fwrite(input, sz, 1, pf);
+    fclose(pf);
+    free(input);
+
+    LOG("MCS generated successfully: %s", dstName);
+    return 1;
+}

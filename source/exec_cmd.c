@@ -618,7 +618,7 @@ static void copyAllSavesUSB(const save_entry_t* save, int dev, int all)
 	save_entry_t *item;
 	list_t *list = ((void**)save->dir_name)[0];
 
-	_set_dest_path(dst_path, dev, PS2_SAVES_PATH_USB);
+	_set_dest_path(dst_path, dev, (save->flags & SAVE_FLAG_PS1) ? PS1_SAVES_PATH_USB : PS2_SAVES_PATH_USB);
 	if (!list || mkdirs(dst_path) != SUCCESS)
 	{
 		show_message("Error! Folder is not available:\n%s", dst_path);
@@ -635,7 +635,19 @@ static void copyAllSavesUSB(const save_entry_t* save, int dev, int all)
 			continue;
 
 		snprintf(copy_path, sizeof(copy_path), "%s%s/", dst_path, item->dir_name);
+		if (item->flags & SAVE_FLAG_PS1 && !(item->flags & SAVE_FLAG_PS1CARD))
+			strchr(copy_path, '2')[0] = '1';
 		LOG("Copying <%s> to %s...", item->path, copy_path);
+
+		if (item->flags & SAVE_FLAG_PS1CARD)
+		{
+			char src_path[256];
+
+			strcat(copy_path, item->dir_name);
+			snprintf(src_path, sizeof(src_path), "%s%s", item->path, item->dir_name);
+			(copy_file(src_path, copy_path) == SUCCESS) ? done++ : err_count++;
+			continue;
+		}
 
 		if ((item->flags & SAVE_FLAG_PS1) || item->type == FILE_TYPE_PS2)
 			(copy_directory(item->path, item->path, copy_path) == SUCCESS) ? done++ : err_count++;
@@ -777,21 +789,32 @@ static void exportAllSaves(const save_entry_t* save, int dev, int all)
 	list_t *list = ((void**)save->dir_name)[0];
 
 	init_progress_bar("Exporting all saves...");
-	_set_dest_path(outPath, dev, PS2_SAVES_PATH_USB);
+	_set_dest_path(outPath, dev, (save->flags & SAVE_FLAG_PS1) ? PS1_SAVES_PATH_USB : PS2_SAVES_PATH_USB);
 	mkdirs(outPath);
 
 	LOG("Exporting all saves from '%s' to %s...", save->path, outPath);
 	for (node = list_head(list); (item = list_get(node)); node = list_next(node))
 	{
 		update_progress_bar(progress++, list_count(list), item->name);
-		if (item->type != FILE_TYPE_PS2 || !(all || item->flags & SAVE_FLAG_SELECTED))
+		if (!(all || item->flags & SAVE_FLAG_SELECTED))
 			continue;
 
 		gmtime_r(&(time_t){time(NULL)}, &t);
-		sprintf(strrchr(outPath, '/'), "/%s_%d-%02d-%02d_%02d%02d%02d.psu", item->title_id,
-			t.tm_year+1900, t.tm_mon+1, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec);
+		sprintf(strrchr(outPath, '/'), "/%s_%d-%02d-%02d_%02d%02d%02d.%s", item->title_id,
+			t.tm_year+1900, t.tm_mon+1, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec,
+			(item->type == FILE_TYPE_PS1) ? "mcs" : "psu");
 
-		(exportPSU(item->path, outPath) ? done++ : err_count++);
+		switch (item->type)
+		{
+		case FILE_TYPE_PS1:
+			(exportMCS(item->path, item->dir_name, outPath) ? done++ : err_count++);
+			break;
+		
+		case FILE_TYPE_PS2:
+			(exportPSU(item->path, outPath) ? done++ : err_count++);
+			break;
+		}
+
 	}
 
 	end_progress_bar();

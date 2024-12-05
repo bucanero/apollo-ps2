@@ -1,4 +1,4 @@
-﻿// PS1 Memory Card management by Bucanero
+// PS1 Memory Card management by Bucanero
 //
 //based on PS1 Memory Card class
 //by Shendo 2009-2021 (MemcardRex)
@@ -795,8 +795,15 @@ int saveSingleSave(const char* fileName, int slotNumber, int singleSaveType)
     {
         //Action Replay single save
         case PS1SAVE_AR:
-            setArHeader(ps1saves[slotNumber].saveName, binWriter);
-            break;
+            //setArHeader(ps1saves[slotNumber].saveName, binWriter);
+            //workaround for AR saves (setArHeader freeze on real PS2 hardware)
+            memset(outputData, 0, 54);
+            memcpy(outputData, ps1saves[slotNumber].saveName, 20);
+            memmove(outputData + 54, outputData + PS1CARD_HEADER_SIZE, outputData_Length - PS1CARD_HEADER_SIZE);
+            fwrite(outputData, 1, outputData_Length - PS1CARD_HEADER_SIZE + 54, binWriter);
+            fclose(binWriter);
+            free(outputData);
+            return true;
 
         //MCS single save
         case PS1SAVE_MCS:

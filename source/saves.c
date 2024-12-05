@@ -560,6 +560,8 @@ static void add_vmc_import_saves(list_t* list, const char* path, const char* fol
 		snprintf(psvPath, sizeof(psvPath), "%s%s%s", path, folder, dir->d_name);
 		LOG("Reading %s...", psvPath);
 
+		if (type == FILE_TYPE_PSV && (read_file(psvPath, (uint8_t*) psvPath, 0x40) < 0 || psvPath[0x3C] != 0x02))
+			continue;
 /*
 		FILE *fp = fopen(psvPath, "rb");
 		if (!fp) {
@@ -719,7 +721,7 @@ list_t * ReadBackupList(const char* userPath)
 	code_entry_t * cmd;
 	list_t *list = list_alloc();
 
-	item = _createSaveEntry(SAVE_FLAG_ZIP, CHAR_ICON_ZIP " Extract Archives (Zip, 7z)");
+	item = _createSaveEntry(SAVE_FLAG_ZIP, CHAR_ICON_ZIP " Extract Archives (Zip)");
 	item->path = strdup(menu_options[3].options[apollo_config.storage]);
 	item->type = FILE_TYPE_ZIP;
 	list_append(list, item);
@@ -1108,7 +1110,9 @@ static void read_psx_savegames(const char* userPath, const char* folder, list_t 
 		else if (endsWith(dir->d_name, ".PSV"))
 		{
 			snprintf(psvPath, sizeof(psvPath), "%s%s%s", userPath, folder, dir->d_name);
-			read_file(psvPath, (uint8_t*) data, sizeof(data));
+			if (read_file(psvPath, (uint8_t*) data, sizeof(data)) < 0)
+				continue;
+
 			toff = (data[0x3C] == 0x01) ? 0x64 : 0x80;
 			type = FILE_TYPE_PSV;
 		}
@@ -1293,7 +1297,7 @@ list_t * ReadUserList(const char* userPath)
 	list = list_alloc();
 	mctype = check_memcard_type(userPath);
 
-	item = _createSaveEntry((mctype == sceMcTypePS1) ? SAVE_FLAG_PS1 : SAVE_FLAG_PS2, CHAR_ICON_COPY " Bulk Save Management");
+	item = _createSaveEntry((mctype == sceMcTypePS1) ? (SAVE_FLAG_PS1|SAVE_FLAG_PS1CARD) : SAVE_FLAG_PS2, CHAR_ICON_COPY " Bulk Save Management");
 	item->type = FILE_TYPE_MENU;
 	item->codes = list_alloc();
 	item->path = strdup(userPath);

@@ -1098,6 +1098,7 @@ void execCodeCommand(code_entry_t* code, const char* codecmd)
 
 		case CMD_IMP_VMC2SAVE:
 			import_save2vmc(code->file, codecmd[1]);
+			selected_entry->flags |= SAVE_FLAG_UPDATED;
 			code->activated = 0;
 			break;
 

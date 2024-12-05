@@ -560,7 +560,7 @@ static void add_vmc_import_saves(list_t* list, const char* path, const char* fol
 		snprintf(psvPath, sizeof(psvPath), "%s%s%s", path, folder, dir->d_name);
 		LOG("Reading %s...", psvPath);
 
-		if (type == FILE_TYPE_PSV && (read_file(psvPath, (uint8_t*) psvPath, 0x40) < 0 || psvPath[0x3C] != 0x02))
+		if (type == FILE_TYPE_PSV && (read_file(psvPath, (uint8_t*) data, 0x40) < 0 || data[0x3C] != 0x02))
 			continue;
 /*
 		FILE *fp = fopen(psvPath, "rb");

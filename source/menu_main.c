@@ -156,6 +156,7 @@ static void SetMenu(int id)
 			if (selected_entry->flags & SAVE_FLAG_UPDATED && id == MENU_PS2VMC_SAVES)
 			{
 				selected_entry->flags ^= SAVE_FLAG_UPDATED;
+				mcio_vmcFinish();
 				ReloadUserSaves(&vmc2_saves);
 			}
 			else if (selected_entry->flags & SAVE_FLAG_UPDATED && id == MENU_PS1VMC_SAVES)

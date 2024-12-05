@@ -193,7 +193,7 @@ int copy_directory(const char* startdir, const char* inputdir, const char* outpu
 		if ((strcmp(dirp->d_name, ".")  != 0) && (strcmp(dirp->d_name, "..") != 0)) {
 			snprintf(fullname, sizeof(fullname), "%s%s", inputdir, dirp->d_name);
 
-			if (dir_exists(fullname) == SUCCESS) {
+			if (S_ISDIR(dirp->d_stat.st_mode)) {
 				strcat(fullname, "/");
 				copy_directory(startdir, fullname, outputdir);
 			} else {

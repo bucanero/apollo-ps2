@@ -14,6 +14,7 @@
 #include "lzari.h"
 #include "ps2mc.h"
 #include "saves.h"
+#include "ps2icon.h"
 
 #define  MAX_HEADER_MAGIC   "Ps2PowerSave"
 #define  CBS_HEADER_MAGIC   "CFU\0"
@@ -59,6 +60,17 @@ static const uint8_t cbsKey[256] = {
     0x8a, 0xd9, 0xec, 0x27, 0x44, 0x0e, 0x33, 0xc8,
     0x6b, 0x93, 0x32, 0x48, 0xb6, 0x30, 0x43, 0xa5
 };
+
+
+int check_memcard_type(const char *mcpath)
+{
+    int val, type;
+
+    mcGetInfo(mcpath[2] - '0', 0, &type, &val, &val);
+    mcSync(0, NULL, &val);
+
+    return type;
+}
 
 static void printMAXHeader(const maxHeader_t *header)
 {
@@ -452,8 +464,8 @@ int importPSV(const char *save, const char* mc_path)
     if(!psvFile)
         return 0;
 
-    fread(&dataPos, 1, sizeof(uint32_t), psvFile);
-    if (dataPos != 0x50535600)
+    fread(dstName, 1, sizeof(dstName), psvFile);
+    if ((memcmp(dstName, PSV_MAGIC, 4) != 0) || (dstName[0x3C] != 0x02))
     {
         fclose(psvFile);
         return 0;
@@ -543,7 +555,10 @@ uint8_t* loadVmcIcon(const char *save, const char* icon)
         return NULL;
     }
 
-    return p;
+    uint8_t* tex = ps2IconTexture(p);
+    free(p);
+
+    return tex;
 }
 
 int importVMC(const char *save, const char* mc_path)

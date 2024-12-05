@@ -9,10 +9,12 @@
 #include "ps2pad.h"
 #include "common.h"
 #include "utils.h"
+#include "ps1card.h"
 
 extern save_list_t hdd_saves;
 extern save_list_t usb_saves;
-extern save_list_t vmc_saves;
+extern save_list_t vmc1_saves;
+extern save_list_t vmc2_saves;
 extern save_list_t online_saves;
 extern save_list_t user_backup;
 
@@ -121,12 +123,20 @@ static void SetMenu(int id)
 {
 	switch (menu_id) //Leaving menu
 	{
-		case MENU_VMC_SAVES:
+		case MENU_PS1VMC_SAVES:
+			if (id == MENU_MAIN_SCREEN)
+			{
+				UnloadGameList(vmc1_saves.list);
+				vmc1_saves.list = NULL;
+			}
+			break;
+
+		case MENU_PS2VMC_SAVES:
 			if (id == MENU_MAIN_SCREEN)
 			{
 				LOG("Saving VMC changes...");
-				UnloadGameList(vmc_saves.list);
-				vmc_saves.list = NULL;
+				UnloadGameList(vmc2_saves.list);
+				vmc2_saves.list = NULL;
 				mcio_vmcFinish();
 			}
 
@@ -140,7 +150,21 @@ static void SetMenu(int id)
 
 		case MENU_SETTINGS: //Options Menu
 		case MENU_CREDITS: //About Menu
+			break;
+
 		case MENU_PATCHES: //Cheat Selection Menu
+			if (selected_entry->flags & SAVE_FLAG_UPDATED && id == MENU_PS2VMC_SAVES)
+			{
+				selected_entry->flags ^= SAVE_FLAG_UPDATED;
+				mcio_vmcFinish();
+				ReloadUserSaves(&vmc2_saves);
+			}
+			else if (selected_entry->flags & SAVE_FLAG_UPDATED && id == MENU_PS1VMC_SAVES)
+			{
+				selected_entry->flags ^= SAVE_FLAG_UPDATED;
+				saveMemoryCard(vmc1_saves.path, 0, 0);
+				ReloadUserSaves(&vmc1_saves);
+			}
 			break;
 
 		case MENU_SAVE_DETAILS:
@@ -178,12 +202,20 @@ static void SetMenu(int id)
 				Draw_MainMenu_Ani();
 			break;
 
-		case MENU_VMC_SAVES: //Trophies Menu
-			if (!vmc_saves.list && !ReloadUserSaves(&vmc_saves))
+		case MENU_PS1VMC_SAVES: //PS1 VMC Menu
+			if (!vmc1_saves.list && !ReloadUserSaves(&vmc1_saves))
 				return;
 
 			if (apollo_config.doAni)
-				Draw_UserCheatsMenu_Ani(&vmc_saves);
+				Draw_UserCheatsMenu_Ani(&vmc1_saves);
+			break;
+
+		case MENU_PS2VMC_SAVES: //PS2 VMC Menu
+			if (!vmc2_saves.list && !ReloadUserSaves(&vmc2_saves))
+				return;
+
+			if (apollo_config.doAni)
+				Draw_UserCheatsMenu_Ani(&vmc2_saves);
 			break;
 
 		case MENU_USB_SAVES: //USB saves Menu
@@ -231,7 +263,8 @@ static void SetMenu(int id)
 
 		case MENU_PATCHES: //Cheat Selection Menu
 			//if entering from game list, don't keep index, otherwise keep
-			if (menu_id == MENU_USB_SAVES || menu_id == MENU_HDD_SAVES || menu_id == MENU_ONLINE_DB || menu_id == MENU_VMC_SAVES)
+			if (menu_id == MENU_USB_SAVES || menu_id == MENU_HDD_SAVES || menu_id == MENU_ONLINE_DB || 
+				menu_id == MENU_PS2VMC_SAVES || menu_id == MENU_PS1VMC_SAVES)
 				menu_old_sel[MENU_PATCHES] = 0;
 
 			char iconfile[256] = {0};
@@ -241,21 +274,27 @@ static void SetMenu(int id)
 			{
 				snprintf(iconfile, sizeof(iconfile), APOLLO_LOCAL_CACHE "%s.PNG", selected_entry->title_id);
 
-				if (selected_entry->flags & SAVE_FLAG_PSP && file_exists(iconfile) != SUCCESS)
-					http_download(selected_entry->path, "ICON0.PNG", iconfile, 0);
+//				if (selected_entry->flags & SAVE_FLAG_PSP && file_exists(iconfile) != SUCCESS)
+//					http_download(selected_entry->path, "ICON0.PNG", iconfile, 0);
 
 //				if (selected_entry->flags & SAVE_FLAG_PSV && file_exists(iconfile) != SUCCESS)
 //					http_download(selected_entry->path, "icon0.png", iconfile, 0);
 			}
-			else if (selected_entry->flags & SAVE_FLAG_VMC)
+			else if (selected_entry->flags & SAVE_FLAG_VMC && selected_entry->type == FILE_TYPE_PS2)
 			{
-				LoadRawIconTexture(loadVmcIcon(selected_entry->dir_name, selected_entry->icon), icon_png_file_index);
+				LoadRawIconTexture(128, 128, loadVmcIcon(selected_entry->dir_name, selected_entry->icon));
 			}
-			else if (selected_entry->flags & (SAVE_FLAG_PS2 | SAVE_FLAG_PS1) && selected_entry->icon)
+			else if (selected_entry->flags & SAVE_FLAG_PS1 && selected_entry->type == FILE_TYPE_PS1)
+			{
+				LoadRawIconTexture(16, 16, getIconRGBA(selected_entry->icon[0], 0));
+				menu_textures[icon_png_file_index].width = 64;
+				menu_textures[icon_png_file_index].height = 64;
+			}
+			else if ((selected_entry->flags & SAVE_FLAG_PS2) && selected_entry->icon)
 				snprintf(iconfile, sizeof(iconfile), "%s%s", selected_entry->path, selected_entry->icon);
 
 			if (file_exists(iconfile) == SUCCESS)
-				LoadIconTexture(iconfile, icon_png_file_index);
+				LoadIconTexture(iconfile);
 
 			if (apollo_config.doAni && menu_id != MENU_PATCH_VIEW && menu_id != MENU_CODE_OPTIONS)
 				Draw_CheatsMenu_Selection_Ani();
@@ -361,8 +400,17 @@ static void doSaveMenu(save_list_t * save_list)
 
 		if (selected_entry->type == FILE_TYPE_VMC && selected_entry->flags & SAVE_FLAG_VMC)
 		{
-			strncpy(vmc_saves.path, selected_entry->path, sizeof(vmc_saves.path));
-			SetMenu(MENU_VMC_SAVES);
+			if (selected_entry->flags & SAVE_FLAG_PS1)
+			{
+				strncpy(vmc1_saves.path, selected_entry->path, sizeof(vmc1_saves.path));
+				SetMenu(MENU_PS1VMC_SAVES);
+			}
+			else
+			{
+				strncpy(vmc2_saves.path, selected_entry->path, sizeof(vmc2_saves.path));
+				SetMenu(MENU_PS2VMC_SAVES);
+			}
+
 			return;
 		}
 
@@ -773,8 +821,12 @@ void drawScene(void)
 			doMainMenu();
 			break;
 
-		case MENU_VMC_SAVES: //VMC Menu
-			doSaveMenu(&vmc_saves);
+		case MENU_PS1VMC_SAVES: //PS1 VMC Menu
+			doSaveMenu(&vmc1_saves);
+			break;
+
+		case MENU_PS2VMC_SAVES: //VMC Menu
+			doSaveMenu(&vmc2_saves);
 			break;
 
 		case MENU_USB_SAVES: //USB Saves Menu

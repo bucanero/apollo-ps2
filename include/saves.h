@@ -25,8 +25,9 @@
 #define PS1_IMP_PATH_USB        "PS1/SAVEDATA/"
 
 #define EXPORT_PATH             "APOLLO/EXPORT/"
-#define EXPORT_ZRIF_PATH        APOLLO_PATH "zrif/"
 
+#define IMP_PS1VMC_PATH_USB     "PS1/VMC/"
+#define IMP_POPS_PATH_USB       "POPS/"
 #define IMP_PS2VMC_PATH_USB     "PS2/VMC/"
 #define IMP_OPLVMC_PATH_USB     "VMC/"
 
@@ -71,6 +72,7 @@ enum cmd_code_enum
     CMD_HEX_EDIT_FILE,
     CMD_EXPORT_DATA_FILE,
     CMD_IMPORT_DATA_FILE,
+    CMD_DELETE_SAVE,
 
 // Bulk commands
     CMD_EXPORT_SAVES,
@@ -89,11 +91,16 @@ enum cmd_code_enum
 // Export commands
     CMD_EXP_VMP2MCR,
     CMD_EXP_PS2SAVE,
-    CMD_EXP_VMCSAVE,
+    CMD_EXP_PS1SAVE,
+    CMD_EXP_VMC2SAVE,
+    CMD_EXP_VMC1SAVE,
+    CMD_EXP_PS1_VMP,
+    CMD_EXP_PS1_VM1,
 
 // Import commands
     CMD_IMP_SAVE_MC,
-    CMD_IMP_VMCSAVE,
+    CMD_IMP_VMC2SAVE,
+    CMD_IMP_VMC1SAVE,
     CMD_EXTRACT_ARCHIVE,
     CMD_URL_DOWNLOAD,
     CMD_NET_WEBSERVER,
@@ -109,11 +116,12 @@ enum cmd_code_enum
 #define SAVE_FLAG_ZIP           4
 #define SAVE_FLAG_PS1           8
 #define SAVE_FLAG_PS2           16
-#define SAVE_FLAG_PSP           32
+#define SAVE_FLAG_UPDATED       32
 #define SAVE_FLAG_PACKED        64
 #define SAVE_FLAG_LOCKED        128
 #define SAVE_FLAG_ONLINE        256
 #define SAVE_FLAG_VMC           512
+#define SAVE_FLAG_PS1CARD       1024
 
 enum save_type_enum
 {
@@ -124,9 +132,9 @@ enum save_type_enum
     FILE_TYPE_PSV,
 
     // PS1 File Types
+    FILE_TYPE_PS1,
     FILE_TYPE_MCS,
     FILE_TYPE_PSX,
-    FILE_TYPE_ZIP,
 
     // PS2 File Types
     FILE_TYPE_MAX,
@@ -135,6 +143,7 @@ enum save_type_enum
     FILE_TYPE_PSU,
 
     // ISO Files
+    FILE_TYPE_ZIP,
     FILE_TYPE_ISO,
     FILE_TYPE_NET,
 };
@@ -206,7 +215,8 @@ list_t * ReadUsbList(const char* userPath);
 list_t * ReadUserList(const char* userPath);
 list_t * ReadOnlineList(const char* urlPath);
 list_t * ReadBackupList(const char* userPath);
-list_t * ReadVmcList(const char* userPath);
+list_t * ReadVmc1List(const char* userPath);
+list_t * ReadVmc2List(const char* userPath);
 void UnloadGameList(list_t * list);
 char * readTextFile(const char * path, long* size);
 int sortSaveList_Compare(const void* A, const void* B);
@@ -214,7 +224,8 @@ int sortSaveList_Compare_Type(const void* A, const void* B);
 int sortSaveList_Compare_TitleID(const void* A, const void* B);
 int sortCodeList_Compare(const void* A, const void* B);
 int ReadCodes(save_entry_t * save);
-int ReadVmcCodes(save_entry_t * game);
+int ReadVmc1Codes(save_entry_t * save);
+int ReadVmc2Codes(save_entry_t * game);
 int ReadOnlineSaves(save_entry_t * game);
 int ReadBackupCodes(save_entry_t * bup);
 
@@ -242,7 +253,7 @@ void stop_loading_screen(void);
 
 void execCodeCommand(code_entry_t* code, const char* codecmd);
 
-int create_savegame_folder(const char* folder);
+int check_memcard_type(const char *mcpath);
 int get_save_details(const save_entry_t *save, char** details);
 
 int importCBS(const char *save, const char *mc_path);
@@ -255,6 +266,7 @@ int importVMC(const char *save, const char *mc_path);
 int exportPSU(const char *mc_save, const char* out_path);
 int exportPSV(const char *mc_save, const char* out_path);
 int exportCBS(const char *mc_save, const char* out_path, const char* title);
+int exportMCS(const char* path, const char* fname, const char* dstName);
 
 int vmc_export_psv(const char* save, const char* out_path);
 int vmc_export_psu(const char* path, const char* output);
@@ -263,6 +275,9 @@ int vmc_import_psu(const char *input);
 
 uint8_t* loadVmcIcon(const char *save, const char* icon);
 int sjis2ascii(uint8_t* bData);
+int psv_resign(const char *src_psv);
 int vmp_resign(const char *src_vmp);
-int ps1_mcr2vmp(const char* mcrfile, const char* vmp_path);
-int ps1_vmp2mcr(const char* vmpfile, const char* mcr_path);
+
+int importPS1psv(const char *save, const char* mc_path, const char* fname);
+int importPS1mcs(const char *save, const char* mc_path, const char* fname);
+int importPS1psx(const char *save, const char* mc_path, const char* fname);

@@ -8,6 +8,7 @@
 #include "menu.h"
 #include "common.h"
 #include "utils.h"
+#include "ps1card.h"
 
 static char host_buf[256];
 
@@ -581,7 +582,18 @@ static void importSave(const save_entry_t* save, const char* mc_path)
 		break;
 
 	case FILE_TYPE_PSV:
-		ret = importPSV(save->path, mc_path);
+		if (save->flags & SAVE_FLAG_PS1)
+			ret = importPS1psv(save->path, mc_path, save->dir_name);
+		else
+			ret = importPSV(save->path, mc_path);
+		break;
+
+	case FILE_TYPE_MCS:
+		ret = importPS1mcs(save->path, mc_path, save->dir_name);
+		break;
+
+	case FILE_TYPE_PSX:
+		ret = importPS1psx(save->path, mc_path, save->dir_name);
 		break;
 
 	default:
@@ -606,7 +618,7 @@ static void copyAllSavesUSB(const save_entry_t* save, int dev, int all)
 	save_entry_t *item;
 	list_t *list = ((void**)save->dir_name)[0];
 
-	_set_dest_path(dst_path, dev, PS2_SAVES_PATH_USB);
+	_set_dest_path(dst_path, dev, (save->flags & SAVE_FLAG_PS1) ? PS1_SAVES_PATH_USB : PS2_SAVES_PATH_USB);
 	if (!list || mkdirs(dst_path) != SUCCESS)
 	{
 		show_message("Error! Folder is not available:\n%s", dst_path);
@@ -623,7 +635,19 @@ static void copyAllSavesUSB(const save_entry_t* save, int dev, int all)
 			continue;
 
 		snprintf(copy_path, sizeof(copy_path), "%s%s/", dst_path, item->dir_name);
+		if (item->flags & SAVE_FLAG_PS1 && !(item->flags & SAVE_FLAG_PS1CARD))
+			strchr(copy_path, '2')[0] = '1';
 		LOG("Copying <%s> to %s...", item->path, copy_path);
+
+		if (item->flags & SAVE_FLAG_PS1CARD)
+		{
+			char src_path[256];
+
+			strcat(copy_path, item->dir_name);
+			snprintf(src_path, sizeof(src_path), "%s%s", item->path, item->dir_name);
+			(copy_file(src_path, copy_path) == SUCCESS) ? done++ : err_count++;
+			continue;
+		}
 
 		if ((item->flags & SAVE_FLAG_PS1) || item->type == FILE_TYPE_PS2)
 			(copy_directory(item->path, item->path, copy_path) == SUCCESS) ? done++ : err_count++;
@@ -699,7 +723,7 @@ static int apply_cheat_patches(const save_entry_t* entry)
 			snprintf(tmpfile, sizeof(tmpfile), "%s%s", entry->path, filename);
 			LOG("Decrypting file '%s'", tmpfile);
 
-			if (entry->flags & SAVE_FLAG_PSP && !psp_is_decrypted(decrypted_files, filename))
+if(0)//			if (entry->flags & SAVE_FLAG_PSP && !psp_is_decrypted(decrypted_files, filename))
 			{
 if(0)//				if (get_psp_save_key(entry, key) && psp_DecryptSavedata(entry->path, tmpfile, key))
 				{
@@ -765,21 +789,32 @@ static void exportAllSaves(const save_entry_t* save, int dev, int all)
 	list_t *list = ((void**)save->dir_name)[0];
 
 	init_progress_bar("Exporting all saves...");
-	_set_dest_path(outPath, dev, PS2_SAVES_PATH_USB);
+	_set_dest_path(outPath, dev, (save->flags & SAVE_FLAG_PS1) ? PS1_SAVES_PATH_USB : PS2_SAVES_PATH_USB);
 	mkdirs(outPath);
 
 	LOG("Exporting all saves from '%s' to %s...", save->path, outPath);
 	for (node = list_head(list); (item = list_get(node)); node = list_next(node))
 	{
 		update_progress_bar(progress++, list_count(list), item->name);
-		if (item->type != FILE_TYPE_PS2 || !(all || item->flags & SAVE_FLAG_SELECTED))
+		if (!(all || item->flags & SAVE_FLAG_SELECTED))
 			continue;
 
 		gmtime_r(&(time_t){time(NULL)}, &t);
-		sprintf(strrchr(outPath, '/'), "/%s_%d-%02d-%02d_%02d%02d%02d.psu", item->title_id,
-			t.tm_year+1900, t.tm_mon+1, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec);
+		sprintf(strrchr(outPath, '/'), "/%s_%d-%02d-%02d_%02d%02d%02d.%s", item->title_id,
+			t.tm_year+1900, t.tm_mon+1, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec,
+			(item->type == FILE_TYPE_PS1) ? "mcs" : "psu");
 
-		(exportPSU(item->path, outPath) ? done++ : err_count++);
+		switch (item->type)
+		{
+		case FILE_TYPE_PS1:
+			(exportMCS(item->path, item->dir_name, outPath) ? done++ : err_count++);
+			break;
+		
+		case FILE_TYPE_PS2:
+			(exportPSU(item->path, outPath) ? done++ : err_count++);
+			break;
+		}
+
 	}
 
 	end_progress_bar();
@@ -870,6 +905,48 @@ static void export_vmcsave(const save_entry_t* save, int type, int dst_id)
 		show_message("Error exporting save:\n%s", save->path);
 }
 
+static void exportVmc1Save(const save_entry_t* save, int type, int dst_id)
+{
+	char outPath[256];
+	struct tm t;
+
+	_set_dest_path(outPath, dst_id, (type == PS1SAVE_PSV) ? PS3_SAVES_PATH_USB : PS1_SAVES_PATH_USB);
+	mkdirs(outPath);
+	if (type != PS1SAVE_PSV)
+	{
+		// build file path
+		gmtime_r(&(time_t){time(NULL)}, &t);
+		sprintf(strrchr(outPath, '/'), "/%s_%d-%02d-%02d_%02d%02d%02d.%s", save->title_id,
+			t.tm_year+1900, t.tm_mon+1, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec,
+			(type == PS1SAVE_MCS) ? "mcs" : "psx");
+	}
+
+	if (saveSingleSave(outPath, save->icon[0], type))
+		show_message("Save successfully exported to:\n%s", outPath);
+	else
+		show_message("Error exporting save:\n%s", save->path);
+}
+
+static void export_ps1vmc(const char* vm1_file, int dst, int vmp)
+{
+	char dstfile[256];
+	char dst_path[256];
+
+	_set_dest_path(dst_path, dst, IMP_PS1VMC_PATH_USB);
+	if (mkdirs(dst_path) != SUCCESS)
+	{
+		show_message("Error! Export folder is not available:\n%s", dst_path);
+		return;
+	}
+
+	snprintf(dstfile, sizeof(dstfile), "%s%s.%s", dst_path, vm1_file, vmp ? "VMP" : "VM1");
+
+	if (saveMemoryCard(dstfile, vmp ? PS1CARD_VMP : PS1CARD_RAW, 0))
+		show_message("Memory card successfully exported to:\n%s", dstfile);
+	else
+		show_message("Error! Failed to export PS1 memory card");
+}
+
 static void import_save2vmc(const char* src, int type)
 {
 	int ret = 0;
@@ -921,13 +998,6 @@ static int _copy_save_file(const char* src_path, const char* dst_path, const cha
 static void exportSaveFile(const save_entry_t* entry, const char* filename)
 {
 	char path[256];
-	uint8_t key[16];
-
-if(0)//	if (entry->flags & SAVE_FLAG_PSP && !get_psp_save_key(entry, key))
-	{
-		show_message("Error! No game decryption key available for %s", entry->title_id);
-		return;
-	}
 
 	snprintf(path, sizeof(path), APOLLO_USER_PATH "%s/", entry->title_id);
 	mkdirs(path);
@@ -949,18 +1019,11 @@ if(0)//		if (entry->flags & SAVE_FLAG_PSP && !psp_DecryptSavedata(entry->path, p
 static void importSaveFile(const save_entry_t* entry, const char* filename)
 {
 	char path[256];
-	uint8_t key[16];
-
-if(0)//	if (entry->flags & SAVE_FLAG_PSP && !get_psp_save_key(entry, key))
-	{
-		show_message("Error! No game decryption key available for %s", entry->title_id);
-		return;
-	}
 
 	snprintf(path, sizeof(path), APOLLO_USER_PATH "%s/%s", entry->title_id, filename);
 	if (file_exists(path) != SUCCESS)
 	{
-		show_message("Error! Can't find decrypted save-game file:\n%s", path);
+		show_message("Error! Can't find save-game file:\n%s", path);
 		return;
 	}
 
@@ -1028,21 +1091,39 @@ void execCodeCommand(code_entry_t* code, const char* codecmd)
 			code->activated = 0;
 			break;
 
-		case CMD_EXP_VMCSAVE:
+		case CMD_EXP_VMC2SAVE:
 			export_vmcsave(selected_entry, code->options[0].id, codecmd[1]);
 			code->activated = 0;
 			break;
 
-		case CMD_IMP_VMCSAVE:
+		case CMD_IMP_VMC2SAVE:
 			import_save2vmc(code->file, codecmd[1]);
+			selected_entry->flags |= SAVE_FLAG_UPDATED;
 			code->activated = 0;
 			break;
-/*
-		case CMD_RESIGN_VMP:
-			resignVMP(selected_entry, code->options[0].name[code->options[0].sel]);
+
+		case CMD_EXP_PS1SAVE:
+		case CMD_EXP_VMC1SAVE:
+			exportVmc1Save(selected_entry, code->options[0].id, codecmd[1]);
 			code->activated = 0;
 			break;
-*/
+
+		case CMD_IMP_VMC1SAVE:
+			if (openSingleSave(code->file, (int*) host_buf))
+				show_message("Save successfully imported:\n%s", code->file);
+			else
+				show_message("Error! Couldn't import save:\n%s", code->file);
+
+			selected_entry->flags |= SAVE_FLAG_UPDATED;
+			code->activated = 0;
+			break;
+
+		case CMD_EXP_PS1_VM1:
+		case CMD_EXP_PS1_VMP:
+			export_ps1vmc(code->file, codecmd[1], codecmd[0] == CMD_EXP_PS1_VMP);
+			code->activated = 0;
+			break;
+
 		case CMD_COPY_SAVES_USB:
 		case CMD_COPY_ALL_SAVES_USB:
 			copyAllSavesUSB(selected_entry, codecmd[1], codecmd[0] == CMD_COPY_ALL_SAVES_USB);

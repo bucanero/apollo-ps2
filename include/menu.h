@@ -17,7 +17,7 @@ extern SDL_Renderer* renderer;
 enum menu_screen_ids
 {
 	MENU_MAIN_SCREEN,		/* 0 - Main Menu */
-	MENU_VMC_SAVES,			/* 1 - Trophies */
+	MENU_PS2VMC_SAVES,		/* 1 - PS2 VMC Menu */
 	MENU_USB_SAVES,			/* 2 - USB Menu (User List) */
 	MENU_HDD_SAVES,			/* 3 - HDD Menu (User List) */
 	MENU_ONLINE_DB,			/* 4 - Online Menu (Online List) */
@@ -29,6 +29,7 @@ enum menu_screen_ids
 	MENU_CODE_OPTIONS,		/* 10 - Code Menu (View Cheat Options) */
 	MENU_SAVE_DETAILS,
 	MENU_HEX_EDITOR,
+	MENU_PS1VMC_SAVES,		/* 13 - PS1 VMC Menu */
 	TOTAL_MENU_IDS
 };
 
@@ -229,7 +230,6 @@ extern int menu_id;
 extern int menu_sel;
 extern int menu_old_sel[]; 
 extern int last_menu_id[];
-extern const char * menu_pad_help[];
 
 extern struct save_entry * selected_entry;
 extern struct code_entry * selected_centry;
@@ -249,8 +249,8 @@ extern void Draw_MainMenu_Ani(void);
 extern void Draw_HexEditor(const hexedit_data_t* hex);
 extern void Draw_HexEditor_Ani(const hexedit_data_t* hex);
 int LoadMenuTexture(const char* path, int idx);
-int LoadIconTexture(const char* path, int idx);
-int LoadRawIconTexture(uint8_t* icon, int idx);
+int LoadIconTexture(const char* path);
+int LoadRawIconTexture(int w, int h, uint8_t* icon);
 void initMenuOptions(void);
 
 void drawScene(void);

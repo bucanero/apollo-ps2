@@ -172,44 +172,47 @@ static void rawImageTexture(const rawImage_t *img, png_texture *tex)
 	SDL_FreeSurface(surface);
 }
 
-int LoadRawIconTexture(uint8_t* icon, int idx)
+int LoadRawIconTexture(int w, int h, uint8_t* icon)
 {
-	rawImage_t raw;
+	rawImage_t raw = {
+		.datap = (uint32_t*) icon,
+		.width = w,
+		.height = h
+	};
 
-	if (menu_textures[idx].texture)
-		SDL_DestroyTexture(menu_textures[idx].texture);
+	if (menu_textures[icon_png_file_index].texture)
+		SDL_DestroyTexture(menu_textures[icon_png_file_index].texture);
 
 	if (!icon)
 		return 0;
 
-	raw.datap = (uint32_t*) ps2IconTexture(icon);
+	rawImageTexture(&raw, &menu_textures[icon_png_file_index]);
+	menu_textures[icon_png_file_index].size = 1;
 	free(icon);
 
-	if (!raw.datap)
-	{
-		LOG("Invalid icon file!");
-		return 0;
-	}
-
-	raw.width = 128;
-	raw.height = 128;
-	menu_textures[idx].size = 1;
-
-	rawImageTexture(&raw, &menu_textures[idx]);
-	free(raw.datap);
 	return 1;
 }
 
-int LoadIconTexture(const char* fname, int idx)
+int LoadIconTexture(const char* fname)
 {
 	uint8_t* icon;
+	uint8_t* tex;
 	size_t len;
 
 	LOG("Loading '%s'", fname);
 	if (read_buffer(fname, &icon, &len) < 0)
 		return 0;
 
-	return (LoadRawIconTexture(icon, idx));
+	tex = ps2IconTexture(icon);
+	free(icon);
+
+	if (!tex)
+	{
+		LOG("Invalid icon file!");
+		return 0;
+	}
+
+	return (LoadRawIconTexture(128, 128, tex));
 }
 
 int LoadMenuTexture(const char* path, int idx)
@@ -496,7 +499,7 @@ static void drawJar(uint8_t idx, int pos_x, int pos_y, const char* text, uint8_t
 		DrawTexture(&menu_textures[idx + JAR_COLUMNS], pos_x, pos_y, 0, menu_textures[idx + JAR_COLUMNS].width, menu_textures[idx + JAR_COLUMNS].height, 0xffffff00 | alpha);
 
 	SetFontColor(APP_FONT_MENU_COLOR | (alpha == 0xFF ? (active ? 0xFF : 0x20) : alpha), 0);
-	DrawStringMono(pos_x + (menu_textures[idx].width * SCREEN_W_ADJ / 2), pos_y - 30, text);
+	DrawStringMono(pos_x + (menu_textures[idx].width * SCREEN_W_ADJ / 2) + 10, pos_y - 30, text);
 }
 
 static void _drawColumn(uint8_t idx, int pos_x, int pos_y, uint8_t alpha)
@@ -585,7 +588,7 @@ void drawSplashLogo(int mode)
 	}
 }
 
-void drawEndLogo()
+void drawEndLogo(void)
 {
 	SDL_Rect rect = {
 		.x = 0,
@@ -632,7 +635,7 @@ static void _draw_MainMenu(uint8_t alpha)
 	drawJars(alpha);
 }
 
-void Draw_MainMenu_Ani()
+void Draw_MainMenu_Ani(void)
 {
 	int max = MENU_ANI_MAX, ani = 0;
 	for (ani = 0; ani < max; ani++)
@@ -679,12 +682,12 @@ void Draw_MainMenu_Ani()
 	}
 }
 
-void Draw_MainMenu()
+void Draw_MainMenu(void)
 {
 	_draw_MainMenu(0xFF);
 }
 
-void drawDialogBackground()
+void drawDialogBackground(void)
 {
 	SDL_RenderClear(renderer);
 	DrawBackground2D(0xFFFFFFFF);

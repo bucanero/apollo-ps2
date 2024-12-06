@@ -128,11 +128,11 @@ enum save_type_enum
     FILE_TYPE_NULL,
     FILE_TYPE_MENU,
     FILE_TYPE_PS2,
+    FILE_TYPE_PS1,
     FILE_TYPE_VMC,
-    FILE_TYPE_PSV,
 
     // PS1 File Types
-    FILE_TYPE_PS1,
+    FILE_TYPE_PSV,
     FILE_TYPE_MCS,
     FILE_TYPE_PSX,
 
@@ -268,6 +268,7 @@ int exportPSV(const char *mc_save, const char* out_path);
 int exportCBS(const char *mc_save, const char* out_path, const char* title);
 int exportMCS(const char* path, const char* fname, const char* dstName);
 
+int vmc_delete_save(const char* path);
 int vmc_export_psv(const char* save, const char* out_path);
 int vmc_export_psu(const char* path, const char* output);
 int vmc_import_psv(const char *input);

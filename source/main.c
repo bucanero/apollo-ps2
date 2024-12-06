@@ -159,7 +159,7 @@ static const char* get_menu_help(int id)
 	case MENU_PS1VMC_SAVES:
 	case MENU_PS2VMC_SAVES:
 	case MENU_USB_SAVES:
-	case MENU_HDD_SAVES:
+	case MENU_MEMCARD_SAVES:
 	case MENU_ONLINE_DB:
 		return "\x10 Select    \x13 Back    \x12 Details    \x11 Refresh";
 

@@ -142,7 +142,7 @@ static void SetMenu(int id)
 
 		case MENU_MAIN_SCREEN: //Main Menu
 		case MENU_USB_SAVES: //USB Saves Menu
-		case MENU_HDD_SAVES: //HHD Saves Menu
+		case MENU_MEMCARD_SAVES: //HHD Saves Menu
 		case MENU_ONLINE_DB: //Cheats Online Menu
 		case MENU_USER_BACKUP: //Backup Menu
 			menu_textures[icon_png_file_index].size = 0;
@@ -153,17 +153,30 @@ static void SetMenu(int id)
 			break;
 
 		case MENU_PATCHES: //Cheat Selection Menu
-			if (selected_entry->flags & SAVE_FLAG_UPDATED && id == MENU_PS2VMC_SAVES)
+			if (selected_entry->flags & SAVE_FLAG_UPDATED)
 			{
+				switch (id)
+				{
+				case MENU_PS2VMC_SAVES:
+					mcio_vmcFinish();
+					ReloadUserSaves(&vmc2_saves);
+					break;
+				
+				case MENU_PS1VMC_SAVES:
+					saveMemoryCard(vmc1_saves.path, 0, 0);
+					ReloadUserSaves(&vmc1_saves);
+					break;
+
+				case MENU_MEMCARD_SAVES:
+					ReloadUserSaves(&hdd_saves);
+					break;
+
+				case MENU_USB_SAVES:
+					ReloadUserSaves(&usb_saves);
+					break;
+				}
+
 				selected_entry->flags ^= SAVE_FLAG_UPDATED;
-				mcio_vmcFinish();
-				ReloadUserSaves(&vmc2_saves);
-			}
-			else if (selected_entry->flags & SAVE_FLAG_UPDATED && id == MENU_PS1VMC_SAVES)
-			{
-				selected_entry->flags ^= SAVE_FLAG_UPDATED;
-				saveMemoryCard(vmc1_saves.path, 0, 0);
-				ReloadUserSaves(&vmc1_saves);
 			}
 			break;
 
@@ -226,7 +239,7 @@ static void SetMenu(int id)
 				Draw_UserCheatsMenu_Ani(&usb_saves);
 			break;
 
-		case MENU_HDD_SAVES: //HDD saves Menu
+		case MENU_MEMCARD_SAVES: //HDD saves Menu
 			if (!hdd_saves.list && !ReloadUserSaves(&hdd_saves))
 				return;
 
@@ -263,7 +276,7 @@ static void SetMenu(int id)
 
 		case MENU_PATCHES: //Cheat Selection Menu
 			//if entering from game list, don't keep index, otherwise keep
-			if (menu_id == MENU_USB_SAVES || menu_id == MENU_HDD_SAVES || menu_id == MENU_ONLINE_DB || 
+			if (menu_id == MENU_USB_SAVES || menu_id == MENU_MEMCARD_SAVES || menu_id == MENU_ONLINE_DB || 
 				menu_id == MENU_PS2VMC_SAVES || menu_id == MENU_PS1VMC_SAVES)
 				menu_old_sel[MENU_PATCHES] = 0;
 
@@ -780,6 +793,13 @@ static void doPatchMenu(void)
 				return;
 			}
 
+			if (selected_centry->codes[0] == CMD_DELETE_SAVE)
+			{
+				selected_centry->activated = 0;
+				SetMenu(last_menu_id[MENU_PATCHES]);
+				return;
+			}
+
 			if (selected_centry->codes[0] == CMD_VIEW_RAW_PATCH)
 			{
 				selected_centry->activated = 0;
@@ -833,7 +853,7 @@ void drawScene(void)
 			doSaveMenu(&usb_saves);
 			break;
 
-		case MENU_HDD_SAVES: //HDD Saves Menu
+		case MENU_MEMCARD_SAVES: //HDD Saves Menu
 			doSaveMenu(&hdd_saves);
 			break;
 

@@ -789,6 +789,9 @@ static int deleteSave(const save_entry_t* save)
 	if (save->flags & SAVE_FLAG_VMC)
 		ret = (save->flags & SAVE_FLAG_PS1) ? formatSave(save->icon[0]) : vmc_delete_save(save->dir_name);
 
+	else if (save->flags & SAVE_FLAG_PACKED)
+		ret = (remove(save->path) == SUCCESS);
+
 	else if (save->flags & SAVE_FLAG_MEMCARD)
 	{
 		if (save->flags & SAVE_FLAG_PS1CARD)
@@ -801,6 +804,11 @@ static int deleteSave(const save_entry_t* save)
 			clean_directory(save->path);
 			ret = (remove(save->path) == SUCCESS);
 		}
+	}
+	else if (save->flags & SAVE_FLAG_PS1|SAVE_FLAG_PS2)
+	{
+		clean_directory(save->path);
+		ret = (remove(save->path) == SUCCESS);
 	}
 
 	if (ret)

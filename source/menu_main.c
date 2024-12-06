@@ -170,6 +170,10 @@ static void SetMenu(int id)
 				case MENU_MEMCARD_SAVES:
 					ReloadUserSaves(&hdd_saves);
 					break;
+
+				case MENU_USB_SAVES:
+					ReloadUserSaves(&usb_saves);
+					break;
 				}
 
 				selected_entry->flags ^= SAVE_FLAG_UPDATED;

@@ -128,11 +128,11 @@ enum save_type_enum
     FILE_TYPE_NULL,
     FILE_TYPE_MENU,
     FILE_TYPE_PS2,
+    FILE_TYPE_PS1,
     FILE_TYPE_VMC,
-    FILE_TYPE_PSV,
 
     // PS1 File Types
-    FILE_TYPE_PS1,
+    FILE_TYPE_PSV,
     FILE_TYPE_MCS,
     FILE_TYPE_PSX,
 

@@ -924,10 +924,24 @@ int sortSaveList_Compare(const void* a, const void* b)
 	return strcasecmp(((save_entry_t*) a)->name, ((save_entry_t*) b)->name);
 }
 
+static int parseTypeFlags(int flags)
+{
+	if (flags & SAVE_FLAG_PACKED)
+		return ((flags & SAVE_FLAG_PS1) ? FILE_TYPE_PSX : FILE_TYPE_PSU);
+	else if (flags & SAVE_FLAG_VMC)
+		return ((flags & SAVE_FLAG_PS1) ? FILE_TYPE_VMC : FILE_TYPE_VMC+1);
+	else if (flags & SAVE_FLAG_PS1)
+		return FILE_TYPE_PS1;
+	else if (flags & SAVE_FLAG_PS2)
+		return FILE_TYPE_PS2;
+
+	return 0;
+}
+
 int sortSaveList_Compare_Type(const void* a, const void* b)
 {
-	int ta = ((save_entry_t*) a)->type;
-	int tb = ((save_entry_t*) b)->type;
+	int ta = parseTypeFlags(((save_entry_t*) a)->flags);
+	int tb = parseTypeFlags(((save_entry_t*) b)->flags);
 
 	if (ta == tb)
 		return sortSaveList_Compare(a, b);
@@ -1063,6 +1077,9 @@ static int set_psx_import_codes(save_entry_t* item)
 	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_COPY " Import to Memory Card", CMD_CODE_NULL);
 	cmd->options_count = 1;
 	cmd->options = _createMcOptions(2, "Import to MemCard", CMD_IMP_SAVE_MC);
+	list_append(item->codes, cmd);
+
+	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_WARN " Delete Save Game", CMD_DELETE_SAVE);
 	list_append(item->codes, cmd);
 
 	return list_count(item->codes);

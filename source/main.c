@@ -223,7 +223,7 @@ static int LoadTextures_Menu(void)
 	//Init Main Menu textures
 	load_menu_texture(bgimg, png);
 	load_menu_texture(cheat, png);
-//	load_menu_texture(leon, jpg);
+	load_menu_texture(leon_luna, png);
 
 	load_menu_texture(circle_loading_bg, png);
 	load_menu_texture(circle_loading_seek, png);
@@ -549,7 +549,7 @@ int main(int argc, char *argv[])
 #ifdef APOLLO_ENABLE_LOGGING
 		// Calculate FPS and ms/frame
 		SetFontColor(APP_FONT_COLOR | 0xFF, 0);
-		DrawFormatString(50, 500, "FPS: %d", (1000 / deltaFrameTicks));
+		DrawFormatString(50, 400, "FPS: %d", (1000 / deltaFrameTicks));
 #endif
 		// Propagate the updated window to the screen
 		SDL_RenderPresent(renderer);

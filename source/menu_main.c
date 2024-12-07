@@ -490,14 +490,24 @@ static void doMainMenu(void)
 
 static void doAboutMenu(void)
 {
+	static int ll = 0;
 	// Check the pads.
 	if (ps2PadGetButtonPressed(PAD_CIRCLE))
 	{
+		if (ll)
+			music_callback(!(ll & 0x01));
+
+		ll = 0;
 		SetMenu(MENU_MAIN_SCREEN);
 		return;
 	}
+	else if (!ll && ps2PadGetButtonPressed(PAD_SELECT))
+	{
+		ll = (0x02 | apollo_config.music);
+		music_callback(0);
+	}
 
-	Draw_AboutMenu();
+	Draw_AboutMenu(ll);
 }
 
 static void doOptionsMenu(void)

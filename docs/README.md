@@ -32,6 +32,13 @@ This homebrew app allows you to download, unlock, patch and resign save-game fil
 * **VMC saves listing:** quick access to all save files on Virtual Memory Cards images (+ file details)
 * **VMC saves import/export:** allows the user export saves on VMC images to `.PSU`, `.PSV` formats, and import saves to VMCs from other tools and consoles (`.PSU`, `.PSV` supported).
 
+## PS1 Virtual Memory Card Management
+
+* **VMC saves management:** quick access to all save files on Virtual Memory Cards images.
+  - Supported PS1 VMC formats: `.VMP`, `.MCR`, `.VM1`, `.BIN`, `.VMC`, `.GME`, `.VGS`, `.SRM`, `.MCD`
+* **Import PS1 saves:** import saves to VMCs from other systems and consoles (`.MCS`, `.PSV`, `.PSX`, `.PS1`, `.MCB`, `.PDA` supported).
+* **Export PS1 saves:** allows the user export saves on VMC images to `.MCS`/`.PSV`/`.PSX` formats.
+
 # Download
 
 Get the [latest version here][app_latest].
@@ -58,6 +65,14 @@ On first run, the application will detect and setup the required user settings.
 | **External saves** | your saves must be stored on `<mass/host/cdfs>:/PS2/SAVEDATA/`. |
 | **Memory Card saves** | save-games will be scanned from `mc0:/` and `mc1:/`. |
 | **Virtual Memory Cards** | VMC images will be scanned from `<mass/host>:/VMC/` and `/PS2/VMC/`. |
+
+### PS1
+
+| PS1 | Folder |
+|-----|--------|
+| **External saves** | your saves must be stored on `<mass/host/cdfs>:/PS1/SAVEDATA/`. |
+| **Memory Card saves** | save-games will be scanned from `mc0:/` and `mc1:/`. |
+| **Virtual Memory Cards** | VMC images will be scanned from `<mass/host>:/VMC/` , `/POPS/*`, and `/PS1/VMC/`. |
 
 # Usage
 
@@ -99,6 +114,7 @@ The Online Database project aims to [add more save-games](https://github.com/buc
 * [Dnawrkshp](https://github.com/Dnawrkshp/): [Artemis PS3](https://github.com/Dnawrkshp/ArtemisPS3)
 * [Berion](https://www.psx-place.com/members/berion.1431/): GUI design
 * [jimmikaelkael](https://github.com/jimmikaelkael): ps3mca tool
+* [ShendoXT](https://github.com/ShendoXT): [MemcardRex](https://github.com/ShendoXT/memcardrex)
 * [aldostools](https://aldostools.org/): [Bruteforce Save Data](https://bruteforcesavedata.forumms.net/)
 * [PiNk/abyss](http://amigascne.org/abyss/pink/index.html): [Background music track](https://github.com/bucanero/apollo-ps2/blob/main/data/inside.ahx)
 

@@ -4,6 +4,44 @@ All notable changes to the `apollo-ps2` project will be documented in this file.
 
 ## [Unreleased]()
 
+## [v1.0.0](https://github.com/bucanero/apollo-ps2/releases/tag/v1.0.0) - 2024-12-07
+
+### Added
+
+* Delete PS2 saves (MemCard and VMC images)
+* PS1 MemCard support
+  - List, import, export, and delete PS1 saves
+  - Import - Supported formats: `.MCS`, `.PSV`, `.PSX`, `.PS1`, `.MCB`, `.PDA`
+  - Export - Supported formats: `.MCS`, `.PSV`, `.PSX`
+* Manage PS1 Virtual Memory Card images (VMC)
+  - Supports `.VMC` and external formats (`.MCR`, `.VMP`, `.BIN`, `.VM1`, `.GME`, `.VGS`, `.SRM`, `.MCD`)
+  - List, import, export, and delete PS1 saves inside VMC images
+  - Import - Supported formats: `.MCS`, `.PSV`, `.PSX`, `.PS1`, `.MCB`, `.PDA`
+  - Export - Supported formats: `.MCS`, `.PSV`, `.PSX`
+* Sort saves by Type (Settings)
+* Execute `BOOT.ELF` on app exit
+  - `mc?:/BOOT/BOOT.ELF`
+  - `mc0:/B?DATA-SYSTEM/BOOT.ELF`
+  - `mass:/BOOT/BOOT.ELF`
+
+### Fixed
+
+* Fixed GUI color rendering issue
+
+### Misc
+
+* Updated Apollo Patch Engine to v1.1.2
+  - Fixed SW Code search bug when bytes are not found
+  - Improve code parsing
+  - Fix SW Code Type D issue with `CRLF` line breaks
+  - Improve SW Code type 3 (add Subtypes `3/7/B/F`)
+  - Improve SW code type 4 (add Subtypes `4/5/6/C/D/E`)
+  - BSD scripts
+    + BSD script command `aes_cbc(key, iv)`
+    + Change `compress` and `decompress` command syntax
+    + `decompress(offset, wbits)`
+    + `compress(offset)`
+
 ## [v0.7.0](https://github.com/bucanero/apollo-ps2/releases/tag/v0.7.0) - 2024-02-03
 
 ### Added

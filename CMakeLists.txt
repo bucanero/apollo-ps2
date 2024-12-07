@@ -99,6 +99,7 @@ target_link_libraries(${PROJECT_NAME}
   zip
   lzma
   mc
+  elf-loader
 #  un7zip
   ahx
   z

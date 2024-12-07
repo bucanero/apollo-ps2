@@ -482,7 +482,7 @@ static void doMainMenu(void)
 		return;
 	}
 
-	else if(ps2PadGetButtonPressed(PAD_CIRCLE) && show_dialog(DIALOG_TYPE_YESNO, "Exit to XMB?"))
+	else if(ps2PadGetButtonPressed(PAD_CIRCLE) && show_dialog(DIALOG_TYPE_YESNO, "Exit the app?"))
 		close_app = 1;
 	
 	Draw_MainMenu();

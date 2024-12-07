@@ -396,6 +396,12 @@ int ReadCodes(save_entry_t * save)
 
 	save->codes = list_alloc();
 
+	if (wildcard_match_icase(save->dir_name, "B?EXEC-*E?"))
+	{
+		code = _createCmdCode(PATCH_NULL, "----- " CHAR_ICON_WARN "Save linked to MemCard ID" CHAR_ICON_WARN " -----", CMD_CODE_NULL);
+		list_append(save->codes, code);
+	}
+
 	code = _createCmdCode(PATCH_COMMAND, CHAR_ICON_USER " View Save Details", CMD_VIEW_DETAILS);
 	list_append(save->codes, code);
 

@@ -11,6 +11,8 @@
 #include <sifrpc.h>
 #include <loadfile.h>
 #include <libmc.h>
+#include <elf-loader.h>
+#include <sbv_patches.h>
 
 #include "saves.h"
 #include "utils.h"
@@ -371,11 +373,35 @@ static void registerSpecialChars(void)
 	RegisterSpecialCharacter(CHAR_TRP_SYNC, 0, 1.2f, &menu_textures[trp_sync_png_index]);
 }
 
+static void check_boot(const char* bootpath)
+{
+	if (file_exists(bootpath) == SUCCESS)
+	{
+		LOG("Launching BOOT.ELF from %s", bootpath);
+		LoadELFFromFile(bootpath, 0, NULL);
+	}
+}
+
 static void terminate(void)
 {
+	char bootpath[28] = "mc0:/BADATA-SYSTEM/BOOT.ELF";
+	char region[4] = {'A', 'E', 'I', 'C'};
+
 	LOG("Exiting...");
 
 	AHX_Quit();
+	sbv_patch_disable_prefix_check();
+
+	for (int i = 0; i < 4; i++)
+	{
+		bootpath[6] = region[i];
+		check_boot(bootpath);
+	}
+
+	check_boot("mc0:/BOOT/BOOT.ELF");
+	check_boot("mc1:/BOOT/BOOT.ELF");
+	check_boot("mc0:/MATRIXTEAM/MANAGER.ELF");
+	check_boot("mass:/BOOT/BOOT.ELF");
 }
 
 static int initInternal(void)

@@ -397,6 +397,33 @@ static int updatePadSelection(int total)
 	return 1;
 }
 
+static void inject_ps1_fake_vmc(const save_entry_t* save)
+{
+	int r;
+	uint8_t* buf;
+	uint64_t save_len = 0;
+	char outPath[256];
+
+	snprintf(outPath, sizeof(outPath), "%s%s", save->path, save->dir_name);
+	get_file_size(outPath, &save_len);
+	buf = calloc(1, PS1CARD_SIZE);
+	if (!buf)
+		return;
+
+	openMemoryCardStream(buf, PS1CARD_SIZE, 0);
+	formatMemoryCard();
+
+	buf[0] = 0x51;
+	strncpy((char*) &buf[10], save->dir_name, 20);
+
+	//Inject save data
+	if ((read_file(outPath, &buf[PS1CARD_HEADER_SIZE], save_len) < 0) ||
+		!setSaveBytes(buf, save_len + PS1CARD_HEADER_SIZE, &r))
+		LOG("Error injecting: %s", outPath);
+
+	free(buf);
+}
+
 static void doSaveMenu(save_list_t * save_list)
 {
 	if (updatePadSelection(list_count(save_list->list)))
@@ -436,6 +463,9 @@ static void doSaveMenu(save_list_t * save_list)
 		if (apollo_config.doSort && 
 			((save_list->icon_id == cat_bup_png_index) || (save_list->icon_id == cat_db_png_index)))
 			list_bubbleSort(selected_entry->codes, &sortCodeList_Compare);
+
+		if ((selected_entry->flags & SAVE_FLAG_MEMCARD) && (selected_entry->flags & SAVE_FLAG_PS1))
+			inject_ps1_fake_vmc(selected_entry);
 
 		SetMenu(MENU_PATCHES);
 		return;

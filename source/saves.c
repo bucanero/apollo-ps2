@@ -351,33 +351,6 @@ static option_entry_t* get_file_entries(const char* path, const char* mask)
 	return _getFileOptions(path, mask, CMD_CODE_NULL);
 }
 
-static void inject_ps1_fake_vmc(const save_entry_t* save)
-{
-	int r;
-	uint8_t* buf;
-	uint64_t save_len = 0;
-	char outPath[256];
-
-	snprintf(outPath, sizeof(outPath), "%s%s", save->path, save->dir_name);
-	get_file_size(outPath, &save_len);
-	buf = calloc(1, PS1CARD_SIZE);
-	if (!buf)
-		return;
-
-	openMemoryCardStream(buf, PS1CARD_SIZE, 0);
-	formatMemoryCard();
-
-	buf[0] = 0x51;
-	strncpy((char*) &buf[10], save->dir_name, 20);
-
-	//Inject save data
-	if ((read_file(outPath, &buf[PS1CARD_HEADER_SIZE], save_len) < 0) ||
-		!setSaveBytes(buf, save_len + PS1CARD_HEADER_SIZE, &r))
-		LOG("Error injecting: %s", outPath);
-
-	free(buf);
-}
-
 /*
  * Function:		ReadLocalCodes()
  * File:			saves.c
@@ -409,10 +382,7 @@ int ReadCodes(save_entry_t * save)
 	list_append(save->codes, code);
 
 	if (save->flags & SAVE_FLAG_PS1)
-	{
 		add_ps1_commands(save);
-		inject_ps1_fake_vmc(save);
-	}
 	else
 		add_ps2_commands(save);
 

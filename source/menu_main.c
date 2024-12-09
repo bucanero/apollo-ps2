@@ -460,12 +460,12 @@ static void doSaveMenu(save_list_t * save_list)
 			return;
 		}
 
-		if ((selected_entry->flags & SAVE_FLAG_MEMCARD) && (selected_entry->flags & SAVE_FLAG_PS1))
-			inject_ps1_fake_vmc(selected_entry);
-
 		if (apollo_config.doSort && 
 			((save_list->icon_id == cat_bup_png_index) || (save_list->icon_id == cat_db_png_index)))
 			list_bubbleSort(selected_entry->codes, &sortCodeList_Compare);
+
+		if ((selected_entry->flags & SAVE_FLAG_MEMCARD) && (selected_entry->flags & SAVE_FLAG_PS1))
+			inject_ps1_fake_vmc(selected_entry);
 
 		SetMenu(MENU_PATCHES);
 		return;

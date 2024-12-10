@@ -89,13 +89,13 @@ add_executable(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
   ${SDL2_LIBRARIES}
-  CURL::libcurl
+#  CURL::libcurl
   apollo
   polarssl
   dbglogger
   freetype
   png
-#  unrar
+  ps2ip
   zip
   lzma
   mc

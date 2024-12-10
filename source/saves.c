@@ -23,6 +23,7 @@
 #define CHAR_ICON_USER		"\x07"
 #define CHAR_ICON_LOCK		"\x08"
 #define CHAR_ICON_WARN		"\x0F"
+#define CHAR_ICON_PACK		"\x0E"
 
 
 /*
@@ -533,6 +534,21 @@ static void add_vmc_import_saves(list_t* list, const char* path, const char* fol
 		{
 			toff = 0x40;
 			type = FILE_TYPE_PSU;
+		}
+		else if (endsWith(dir->d_name, ".MAX"))
+		{
+			toff = 0x10;
+			type = FILE_TYPE_MAX;
+		}
+		else if (endsWith(dir->d_name, ".CBS"))
+		{
+			toff = 0x14;
+			type = FILE_TYPE_CBS;
+		}
+		else if (endsWith(dir->d_name, ".XPS") || endsWith(dir->d_name, ".SPS"))
+		{
+			toff = 0x04;
+			type = FILE_TYPE_XPS;
 		}
 		else continue;
 

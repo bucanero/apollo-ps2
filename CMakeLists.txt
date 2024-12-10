@@ -95,7 +95,7 @@ target_link_libraries(${PROJECT_NAME}
   dbglogger
   freetype
   png
-#  unrar
+  ps2ip
   zip
   lzma
   mc

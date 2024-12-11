@@ -900,15 +900,15 @@ int vmc_import_max(const char *save)
         update_progress_bar(offset, header.decompressedSize, entry->name);
 
         snprintf(dstName, sizeof(dstName), "%s/%s", header.dirName, entry->name);
-		fd = mcio_mcOpen(dstName, sceMcFileCreateFile | sceMcFileAttrWriteable | sceMcFileAttrFile);
-		if (fd < 0)
-			return 0;
+        fd = mcio_mcOpen(dstName, sceMcFileCreateFile | sceMcFileAttrWriteable | sceMcFileAttrFile);
+        if (fd < 0)
+            return 0;
 
-		r = mcio_mcWrite(fd, &decompressed[offset], entry->length);
-		mcio_mcClose(fd);
+        r = mcio_mcWrite(fd, &decompressed[offset], entry->length);
+        mcio_mcClose(fd);
 
-		if (r != (int)entry->length)
-			return 0;
+        if (r != (int)entry->length)
+            return 0;
 
         offset = roundUp(offset + entry->length + 8, 16) - 8;
     }

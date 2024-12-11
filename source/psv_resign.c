@@ -647,7 +647,7 @@ int vmc_import_xps(const char *save)
 	if(!xpsFile)
 		return 0;
 
-	fread(path, 1, 0x20, xpsFile);
+	fread(path, 1, 0x15, xpsFile);
 	if (memcmp(&path[4], "SharkPortSave\0\0\0", 16) != 0)
 	{
 		fclose(xpsFile);

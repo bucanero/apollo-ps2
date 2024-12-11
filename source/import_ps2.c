@@ -902,13 +902,19 @@ int vmc_import_max(const char *save)
         snprintf(dstName, sizeof(dstName), "%s/%s", header.dirName, entry->name);
         fd = mcio_mcOpen(dstName, sceMcFileCreateFile | sceMcFileAttrWriteable | sceMcFileAttrFile);
         if (fd < 0)
+        {
+            free(decompressed);
             return 0;
+        }
 
         r = mcio_mcWrite(fd, &decompressed[offset], entry->length);
         mcio_mcClose(fd);
 
         if (r != (int)entry->length)
+        {
+            free(decompressed);
             return 0;
+        }
 
         offset = roundUp(offset + entry->length + 8, 16) - 8;
     }

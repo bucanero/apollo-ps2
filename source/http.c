@@ -138,7 +138,7 @@ int http_init(void)
 		return HTTP_FAILED;
 	}
 */
-	curl_global_init(CURL_GLOBAL_ALL);
+//	curl_global_init(CURL_GLOBAL_ALL);
 
 	return HTTP_SUCCESS;
 }
@@ -154,6 +154,7 @@ static int update_progress(void *p, int64_t dltotal, int64_t dlnow, int64_t ulto
 
 int http_download(const char* url, const char* filename, const char* local_dst, int show_progress)
 {
+#if 0
 	char full_url[1024];
 	CURL *curl;
 	CURLcode res;
@@ -228,13 +229,13 @@ int http_download(const char* url, const char* filename, const char* local_dst, 
 		unlink_secure(local_dst);
 		return HTTP_FAILED;
 	}
-
+#endif
 	return HTTP_SUCCESS;
 }
 
 void http_end(void)
 {
-	curl_global_cleanup();
+//	curl_global_cleanup();
 
 //	sceNetApctlTerm();
 //	sceNetInetTerm();

@@ -23,6 +23,7 @@
 #define CHAR_ICON_USER		"\x07"
 #define CHAR_ICON_LOCK		"\x08"
 #define CHAR_ICON_WARN		"\x0F"
+#define CHAR_ICON_PACK		"\x0E"
 
 
 /*
@@ -511,6 +512,7 @@ static void add_vmc_import_saves(list_t* list, const char* path, const char* fol
 	struct dirent *dir;
 	char psvPath[256];
 	char data[64];
+	char title[256];
 	int type, toff;
 
 	snprintf(psvPath, sizeof(psvPath), "%s%s", path, folder);
@@ -534,6 +536,21 @@ static void add_vmc_import_saves(list_t* list, const char* path, const char* fol
 			toff = 0x40;
 			type = FILE_TYPE_PSU;
 		}
+		else if (endsWith(dir->d_name, ".MAX"))
+		{
+			toff = 0x10;
+			type = FILE_TYPE_MAX;
+		}
+		else if (endsWith(dir->d_name, ".CBS"))
+		{
+			toff = 0x14;
+			type = FILE_TYPE_CBS;
+		}
+		else if (endsWith(dir->d_name, ".XPS") || endsWith(dir->d_name, ".SPS"))
+		{
+			toff = 0x15;
+			type = FILE_TYPE_XPS;
+		}
 		else continue;
 
 		snprintf(psvPath, sizeof(psvPath), "%s%s%s", path, folder, dir->d_name);
@@ -541,7 +558,7 @@ static void add_vmc_import_saves(list_t* list, const char* path, const char* fol
 
 		if (type == FILE_TYPE_PSV && (read_file(psvPath, (uint8_t*) data, 0x40) < 0 || data[0x3C] != 0x02))
 			continue;
-/*
+
 		FILE *fp = fopen(psvPath, "rb");
 		if (!fp) {
 			LOG("Unable to open '%s'", psvPath);
@@ -549,14 +566,21 @@ static void add_vmc_import_saves(list_t* list, const char* path, const char* fol
 		}
 
 		fseek(fp, toff, SEEK_SET);
+		if (type == FILE_TYPE_XPS)
+		{
+			// Skip the variable size header
+			fread(&toff, 1, sizeof(int), fp);
+			fseek(fp, toff, SEEK_CUR);
+			fread(&toff, 1, sizeof(int), fp);
+			fseek(fp, toff + 10, SEEK_CUR);
+		}
 		fread(data, 1, sizeof(data), fp);
 		fclose(fp);
-*/
 
-		cmd = _createCmdCode(PATCH_COMMAND, psvPath, CMD_IMP_VMC2SAVE);
+		snprintf(title, sizeof(title), "%s (%.10s) %s", CHAR_ICON_COPY, data+2, dir->d_name);
+		cmd = _createCmdCode(PATCH_COMMAND, title, CMD_IMP_VMC2SAVE);
 		cmd->file = strdup(psvPath);
 		cmd->codes[1] = type;
-		sprintf(cmd->name, "%s %s", CHAR_ICON_COPY, dir->d_name);
 		list_append(list, cmd);
 
 		LOG("[%s] F(%X) name '%s'", cmd->file, cmd->flags, cmd->name+2);
@@ -1117,7 +1141,7 @@ static void read_psx_savegames(const char* userPath, const char* folder, list_t 
 		}
 		else if (endsWith(dir->d_name, ".XPS") || endsWith(dir->d_name, ".SPS"))
 		{
-			toff = 0x04;
+			toff = 0x15;
 			type = FILE_TYPE_XPS;
 		}
 		else
@@ -1133,6 +1157,15 @@ static void read_psx_savegames(const char* userPath, const char* folder, list_t 
 		}
 
 		fseek(fp, toff, SEEK_SET);
+		if (type == FILE_TYPE_XPS)
+		{
+			// Skip the variable size header
+			fread(&toff, 1, sizeof(int), fp);
+			fseek(fp, toff, SEEK_CUR);
+			fread(&toff, 1, sizeof(int), fp);
+			fseek(fp, toff + 10, SEEK_CUR);
+			toff = 0;
+		}
 		fread(data, 1, sizeof(data), fp);
 		fclose(fp);
 

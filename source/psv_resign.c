@@ -240,149 +240,6 @@ static void write_psv_header(FILE *fp, uint32_t type)
     fwrite(&ph, sizeof(psv_header_t), 1, fp);
 }
 
-int ps1_mcs2psv(const char* mcsfile, const char* psv_path)
-{
-	char dstName[256];
-	size_t sz;
-	uint8_t *input;
-	FILE *pf;
-	ps1_header_t ps1h;
-
-	if (read_buffer(mcsfile, &input, &sz) < 0) {
-		LOG("Failed to open input file");
-		return 0;
-	}
-
-	if (memcmp(input, "Q\x00", 2) != 0) {
-		LOG("Not a .mcs file");
-		free(input);
-		return 0;
-	}
-	
-	get_psv_filename(dstName, psv_path, (char*) &input[0x0A]);
-	pf = fopen(dstName, "wb");
-	if (!pf) {
-		LOG("Failed to open output file");
-		free(input);
-		return 0;
-	}
-	
-	write_psv_header(pf, 1);
-
-	memset(&ps1h, 0, sizeof(ps1_header_t));
-	ps1h.saveSize = ES32(sz - 0x80);
-	ps1h.startOfSaveData = 0x84000000;
-	ps1h.blockSize = 0x00020000;
-	ps1h.dataSize = ps1h.saveSize;
-	ps1h.unknown1 = 0x03900000;
-	memcpy(ps1h.prodCode, input + 0x0A, sizeof(ps1h.prodCode));
-
-	fwrite(&ps1h, sizeof(ps1_header_t), 1, pf);
-	fwrite(input + 0x80, sz - 0x80, 1, pf);
-	fclose(pf);
-	free(input);
-
-	psv_resign(dstName);
-
-	return 1;
-}
-
-int ps1_psv2mcs(const char* psvfile, const char* mcs_path)
-{
-	char dstName[256];
-	uint8_t mcshdr[128];
-	size_t sz;
-	uint8_t *input;
-	FILE *pf;
-	ps1_header_t *ps1h;
-
-	if (read_buffer(psvfile, &input, &sz) < 0) {
-		LOG("Failed to open input file");
-		return 0;
-	}
-
-	if (memcmp(input, PSV_MAGIC, 4) != 0) {
-		LOG("Not a .psv file");
-		free(input);
-		return 0;
-	}
-
-	snprintf(dstName, sizeof(dstName), "%s%s.mcs", mcs_path, strrchr(psvfile, '/')+1);
-	pf = fopen(dstName, "wb");
-	if (!pf) {
-		LOG("Failed to open output file");
-		free(input);
-		return 0;
-	}
-	
-	ps1h = (ps1_header_t*)(input + 0x40);
-
-	memset(mcshdr, 0, sizeof(mcshdr));
-	memcpy(mcshdr + 4, &ps1h->saveSize, 4);
-	memcpy(mcshdr + 56, &ps1h->saveSize, 4);
-	memcpy(mcshdr + 10, ps1h->prodCode, sizeof(ps1h->prodCode));
-	mcshdr[0] = 0x51;
-	mcshdr[8] = 0xFF;
-	mcshdr[9] = 0xFF;
-
-	for (int x=0; x<127; x++)
-		mcshdr[127] ^= mcshdr[x];
-
-	fwrite(mcshdr, sizeof(mcshdr), 1, pf);
-	fwrite(input + 0x84, sz - 0x84, 1, pf);
-	fclose(pf);
-	free(input);
-
-	return 1;
-}
-
-int ps1_psx2psv(const char* psxfile, const char* psv_path)
-{
-	char dstName[256];
-	size_t sz;
-	uint8_t *input;
-	FILE *pf;
-	ps1_header_t ps1h;
-
-	if (read_buffer(psxfile, &input, &sz) < 0) {
-		LOG("Failed to open input file");
-		return 0;
-	}
-
-	if (memcmp(input + 0x36, "SC", 2) != 0) {
-		LOG("Not a .psx file");
-		free(input);
-		return 0;
-	}
-	
-	get_psv_filename(dstName, psv_path, (char*) input);
-	pf = fopen(dstName, "wb");
-	if (!pf) {
-		LOG("Failed to open output file");
-		free(input);
-		return 0;
-	}
-	
-	write_psv_header(pf, 1);
-
-	memset(&ps1h, 0, sizeof(ps1_header_t));
-	ps1h.saveSize = ES32(sz - 0x36);
-	ps1h.startOfSaveData = 0x84000000;
-	ps1h.blockSize = 0x00020000;
-	ps1h.dataSize = ps1h.saveSize;
-	ps1h.unknown1 = 0x03900000;
-	memcpy(ps1h.prodCode, input, sizeof(ps1h.prodCode));
-
-	fwrite(&ps1h, sizeof(ps1_header_t), 1, pf);
-	fwrite(input + 0x36, sz - 0x36, 1, pf);
-	fclose(pf);
-	free(input);
-
-	psv_resign(dstName);
-
-	return 1;
-}
-
 int exportPSV(const char *save, const char* psv_path)
 {
 	FILE *psvFile;
@@ -626,43 +483,14 @@ int vmc_import_psv(const char *input)
     struct io_dirent entry;
     ps2_MainDirInfo_t *ps2md;
     ps2_FileInfo_t *ps2fi;
-
-	FILE *fh = fopen(input, "rb");
-	if (fh == NULL)
-		return 0;
-
-	fread(filepath, 1, 4, fh);
-	if (memcmp(PSV_MAGIC, filepath, 4) != 0) {
-		LOG("Not a .PSV file");
-		fclose(fh);
-		return 0;
-	}
-
-	fseek(fh, 0, SEEK_END);
-	int filesize = ftell(fh);
-	if (!filesize) {
-		fclose(fh);
-		return 0;
-	}
-	fseek(fh, 0, SEEK_SET);
+	uint8_t *p;
+	size_t filesize;
 
 	LOG("Reading file: '%s'...", input);
-
-	uint8_t *p = malloc(filesize);
-	if (p == NULL) {
+	if (read_buffer(input, &p, &filesize) < 0)
 		return 0;
-	}
 
-	r = fread(p, 1, filesize, fh);
-	if (r != filesize) {
-		fclose(fh);
-		free(p);
-		return 0;
-	}
-
-	fclose(fh);
-
-	if (p[0x3C] != 0x02) {
+	if (filesize < 0x200 || memcmp(PSV_MAGIC, p, 4) != 0 || p[0x3C] != 0x02) {
 		LOG("Not a PS2 save file");
 		free(p);
 		return 0;
@@ -802,6 +630,94 @@ int vmc_import_psu(const char *input)
 	memcpy(&entry.stat.mtime, &psu_entry.modified, sizeof(struct sceMcStDateTime));
 	entry.stat.mode = psu_entry.mode;
 	mcio_mcSetStat(psu_entry.name, &entry);
+
+	return 1;
+}
+
+int vmc_import_xps(const char *save)
+{
+	int r, fd;
+	FILE *xpsFile;
+	char path[256];
+	uint8_t *data;
+	xpsEntry_t entry;
+	struct io_dirent dirEntry, mcEntry;
+
+	xpsFile = fopen(save, "rb");
+	if(!xpsFile)
+		return 0;
+
+	fread(path, 1, 0x15, xpsFile);
+	if (memcmp(&path[4], "SharkPortSave\0\0\0", 16) != 0)
+	{
+		fclose(xpsFile);
+		return 0;
+	}
+
+	// Skip the variable size header
+	fread(&r, 1, sizeof(int), xpsFile);
+	fseek(xpsFile, r, SEEK_CUR);
+	fread(&r, 1, sizeof(int), xpsFile);
+	fseek(xpsFile, r, SEEK_CUR);
+	fread(&r, 1, sizeof(int), xpsFile);
+	fread(&r, 1, sizeof(int), xpsFile);
+
+	// Read main directory entry
+	fread(&entry, 1, sizeof(xpsEntry_t), xpsFile);
+
+	r = mcio_mcMkDir(entry.name);
+	if (r < 0)
+		LOG("Error: can't create directory '%s'... (%d)", entry.name, r);
+	else
+		mcio_mcClose(r);
+
+	// Root dir
+	memset(&mcEntry, 0, sizeof(struct io_dirent));
+	memset(&dirEntry, 0, sizeof(struct io_dirent));
+	memcpy(&dirEntry.stat.ctime, &entry.created, sizeof(struct sceMcStDateTime));
+	memcpy(&dirEntry.stat.mtime, &entry.modified, sizeof(struct sceMcStDateTime));
+	memcpy(dirEntry.name, entry.name, sizeof(entry.name));
+	dirEntry.stat.mode = ES16(entry.mode);
+	dirEntry.stat.size = entry.length;
+
+	LOG("Save contents:");
+	// Copy each file entry
+	for(int numFiles = entry.length - 2; numFiles > 0; numFiles--)
+	{
+		fread(&entry, 1, sizeof(xpsEntry_t), xpsFile);
+		LOG(" %8d bytes  : %s", entry.length, entry.name);
+		update_progress_bar(dirEntry.stat.size - numFiles, dirEntry.stat.size, entry.name);
+
+		snprintf(path, sizeof(path), "%s/%s", dirEntry.name, entry.name);
+		fd = mcio_mcOpen(path, sceMcFileCreateFile | sceMcFileAttrWriteable | sceMcFileAttrFile);
+		if (fd < 0)
+		{
+			fclose(xpsFile);
+			return 0;
+		}
+
+		data = malloc(entry.length);
+		fread(data, 1, entry.length, xpsFile);
+
+		r = mcio_mcWrite(fd, data, entry.length);
+		mcio_mcClose(fd);
+		free(data);
+
+		if (r != (int)entry.length)
+		{
+			fclose(xpsFile);
+			return 0;
+		}
+
+		mcio_mcStat(path, &mcEntry);
+		memcpy(&mcEntry.stat.ctime, &entry.created, sizeof(struct sceMcStDateTime));
+		memcpy(&mcEntry.stat.mtime, &entry.modified, sizeof(struct sceMcStDateTime));
+		mcEntry.stat.mode = ES16(entry.mode);
+		mcio_mcSetStat(path, &mcEntry);
+	}
+
+	fclose(xpsFile);
+	mcio_mcSetStat(dirEntry.name, &dirEntry);
 
 	return 1;
 }

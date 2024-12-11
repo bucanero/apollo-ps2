@@ -842,3 +842,176 @@ int exportCBS(const char *save, const char* cbs_path, const char* title)
 
     return 1;
 }
+
+int vmc_import_max(const char *save)
+{
+    int r, fd;
+    maxEntry_t *entry;
+    maxHeader_t header;
+    char dstName[256];
+
+    if (!isMAXFile(save))
+        return 0;
+
+    FILE *f = fopen(save, "rb");
+    if(!f)
+        return 0;
+
+    fread(&header, 1, sizeof(maxHeader_t), f);
+
+    r = mcio_mcMkDir(header.dirName);
+    if (r < 0)
+        LOG("Error: can't create directory '%s'... (%d)", header.dirName, r);
+    else
+        mcio_mcClose(r);
+
+    // Get compressed file entries
+    uint8_t *compressed = malloc(header.compressedSize);
+
+    fseek(f, sizeof(maxHeader_t) - 4, SEEK_SET); // Seek to beginning of LZARI stream.
+    uint32_t ret = fread(compressed, 1, header.compressedSize, f);
+    fclose(f);
+    if(ret != header.compressedSize)
+    {
+        LOG("Compressed size: actual=%d, expected=%d\n", ret, header.compressedSize);
+        free(compressed);
+        return 0;
+    }
+
+    uint8_t *decompressed = malloc(header.decompressedSize);
+    ret = unlzari(compressed, header.compressedSize, decompressed, header.decompressedSize);
+    free(compressed);
+
+    // As with other save formats, decompressedSize isn't acccurate.
+    if(ret == 0)
+    {
+        LOG("Decompression failed.\n");
+        free(decompressed);
+        return 0;
+    }
+
+    LOG("Save contents:\n");
+    // Write the file's data
+    for(uint32_t offset = 0; header.numFiles > 0; header.numFiles--)
+    {
+        entry = (maxEntry_t*) &decompressed[offset];
+        offset += sizeof(maxEntry_t);
+        LOG(" %8d bytes  : %s", entry->length, entry->name);
+        update_progress_bar(offset, header.decompressedSize, entry->name);
+
+        snprintf(dstName, sizeof(dstName), "%s/%s", header.dirName, entry->name);
+        fd = mcio_mcOpen(dstName, sceMcFileCreateFile | sceMcFileAttrWriteable | sceMcFileAttrFile);
+        if (fd < 0)
+        {
+            free(decompressed);
+            return 0;
+        }
+
+        r = mcio_mcWrite(fd, &decompressed[offset], entry->length);
+        mcio_mcClose(fd);
+
+        if (r != (int)entry->length)
+        {
+            free(decompressed);
+            return 0;
+        }
+
+        offset = roundUp(offset + entry->length + 8, 16) - 8;
+    }
+
+    free(decompressed);
+
+    return 1;
+}
+
+int vmc_import_cbs(const char *save)
+{
+    int r, fd;
+    uint8_t *cbsData;
+    uint8_t *compressed;
+    uint8_t *decompressed;
+    cbsHeader_t header;
+    cbsEntry_t entryHeader;
+    uLong decompressedSize;
+    size_t cbsLen;
+    char dstName[256];
+    struct io_dirent mcEntry;
+
+    if(!isCBSFile(save))
+        return 0;
+
+    if(read_buffer(save, &cbsData, &cbsLen) < 0)
+        return 0;
+
+    memcpy(&header, cbsData, sizeof(cbsHeader_t));
+    r = mcio_mcMkDir(header.name);
+    if (r < 0)
+        LOG("Error: can't create directory '%s'... (%d)", header.name, r);
+    else
+        mcio_mcClose(r);
+
+    // Get data for file entries
+    compressed = cbsData + sizeof(cbsHeader_t);
+    // Some tools create .CBS saves with an incorrect compressed size in the header.
+    // It can't be trusted!
+    cbsCrypt(compressed, cbsLen - sizeof(cbsHeader_t));
+    decompressedSize = header.decompressedSize;
+    decompressed = malloc(decompressedSize);
+    r = uncompress(decompressed, &decompressedSize, compressed, cbsLen - sizeof(cbsHeader_t));
+    free(cbsData);
+
+    if(r != Z_OK)
+    {
+        // Compression failed.
+        LOG("Decompression failed! (Z_ERR = %d)", r);
+        free(decompressed);
+        return 0;
+    }
+
+    LOG("Save contents:\n");
+
+    // Write the file's data
+    for(uint32_t offset = 0; offset < (decompressedSize - sizeof(cbsEntry_t)); offset += entryHeader.length)
+    {
+        /* Entry header can't be read directly because it might not be 32-bit aligned.
+        GCC will likely emit an lw instruction for reading the 32-bit variables in the
+        struct which will halt the processor if it tries to load from an address
+        that's misaligned. */
+        memcpy(&entryHeader, &decompressed[offset], sizeof(cbsEntry_t));
+        offset += sizeof(cbsEntry_t);
+        LOG(" %8d bytes  : %s", entryHeader.length, entryHeader.name);
+        update_progress_bar(offset + sizeof(cbsEntry_t), decompressedSize, entryHeader.name);
+
+        snprintf(dstName, sizeof(dstName), "%s/%s", header.name, entryHeader.name);
+        fd = mcio_mcOpen(dstName, sceMcFileCreateFile | sceMcFileAttrWriteable | sceMcFileAttrFile);
+        if (fd < 0)
+        {
+            free(decompressed);
+            return 0;
+        }
+
+        r = mcio_mcWrite(fd, &decompressed[offset], entryHeader.length);
+        mcio_mcClose(fd);
+
+        if (r != (int)entryHeader.length)
+        {
+            free(decompressed);
+            return 0;
+        }
+
+        mcio_mcStat(dstName, &mcEntry);
+        memcpy(&mcEntry.stat.ctime, &entryHeader.created, sizeof(struct sceMcStDateTime));
+        memcpy(&mcEntry.stat.mtime, &entryHeader.modified, sizeof(struct sceMcStDateTime));
+        mcEntry.stat.mode = entryHeader.mode;
+        mcio_mcSetStat(dstName, &mcEntry);
+    }
+    free(decompressed);
+
+    mcio_mcStat(header.name, &mcEntry);
+    memcpy(&mcEntry.stat.ctime, &header.created, sizeof(struct sceMcStDateTime));
+    memcpy(&mcEntry.stat.mtime, &header.modified, sizeof(struct sceMcStDateTime));
+    mcEntry.stat.mode = header.mode;
+    mcio_mcSetStat(header.name, &mcEntry);
+
+    return 1;
+}

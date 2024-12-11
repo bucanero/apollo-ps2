@@ -1003,6 +1003,18 @@ static void import_save2vmc(const char* src, int type)
 		ret = vmc_import_psu(src);
 		break;
 
+	case FILE_TYPE_XPS:
+		ret = vmc_import_xps(src);
+		break;
+
+	case FILE_TYPE_MAX:
+		ret = vmc_import_max(src);
+		break;
+
+	case FILE_TYPE_CBS:
+		ret = vmc_import_cbs(src);
+		break;
+
 	default:
 		break;
 	}

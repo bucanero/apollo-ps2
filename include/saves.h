@@ -273,6 +273,9 @@ int vmc_export_psv(const char* save, const char* out_path);
 int vmc_export_psu(const char* path, const char* output);
 int vmc_import_psv(const char *input);
 int vmc_import_psu(const char *input);
+int vmc_import_xps(const char *input);
+int vmc_import_max(const char *input);
+int vmc_import_cbs(const char *input);
 
 uint8_t* loadVmcIcon(const char *save, const char* icon);
 int sjis2ascii(uint8_t* bData);

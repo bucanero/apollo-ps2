@@ -483,43 +483,14 @@ int vmc_import_psv(const char *input)
     struct io_dirent entry;
     ps2_MainDirInfo_t *ps2md;
     ps2_FileInfo_t *ps2fi;
-
-	FILE *fh = fopen(input, "rb");
-	if (fh == NULL)
-		return 0;
-
-	fread(filepath, 1, 4, fh);
-	if (memcmp(PSV_MAGIC, filepath, 4) != 0) {
-		LOG("Not a .PSV file");
-		fclose(fh);
-		return 0;
-	}
-
-	fseek(fh, 0, SEEK_END);
-	int filesize = ftell(fh);
-	if (!filesize) {
-		fclose(fh);
-		return 0;
-	}
-	fseek(fh, 0, SEEK_SET);
+	uint8_t *p;
+	size_t filesize;
 
 	LOG("Reading file: '%s'...", input);
-
-	uint8_t *p = malloc(filesize);
-	if (p == NULL) {
+	if (read_buffer(input, &p, &filesize) < 0)
 		return 0;
-	}
 
-	r = fread(p, 1, filesize, fh);
-	if (r != filesize) {
-		fclose(fh);
-		free(p);
-		return 0;
-	}
-
-	fclose(fh);
-
-	if (p[0x3C] != 0x02) {
+	if (filesize < 0x200 || memcmp(PSV_MAGIC, p, 4) != 0 || p[0x3C] != 0x02) {
 		LOG("Not a PS2 save file");
 		free(p);
 		return 0;
@@ -659,6 +630,94 @@ int vmc_import_psu(const char *input)
 	memcpy(&entry.stat.mtime, &psu_entry.modified, sizeof(struct sceMcStDateTime));
 	entry.stat.mode = psu_entry.mode;
 	mcio_mcSetStat(psu_entry.name, &entry);
+
+	return 1;
+}
+
+int vmc_import_xps(const char *save)
+{
+	int r, fd;
+	FILE *xpsFile;
+	char path[256];
+	uint8_t *data;
+	xpsEntry_t entry;
+	struct io_dirent dirEntry, mcEntry;
+
+	xpsFile = fopen(save, "rb");
+	if(!xpsFile)
+		return 0;
+
+	fread(path, 1, 0x20, xpsFile);
+	if (memcmp(&path[4], "SharkPortSave\0\0\0", 16) != 0)
+	{
+		fclose(xpsFile);
+		return 0;
+	}
+
+	// Skip the variable size header
+	fread(&r, 1, sizeof(int), xpsFile);
+	fseek(xpsFile, r, SEEK_CUR);
+	fread(&r, 1, sizeof(int), xpsFile);
+	fseek(xpsFile, r, SEEK_CUR);
+	fread(&r, 1, sizeof(int), xpsFile);
+	fread(&r, 1, sizeof(int), xpsFile);
+
+	// Read main directory entry
+	fread(&entry, 1, sizeof(xpsEntry_t), xpsFile);
+
+	r = mcio_mcMkDir(entry.name);
+	if (r < 0)
+		LOG("Error: can't create directory '%s'... (%d)", entry.name, r);
+	else
+		mcio_mcClose(r);
+
+	// Root dir
+	memset(&mcEntry, 0, sizeof(struct io_dirent));
+	memset(&dirEntry, 0, sizeof(struct io_dirent));
+	memcpy(&dirEntry.stat.ctime, &entry.created, sizeof(struct sceMcStDateTime));
+	memcpy(&dirEntry.stat.mtime, &entry.modified, sizeof(struct sceMcStDateTime));
+	memcpy(dirEntry.name, entry.name, sizeof(entry.name));
+	dirEntry.stat.mode = ES16(entry.mode);
+	dirEntry.stat.size = entry.length;
+
+	LOG("Save contents:");
+	// Copy each file entry
+	for(int numFiles = entry.length - 2; numFiles > 0; numFiles--)
+	{
+		fread(&entry, 1, sizeof(xpsEntry_t), xpsFile);
+		LOG(" %8d bytes  : %s", entry.length, entry.name);
+		update_progress_bar(dirEntry.stat.size - numFiles, dirEntry.stat.size, entry.name);
+
+		snprintf(path, sizeof(path), "%s/%s", dirEntry.name, entry.name);
+		fd = mcio_mcOpen(path, sceMcFileCreateFile | sceMcFileAttrWriteable | sceMcFileAttrFile);
+		if (fd < 0)
+		{
+			fclose(xpsFile);
+			return 0;
+		}
+
+		data = malloc(entry.length);
+		fread(data, 1, entry.length, xpsFile);
+
+		r = mcio_mcWrite(fd, data, entry.length);
+		mcio_mcClose(fd);
+		free(data);
+
+		if (r != (int)entry.length)
+		{
+			fclose(xpsFile);
+			return 0;
+		}
+
+		mcio_mcStat(path, &mcEntry);
+		memcpy(&mcEntry.stat.ctime, &entry.created, sizeof(struct sceMcStDateTime));
+		memcpy(&mcEntry.stat.mtime, &entry.modified, sizeof(struct sceMcStDateTime));
+		mcEntry.stat.mode = ES16(entry.mode);
+		mcio_mcSetStat(path, &mcEntry);
+	}
+
+	fclose(xpsFile);
+	mcio_mcSetStat(dirEntry.name, &dirEntry);
 
 	return 1;
 }

@@ -344,6 +344,24 @@ void update_vmc_path(char* path)
 
 void update_db_path(char* path)
 {
+	if (file_exists("cdfs:/" APOLLO_PATH "PS2/games.txt") == SUCCESS)
+	{
+		strcpy(path, "cdfs:/" APOLLO_PATH);
+		return;
+	}
+
+	if (file_exists("mass:/" APOLLO_PATH "PS2/games.txt") == SUCCESS)
+	{
+		strcpy(path, "mass:/" APOLLO_PATH);
+		return;
+	}
+
+	if (file_exists("host:/" APOLLO_PATH "PS2/games.txt") == SUCCESS)
+	{
+		strcpy(path, "host:/" APOLLO_PATH);
+		return;
+	}
+
 	strcpy(path, apollo_config.save_db);
 }
 

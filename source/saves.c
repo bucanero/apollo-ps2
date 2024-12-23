@@ -697,9 +697,11 @@ int ReadOnlineSaves(save_entry_t * game)
 			asprintf(&item->file, "%.12s", content);
 
 			item->options_count = 1;
-			item->options = _createMcOptions(3, "Download to Memory Card", CMD_DOWNLOAD_USB);
-			asprintf(&item->options->name[2], "Download to Mass Storage (mass:/)");
-			asprintf(&item->options->value[2], "%c%c", CMD_DOWNLOAD_USB, STORAGE_MASS);
+			item->options = _createMcOptions(2, "Download to Mass Storage", CMD_DOWNLOAD_USB);
+			memcpy(item->options->name[0] + 26, "mass:", 5);
+			memcpy(item->options->name[1] + 26, "host:", 5);
+			item->options->value[0][1] = STORAGE_MASS;
+			item->options->value[1][1] = STORAGE_HOST;
 			list_append(game->codes, item);
 
 			LOG("[%s%s] %s", game->path, item->file, item->name + 1);

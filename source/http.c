@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <curl/curl.h>
+//#include <curl/curl.h>
 
 //#include <pspnet.h>
 //#include <pspnet_inet.h>
@@ -154,22 +154,21 @@ static int update_progress(void *p, int64_t dltotal, int64_t dlnow, int64_t ulto
 
 int http_download(const char* url, const char* filename, const char* local_dst, int show_progress)
 {
-#if 0
 	char full_url[1024];
-	CURL *curl;
-	CURLcode res;
+//	CURL *curl;
+//	CURLcode res;
 	FILE* fd;
 
 	if (network_up() != HTTP_SUCCESS)
 		return HTTP_FAILED;
-
+/*
 	curl = curl_easy_init();
 	if(!curl)
 	{
 		LOG("ERROR: CURL INIT");
 		return HTTP_FAILED;
 	}
-
+*/
 	fd = fopen(local_dst, "wb");
 	if (!fd) {
 		LOG("fopen Error: File path '%s'", local_dst);
@@ -180,6 +179,12 @@ int http_download(const char* url, const char* filename, const char* local_dst, 
 	snprintf(full_url, sizeof(full_url), "%s%s", url, filename);
 	LOG("URL: %s >> %s", full_url, local_dst);
 
+	if (file_exists(full_url) != SUCCESS)
+		return HTTP_FAILED;
+
+	return (copy_file(full_url, local_dst) == SUCCESS);
+
+#if 0
 	curl_easy_setopt(curl, CURLOPT_URL, full_url);
 	// Set user agent string
 	curl_easy_setopt(curl, CURLOPT_USERAGENT, HTTP_USER_AGENT);

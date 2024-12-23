@@ -2,8 +2,12 @@
 #include <dbglogger.h>
 #define LOG dbglogger_log
 
-#define APOLLO_PATH				"ms0:/APOLLO/"
+#define APOLLO_PATH				"APOLLO/"
+#ifdef APOLLO_ENABLE_LOGGING
+#define APOLLO_APP_PATH			"host:/APOLLO/"
+#else
 #define APOLLO_APP_PATH			"mass:/APOLLO/"
+#endif
 #define APOLLO_USER_PATH		USB_PATH "PS2/EXPORT/"
 #define APOLLO_DATA_PATH		APOLLO_APP_PATH "DATA/"
 #define APOLLO_LOCAL_CACHE		APOLLO_APP_PATH "CACHE/"
@@ -21,8 +25,6 @@
 
 #define PS1_SAVES_PATH_HDD      APOLLO_PATH "PS1/"
 #define PSP_SAVES_PATH_HDD      USB_PATH USER_PATH_USB
-
-#define PS1_IMP_PATH_USB        "PS1/SAVEDATA/"
 
 #define EXPORT_PATH             "APOLLO/EXPORT/"
 

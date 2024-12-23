@@ -4,6 +4,19 @@ All notable changes to the `apollo-ps2` project will be documented in this file.
 
 ## [Unreleased]()
 
+## [v1.0.2](https://github.com/bucanero/apollo-ps2/releases/tag/v1.0.2) - 2024-12-24
+
+### Added
+
+* Support additional PS2 save formats when importing to PS2 VMCs
+  - Import to VMC - New supported formats: `.MAX`, `.CBS`, `.XPS`, `.SPS`
+* Add support to load an offline save database (from `cdfs:/`, `mass:/`)
+  - Note: requires `mass` drive to be available to unzip save files
+
+### Fixed
+
+* Solve issue when exporting PS1 saves from memory cards
+
 ## [v1.0.0](https://github.com/bucanero/apollo-ps2/releases/tag/v1.0.0) - 2024-12-07
 
 ### Added

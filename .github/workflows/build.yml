@@ -12,7 +12,7 @@ jobs:
     container: ps2dev/ps2dev@sha256:96d40a532972fd84f41fd418ef2b51a5dffd444f0bbb4df2fcf4c55ce0af32df
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install build dependencies
         run: |
@@ -55,7 +55,7 @@ jobs:
           echo "sha_name=$(echo ${GITHUB_SHA} | cut -c1-8)" >> $GITHUB_ENV
 
       - name: Upload application
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: apollo-ps2-build_${{ env.sha_name }}
           path: APOLLO.ELF

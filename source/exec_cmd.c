@@ -714,7 +714,10 @@ static int apply_cheat_patches(const save_entry_t* entry)
 			filename = code->file;
 
 		if (strchr(filename, '*'))
-			filename = code->options[0].name[code->options[0].sel];
+		{
+			option_value_t* optval = list_get_item(code->options[0].opts, code->options[0].sel);
+			filename = optval->name;
+		}
 
 		if (strstr(code->file, "~extracted\\"))
 			snprintf(tmpfile, sizeof(tmpfile), "%s[%s]%s", APOLLO_LOCAL_CACHE, entry->title_id, filename);
@@ -1112,10 +1115,13 @@ static void downloadLink(const char* path)
 
 void execCodeCommand(code_entry_t* code, const char* codecmd)
 {
+	option_value_t* optval;
+
 	switch (codecmd[0])
 	{
 		case CMD_EXPORT_DATA_FILE:
-			exportSaveFile(selected_entry, code->options[0].name[code->options[0].sel]);
+			optval = list_get_item(code->options[0].opts, code->options[0].sel);
+			exportSaveFile(selected_entry, optval->name);
 			code->activated = 0;
 			break;
 
@@ -1235,7 +1241,8 @@ void execCodeCommand(code_entry_t* code, const char* codecmd)
 			break;
 
 		case CMD_IMPORT_DATA_FILE:
-			importSaveFile(selected_entry, code->options[0].name[code->options[0].sel]);
+			optval = list_get_item(code->options[0].opts, code->options[0].sel);
+			importSaveFile(selected_entry, optval->name);
 			code->activated = 0;
 			break;
 

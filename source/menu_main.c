@@ -717,10 +717,10 @@ static void doCodeOptionsMenu(void)
     code_entry_t* code = selected_centry;
 	// Check the pads.
 	if(ps2PadGetButtonHold(PAD_UP))
-		move_selection_back(selected_centry->options[option_index].size, 1);
+		move_selection_back(list_count(selected_centry->options[option_index].opts), 1);
 
 	else if(ps2PadGetButtonHold(PAD_DOWN))
-		move_selection_fwd(selected_centry->options[option_index].size, 1);
+		move_selection_fwd(list_count(selected_centry->options[option_index].opts), 1);
 
 	else if (ps2PadGetButtonPressed(PAD_CIRCLE))
 	{
@@ -734,13 +734,15 @@ static void doCodeOptionsMenu(void)
 
 		if (code->type == PATCH_COMMAND)
 		{
-			if (code->options[option_index].value[menu_sel][0] == CMD_HEX_EDIT_FILE)
+			option_value_t* optval = list_get_item(code->options[option_index].opts, menu_sel);
+
+			if (optval->value[0] == CMD_HEX_EDIT_FILE)
 			{
 //				code->options[option_index].value[menu_sel][1] = CMD_DECRYPT_FILE;
 //				execCodeCommand(code, code->options[option_index].value[menu_sel]+1);
 
 				memset(&hex_data, 0, sizeof(hex_data));
-				snprintf(hex_data.filepath, sizeof(hex_data.filepath), "%s%s", selected_entry->path, code->options[0].name[code->options[0].sel]);
+				snprintf(hex_data.filepath, sizeof(hex_data.filepath), "%s%s", selected_entry->path, optval->name);
 				if (read_buffer(hex_data.filepath, &hex_data.data, &hex_data.size) < 0)
 				{
 					show_message("Unable to load\n%s", hex_data.filepath);
@@ -752,7 +754,7 @@ static void doCodeOptionsMenu(void)
 				return;
 			}
 
-			execCodeCommand(code, code->options[option_index].value[menu_sel]);
+			execCodeCommand(code, optval->value);
 		}
 
 		option_index++;

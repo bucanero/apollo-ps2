@@ -62,7 +62,7 @@ enum cmd_code_enum
 // Save commands
     CMD_RESIGN_SAVE,
     CMD_DOWNLOAD_USB,
-    CMD_DOWNLOAD_HDD,
+    CMD_DOWNLOAD_MC,
     CMD_COPY_SAVE_USB,
     CMD_COPY_SAVE_HDD,
     CMD_COPY_SAVE_VMC,
@@ -124,6 +124,7 @@ enum cmd_code_enum
 #define SAVE_FLAG_ONLINE        256
 #define SAVE_FLAG_VMC           512
 #define SAVE_FLAG_PS1CARD       1024
+#define SAVE_FLAG_OFFLINE       2048
 
 enum save_type_enum
 {
@@ -216,11 +217,12 @@ typedef struct
 list_t * ReadUsbList(const char* userPath);
 list_t * ReadUserList(const char* userPath);
 list_t * ReadOnlineList(const char* urlPath);
+list_t * ReadOfflineList(const char* urlPath);
 list_t * ReadBackupList(const char* userPath);
 list_t * ReadVmc1List(const char* userPath);
 list_t * ReadVmc2List(const char* userPath);
 void UnloadGameList(list_t * list);
-char * readTextFile(const char * path, long* size);
+char * readTextFile(const char * path);
 int sortSaveList_Compare(const void* A, const void* B);
 int sortSaveList_Compare_Type(const void* A, const void* B);
 int sortSaveList_Compare_TitleID(const void* A, const void* B);
@@ -229,6 +231,7 @@ int ReadCodes(save_entry_t * save);
 int ReadVmc1Codes(save_entry_t * save);
 int ReadVmc2Codes(save_entry_t * game);
 int ReadOnlineSaves(save_entry_t * game);
+int ReadOfflineSaves(save_entry_t * game);
 int ReadBackupCodes(save_entry_t * bup);
 
 int network_up(void);

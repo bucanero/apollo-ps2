@@ -132,15 +132,11 @@ void update_callback(int sel)
 		return;
 	}
 
-	char *buffer;
-	long size = 0;
-
-	buffer = readTextFile(APOLLO_LOCAL_CACHE "ver.check", &size);
-
+	char *buffer = readTextFile(APOLLO_LOCAL_CACHE "ver.check");
 	if (!buffer)
 		return;
 
-	LOG("received %ld bytes", size);
+	LOG("received %ld bytes", strlen(buffer));
 
 	static const char find[] = "\"name\":\"Apollo Save Tool v";
 	const char* start = strstr(buffer, find);

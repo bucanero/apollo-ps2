@@ -687,14 +687,14 @@ int ReadOnlineSaves(save_entry_t * game)
 
 	game->codes = list_alloc();
 
-	for (char *tmp, *line = strtok(data, "\r\n"); line; line = strtok(NULL, "\r\n"))
+	for (char *ptr, *line = strtok(data, "\r\n"); line; line = strtok(NULL, "\r\n"))
 	{
 		// skip invalid lines
-		if ((tmp = strchr(line, '=')) == NULL)
+		if ((ptr = strchr(line, '=')) == NULL)
 			continue;
 
-		*tmp++ = 0;
-		snprintf(path, sizeof(path), CHAR_ICON_ZIP " %s", tmp);
+		*ptr++ = 0;
+		snprintf(path, sizeof(path), CHAR_ICON_ZIP " %s", ptr);
 		item = _createCmdCode(PATCH_COMMAND, path, CMD_CODE_NULL);
 		item->file = strdup(line);
 
@@ -732,13 +732,13 @@ int ReadOfflineSaves(save_entry_t * game)
 	
 	game->codes = list_alloc();
 
-	for (char *tmp, *line = strtok(data, "\r\n"); line; line = strtok(NULL, "\r\n"))
+	for (char *ptr, *line = strtok(data, "\r\n"); line; line = strtok(NULL, "\r\n"))
 	{
-		if ((tmp = strchr(line, '=')) == NULL)
+		if ((ptr = strchr(line, '=')) == NULL)
 			continue;
 
-		*tmp++ = 0;
-		snprintf(path, sizeof(path), CHAR_ICON_ZIP " %s", tmp);
+		*ptr++ = 0;
+		snprintf(path, sizeof(path), CHAR_ICON_ZIP " %s", ptr);
 		item = _createCmdCode(PATCH_COMMAND, path, CMD_CODE_NULL);
 		item->file = strdup(line);
 
@@ -1430,13 +1430,13 @@ static void _ReadSaveDbList(const char* base, const char* filepath, uint16_t fla
 	if (!data)
 		return;
 
-	for (char *tmp, *line = strtok(data, "\r\n"); line; line = strtok(NULL, "\r\n"))
+	for (char *ptr, *line = strtok(data, "\r\n"); line; line = strtok(NULL, "\r\n"))
 	{
-		if ((tmp = strchr(line, '=')) == NULL)
+		if ((ptr = strchr(line, '=')) == NULL)
 			continue;
 
-		*tmp++ = 0;
-		item = _createSaveEntry(flags, tmp);
+		*ptr++ = 0;
+		item = _createSaveEntry(flags, ptr);
 		item->title_id = strdup(line);
 		asprintf(&item->path, "%s%s/", base, item->title_id);
 

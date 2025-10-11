@@ -243,7 +243,7 @@ int extract_7zip(const char* zip_file, const char* dest_path);
 int extract_rar(const char* rar_file, const char* dest_path);
 int extract_zip(const char* zip_file, const char* dest_path);
 int zip_directory(const char* basedir, const char* inputdir, const char* output_zipfile);
-int zip_append_directory(const char* basedir, const char* inputdir, const char* output_filename);
+uint8_t* extract_psv(const char* zip_file, uint32_t* out_size);
 
 int show_dialog(int dialog_type, const char * format, ...);
 int show_multi_dialog(const char** options, const char * msg);
@@ -267,6 +267,7 @@ int importXPS(const char *save, const char *mc_path);
 int importMAX(const char *save, const char *mc_path);
 int importPSV(const char *save, const char *mc_path);
 int importVMC(const char *save, const char *mc_path);
+int importPSV_buffer(const uint8_t *savebuf, size_t bufsize, const char* mc_path);
 
 int exportPSU(const char *mc_save, const char* out_path);
 int exportPSV(const char *mc_save, const char* out_path);
@@ -290,3 +291,4 @@ int vmp_resign(const char *src_vmp);
 int importPS1psv(const char *save, const char* mc_path, const char* fname);
 int importPS1mcs(const char *save, const char* mc_path, const char* fname);
 int importPS1psx(const char *save, const char* mc_path, const char* fname);
+int importPS1psv_buffer(const uint8_t *data, size_t dataSize, const char* mc_path);

@@ -99,7 +99,6 @@ static void importDbSave(const save_entry_t* entry, const char* file, int dst)
 	// Process the extracted PSV data
 	_set_dest_path(path, dst, "");
 	init_progress_bar("Importing save...");
-	// ps1 or ps2 data[0x3C] == 0x01 or 0x02
 	ret = (entry->flags & SAVE_FLAG_PS1) ? importPS1psv_buffer(psv_data, psv_size, path) : importPSV_buffer(psv_data, psv_size, path);
 	free(psv_data);
 	end_progress_bar();

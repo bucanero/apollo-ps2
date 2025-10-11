@@ -744,6 +744,16 @@ int ReadOfflineSaves(save_entry_t * game)
 
 		item->options_count = 1;
 		item->options = _createMcOptions(1, "Import to Memory Card", CMD_DOWNLOAD_MC);
+
+		optval = malloc(sizeof(option_value_t));
+		asprintf(&optval->name, "Copy to Storage (%s)", USB_PATH);
+		asprintf(&optval->value, "%c%c", CMD_DOWNLOAD_MC, STORAGE_MASS);
+		list_append(item->options[0].opts, optval);
+
+		optval = malloc(sizeof(option_value_t));
+		asprintf(&optval->name, "Copy to Storage (%s)", "host:/");
+		asprintf(&optval->value, "%c%c", CMD_DOWNLOAD_MC, STORAGE_HOST);
+		list_append(item->options[0].opts, optval);
 		list_append(game->codes, item);
 
 		LOG("[%s%s] %s", game->path, item->file, item->name + 1);

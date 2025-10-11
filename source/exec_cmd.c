@@ -45,8 +45,6 @@ static void downloadSave(const save_entry_t* entry, const char* file, int dst)
 	char path[256];
 
 	_set_dest_path(path, dst, (entry->flags & SAVE_FLAG_PS1) ? PS1_SAVES_PATH_USB : PS2_SAVES_PATH_USB);
-	if (dst == STORAGE_MC0)
-		snprintf(path, sizeof(path), PSP_SAVES_PATH_HDD);
 
 	if (mkdirs(path) != SUCCESS)
 	{
@@ -66,6 +64,50 @@ static void downloadSave(const save_entry_t* entry, const char* file, int dst)
 		show_message("Error extracting save game!");
 
 	unlink_secure(APOLLO_LOCAL_CACHE "tmpsave.zip");
+}
+
+static void importDbSave(const save_entry_t* entry, const char* file, int dst)
+{
+	uint8_t* psv_data;
+	uint32_t psv_size;
+	char path[256];
+	int ret;
+
+	snprintf(path, sizeof(path), "%s%s", entry->path, file);
+
+	if (dst != STORAGE_MC0 && dst != STORAGE_MC1)
+	{
+		char dst_path[256];
+
+		_set_dest_path(dst_path, dst, (entry->flags & SAVE_FLAG_PS1) ? PS1_SAVES_PATH_USB : PS2_SAVES_PATH_USB);
+
+		if (mkdirs(dst_path) == SUCCESS && extract_zip(path, dst_path))
+			show_message("Save game successfully copied to:\n%s", dst_path);
+		else
+			show_message("Error extracting save game!\n%s", path);
+
+		return;
+	}
+
+	psv_data = extract_psv(path, &psv_size);
+	if (!psv_data)
+	{
+		show_message("Error extracting PSV data from:\n%s", path);
+		return;
+	}
+
+	// Process the extracted PSV data
+	_set_dest_path(path, dst, "");
+	init_progress_bar("Importing save...");
+	// ps1 or ps2 data[0x3C] == 0x01 or 0x02
+	ret = (entry->flags & SAVE_FLAG_PS1) ? importPS1psv_buffer(psv_data, psv_size, path) : importPSV_buffer(psv_data, psv_size, path);
+	free(psv_data);
+	end_progress_bar();
+
+	if(ret)
+		show_message("Save game successfully imported to:\n%s", path);
+	else
+		show_message("Error! Export folder is not available:\n%s", path);
 }
 
 static uint32_t get_filename_id(const char* dir)
@@ -1125,8 +1167,8 @@ void execCodeCommand(code_entry_t* code, const char* codecmd)
 			code->activated = 0;
 			break;
 
-		case CMD_DOWNLOAD_USB:
-			downloadSave(selected_entry, code->file, codecmd[1]);
+		case CMD_DOWNLOAD_MC:
+			importDbSave(selected_entry, code->file, codecmd[1]);
 			code->activated = 0;
 			break;
 

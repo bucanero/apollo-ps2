@@ -197,6 +197,9 @@ uint8_t* extract_psv(const char* zip_file, uint32_t* out_size)
 	zip_file_t* zfd;
 	struct zip* archive = zip_open(zip_file, ZIP_CHECKCONS, NULL);
 
+	if (!archive)
+		return NULL;
+
 	if (zip_stat_index(archive, 0, 0, &stat) != ZIP_ER_OK || strstr(stat.name, ".PSV") == NULL) {
 		LOG("Failed to stat file in zip.");
 		zip_close(archive);
@@ -215,10 +218,15 @@ uint8_t* extract_psv(const char* zip_file, uint32_t* out_size)
 	zfd = zip_fopen_index(archive, 0, 0);
 	if(!zfd) {
 		zip_close(archive);
+		free(buffer);
 		return NULL;
 	}
 
-	zip_fread(zfd, buffer, stat.size);
+	if (zip_fread(zfd, buffer, stat.size) != stat.size) {
+		free(buffer);
+		buffer = NULL;
+	}
+
 	zip_fclose(zfd);
 	zip_close(archive);
 	*out_size = stat.size;

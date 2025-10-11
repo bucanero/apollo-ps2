@@ -105,8 +105,7 @@ static int isMAXFile(const char *path)
            (header.decompressedSize > 0) &&
            (header.numFiles > 0) &&
            strncmp(header.magic, MAX_HEADER_MAGIC, sizeof(header.magic)) == 0 &&
-           strlen(header.dirName) > 0 &&
-           strlen(header.iconSysName) > 0;
+           strlen(header.dirName) > 0;
 }
 
 static int setMcTblEntryInfo(const char* dstName, const McFsEntry *entry)
@@ -141,7 +140,10 @@ int importMAX(const char *save, const char* mc_path)
     char dstName[256];
 
     if (!isMAXFile(save))
+    {
+        LOG("Invalid MAX file: %s", save);
         return 0;
+    }
 
     FILE *f = fopen(save, "rb");
     if(!f)
@@ -160,8 +162,7 @@ int importMAX(const char *save, const char* mc_path)
     if(ret != header.compressedSize)
     {
         LOG("Compressed size: actual=%d, expected=%d\n", ret, header.compressedSize);
-        free(compressed);
-        return 0;
+        header.compressedSize = ret;
     }
 
     uint8_t *decompressed = malloc(header.decompressedSize);
@@ -295,7 +296,10 @@ int importCBS(const char *save, const char *mc_path)
     McFsEntry mcEntry;
 
     if(!isCBSFile(save))
+    {
+        LOG("Invalid CBS file: %s", save);
         return 0;
+    }
 
     if(read_buffer(save, &cbsData, &cbsLen) < 0)
         return 0;
@@ -386,6 +390,7 @@ int importXPS(const char *save, const char *mc_path)
     fread(&tmp, 1, 0x15, xpsFile);
     if (memcmp(&tmp[4], XPS_HEADER_MAGIC, 16) != 0)
     {
+        LOG("Invalid XPS file: %s", save);
         fclose(xpsFile);
         return 0;
     }
@@ -467,6 +472,7 @@ int importPSV(const char *save, const char* mc_path)
     fread(dstName, 1, sizeof(dstName), psvFile);
     if ((memcmp(dstName, PSV_MAGIC, 4) != 0) || (dstName[0x3C] != 0x02))
     {
+        LOG("Invalid PSV file: %s", save);
         fclose(psvFile);
         return 0;
     }
@@ -494,20 +500,23 @@ int importPSV(const char *save, const char* mc_path)
 
         snprintf(dstName, sizeof(dstName), "%s%s/%s", mc_path, ps2md.filename, ps2fi.filename);
         if(!(outFile = fopen(dstName, "wb")))
-            LOG("[!] Error writing %s", dstName);
-        else
         {
-            fwrite(data, 1, ps2fi.filesize, outFile);
-            fclose(outFile);
-
-            entry.mode = ps2fi.attribute;
-            entry.created = ps2fi.created;
-            entry.modified = ps2fi.modified;
-            entry.length = ps2fi.filesize;
-            memcpy(entry.name, ps2fi.filename, sizeof(entry.name));
-
-            setMcTblEntryInfo(dstName, &entry);
+            LOG("[!] Error writing %s", dstName);
+            free(data);
+            fclose(psvFile);
+            return 0;
         }
+
+        fwrite(data, 1, ps2fi.filesize, outFile);
+        fclose(outFile);
+
+        entry.mode = ps2fi.attribute;
+        entry.created = ps2fi.created;
+        entry.modified = ps2fi.modified;
+        entry.length = ps2fi.filesize;
+        memcpy(entry.name, ps2fi.filename, sizeof(entry.name));
+
+        setMcTblEntryInfo(dstName, &entry);
 
         free(data);
         fseek(psvFile, dataPos, SEEK_SET);
@@ -522,6 +531,67 @@ int importPSV(const char *save, const char* mc_path)
     memcpy(entry.name, ps2md.filename, sizeof(entry.name));
 
     snprintf(dstName, sizeof(dstName), "%s%s", mc_path, ps2md.filename);
+    setMcTblEntryInfo(dstName, &entry);
+
+    return 1;
+}
+
+int importPSV_buffer(const uint8_t *savebuf, size_t bufsize, const char* mc_path)
+{
+    FILE *outFile;
+    char dstName[256];
+    McFsEntry entry;
+    ps2_MainDirInfo_t *ps2md;
+    ps2_FileInfo_t *ps2fi;
+
+    if ((memcmp(savebuf, PSV_MAGIC, 4) != 0) || (savebuf[0x3C] != 0x02))
+    {
+        LOG("Invalid PSV file data");
+        return 0;
+    }
+
+    // Read main directory entry
+    ps2md = (ps2_MainDirInfo_t *)(savebuf + 0x68);
+
+    snprintf(dstName, sizeof(dstName), "%s%s", mc_path, ps2md->filename);
+    mkdir(dstName, 0777);
+
+    LOG("Save contents:");
+    memset(&entry, 0, sizeof(McFsEntry));
+
+    for (int numFiles = (ps2md->numberOfFilesInDir - 2); numFiles > 0; numFiles--)
+    {
+        ps2fi = (ps2_FileInfo_t *)(savebuf + 0x2C + sizeof(ps2_MainDirInfo_t) + (numFiles * sizeof(ps2_FileInfo_t)));
+
+        LOG(" %8d bytes  : %s", ps2fi->filesize, ps2fi->filename);
+        update_progress_bar(ps2md->numberOfFilesInDir - numFiles, ps2md->numberOfFilesInDir, ps2fi->filename);
+
+        snprintf(dstName, sizeof(dstName), "%s%s/%s", mc_path, ps2md->filename, ps2fi->filename);
+        if(!(outFile = fopen(dstName, "wb")))
+        {
+            LOG("[!] Error writing %s", dstName);
+            return 0;
+        }
+
+        fwrite(savebuf + ps2fi->positionInFile, 1, ps2fi->filesize, outFile);
+        fclose(outFile);
+
+        entry.mode = ps2fi->attribute;
+        entry.created = ps2fi->created;
+        entry.modified = ps2fi->modified;
+        entry.length = ps2fi->filesize;
+        memcpy(entry.name, ps2fi->filename, sizeof(entry.name));
+
+        setMcTblEntryInfo(dstName, &entry);
+    }
+
+    entry.mode = ps2md->attribute;
+    entry.created = ps2md->created;
+    entry.modified = ps2md->modified;
+    entry.length = ps2md->numberOfFilesInDir;
+    memcpy(entry.name, ps2md->filename, sizeof(entry.name));
+
+    snprintf(dstName, sizeof(dstName), "%s%s", mc_path, ps2md->filename);
     setMcTblEntryInfo(dstName, &entry);
 
     return 1;

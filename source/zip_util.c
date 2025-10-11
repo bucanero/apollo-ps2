@@ -13,10 +13,6 @@
 
 #define UNZIP_BUF_SIZE 0x10000
 
-static inline uint64_t min64(uint64_t a, uint64_t b)
-{
-    return a < b ? a : b;
-}
 
 void walk_zip_directory(const char* startdir, const char* inputdir, struct zip *zipper)
 {
@@ -106,6 +102,38 @@ int zip_directory(const char* basedir, const char* inputdir, const char* output_
     return (ret == ZIP_ER_OK);
 }
 
+static int unpack_zip_file(struct zip_file* zfd, const char* path, uint8_t* buf)
+{
+	FILE* tfd;
+	ssize_t read;
+
+	if (!zfd) {
+		LOG("Unable to open file in zip.");
+		return 0;
+	}
+
+	tfd = fopen(path, "wb");
+	if(!tfd) {
+		zip_fclose(zfd);
+		LOG("Error opening file '%s'.", path);
+		return 0;
+	}
+
+	for(read = zip_fread(zfd, buf, UNZIP_BUF_SIZE); read > 0; read = zip_fread(zfd, buf, UNZIP_BUF_SIZE)) {
+		fwrite(buf, read, 1, tfd);
+	}
+
+	fclose(tfd);
+	zip_fclose(zfd);
+
+	if (read < 0) {
+		LOG("Error reading from zip.");
+		return 0;
+	}
+
+	return 1;
+}
+
 int extract_zip(const char* zip_file, const char* dest_path)
 {
 	char path[256];
@@ -121,20 +149,21 @@ int extract_zip(const char* zip_file, const char* dest_path)
 
 	buffer = malloc(UNZIP_BUF_SIZE);
 	if (!buffer)
+	{
+		zip_close(archive);
 		return 0;
+	}
 
 	init_progress_bar("Extracting files...");
-
 	LOG("Extracting %s to <%s>...", zip_file, dest_path);
 
 	for (int i = 0; i < files; i++) {
 		const char* filename = zip_get_name(archive, i, 0);
+		if (!filename)
+			continue;
 
 		update_progress_bar(i+1, files, filename);
 		LOG("Unzip [%d/%d] '%s'...", i+1, files, filename);
-
-		if (!filename)
-			continue;
 
 		if (filename[0] == '/')
 			filename++;
@@ -145,56 +174,56 @@ int extract_zip(const char* zip_file, const char* dest_path)
 		if (filename[strlen(filename) - 1] == '/')
 			continue;
 
-		struct zip_stat st;
-		if (zip_stat_index(archive, i, 0, &st)) {
-			LOG("Unable to access file %s in zip.", filename);
-			continue;
-		}
-		struct zip_file* zfd = zip_fopen_index(archive, i, 0);
-		if (!zfd) {
-			LOG("Unable to open file %s in zip.", filename);
-			continue;
-		}
-
-		FILE* tfd = fopen(path, "wb");
-		if(!tfd) {
+		if(!unpack_zip_file(zip_fopen_index(archive, i, 0), path, buffer)) {
 			free(buffer);
-			zip_fclose(zfd);
 			zip_close(archive);
 			end_progress_bar();
-			LOG("Error opening temporary file '%s'.", path);
 			return 0;
 		}
-
-		uint64_t pos = 0, count;
-		while (pos < st.size) {
-			count = min64(UNZIP_BUF_SIZE, st.size - pos);
-			if (zip_fread(zfd, buffer, count) != count) {
-				free(buffer);
-				fclose(tfd);
-				zip_fclose(zfd);
-				zip_close(archive);
-				end_progress_bar();
-				LOG("Error reading from zip.");
-				return 0;
-			}
-
-			fwrite(buffer, count, 1, tfd);
-			pos += count;
-		}
-
-		zip_fclose(zfd);
-		fclose(tfd);
 	}
 
-	if (archive) {
-		zip_close(archive);
-	}
-
-	end_progress_bar();
 	free(buffer);
+	zip_close(archive);
+	end_progress_bar();
 
 	return files;
+}
+
+uint8_t* extract_psv(const char* zip_file, uint32_t* out_size)
+{
+	char path[256];
+	uint8_t* buffer;
+	zip_stat_t stat;
+	zip_file_t* zfd;
+	struct zip* archive = zip_open(zip_file, ZIP_CHECKCONS, NULL);
+
+	if (zip_stat_index(archive, 0, 0, &stat) != ZIP_ER_OK || strstr(stat.name, ".PSV") == NULL) {
+		LOG("Failed to stat file in zip.");
+		zip_close(archive);
+		return NULL;
+	}
+
+	buffer = malloc(stat.size);
+	if (!buffer)
+	{
+		zip_close(archive);
+		return NULL;
+	}
+
+	LOG("Extracting %s to memory (%ld bytes)...", stat.name, stat.size);
+
+	zfd = zip_fopen_index(archive, 0, 0);
+	if(!zfd) {
+		zip_close(archive);
+		return NULL;
+	}
+
+	zip_fread(zfd, buffer, stat.size);
+	zip_fclose(zfd);
+	zip_close(archive);
+	*out_size = stat.size;
+
+	return buffer;
 }
 
 /*

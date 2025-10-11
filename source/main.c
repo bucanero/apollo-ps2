@@ -132,11 +132,11 @@ save_list_t vmc2_saves = {
 */
 save_list_t online_saves = {
 	.icon_id = cat_db_png_index,
-	.title = "Online Database",
+	.title = "Saves Database",
     .list = NULL,
     .path = "",
-    .ReadList = &ReadOnlineList,
-    .ReadCodes = &ReadOnlineSaves,
+    .ReadList = &ReadOfflineList,
+    .ReadCodes = &ReadOfflineSaves,
     .UpdatePath = &update_db_path,
 };
 

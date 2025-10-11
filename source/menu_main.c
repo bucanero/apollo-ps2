@@ -102,7 +102,7 @@ static code_entry_t* LoadRawPatch(void)
 
 	centry->name = strdup(selected_entry->title_id);
 	snprintf(patchPath, sizeof(patchPath), APOLLO_DATA_PATH "%s.savepatch", selected_entry->title_id);
-	centry->codes = readTextFile(patchPath, NULL);
+	centry->codes = readTextFile(patchPath);
 
 	return centry;
 }
@@ -293,6 +293,13 @@ static void SetMenu(int id)
 //				if (selected_entry->flags & SAVE_FLAG_PSV && file_exists(iconfile) != SUCCESS)
 //					http_download(selected_entry->path, "icon0.png", iconfile, 0);
 			}
+			if (selected_entry->flags & SAVE_FLAG_OFFLINE)
+			{
+				snprintf(iconfile, sizeof(iconfile), "%sicon0.png", selected_entry->path);
+				LoadFileTexture(iconfile, icon_png_file_index);
+				menu_textures[icon_png_file_index].width = (selected_entry->flags & SAVE_FLAG_PS1) ? 64 : 128;
+				menu_textures[icon_png_file_index].height = (selected_entry->flags & SAVE_FLAG_PS1) ? 64 : 128;
+			}
 			else if (selected_entry->flags & SAVE_FLAG_VMC && selected_entry->type == FILE_TYPE_PS2)
 			{
 				LoadRawIconTexture(128, 128, loadVmcIcon(selected_entry->dir_name, selected_entry->icon));
@@ -304,10 +311,10 @@ static void SetMenu(int id)
 				menu_textures[icon_png_file_index].height = 64;
 			}
 			else if ((selected_entry->flags & SAVE_FLAG_PS2) && selected_entry->icon)
+			{
 				snprintf(iconfile, sizeof(iconfile), "%s%s", selected_entry->path, selected_entry->icon);
-
-			if (file_exists(iconfile) == SUCCESS)
 				LoadIconTexture(iconfile);
+			}
 
 			if (apollo_config.doAni && menu_id != MENU_PATCH_VIEW && menu_id != MENU_CODE_OPTIONS)
 				Draw_CheatsMenu_Selection_Ani();

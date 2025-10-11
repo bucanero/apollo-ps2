@@ -75,6 +75,14 @@ int importPS1psv(const char *save, const char* mc_path, const char* fname)
     return ret;
 }
 
+int importPS1psv_buffer(const uint8_t *data, size_t dataSize, const char* mc_path)
+{
+    if ((memcmp(data, "\x00VSP", 4) != 0) || (data[0x3C] != 0x01))
+        return 0;
+
+    return write_ps1_save(mc_path, &data[0x64], data + 0x84, dataSize - 0x84);
+}
+
 int importPS1mcs(const char *save, const char* mc_path, const char* fname)
 {
     uint8_t *data;

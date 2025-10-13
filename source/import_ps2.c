@@ -300,7 +300,7 @@ int importCBS(const char *save, const char *mc_path)
     uint8_t *cbsData;
     uint8_t *compressed;
     uint8_t *decompressed;
-    cbsHeader_t *header;
+    cbsHeader_t header;
     cbsEntry_t entryHeader;
     uLong decompressedSize;
     size_t cbsLen;
@@ -322,8 +322,8 @@ int importCBS(const char *save, const char *mc_path)
     if(read_buffer(save, &cbsData, &cbsLen) < 0)
         return 0;
 
-    header = (cbsHeader_t *)cbsData;
-    snprintf(dstName, sizeof(dstName), "%s%s", mc_path, header->name);
+    memcpy(&header, cbsData, sizeof(cbsHeader_t));
+    snprintf(dstName, sizeof(dstName), "%s%s", mc_path, header.name);
     mkdir(dstName, 0777);
 
     // Get data for file entries
@@ -331,15 +331,15 @@ int importCBS(const char *save, const char *mc_path)
     // Some tools create .CBS saves with an incorrect compressed size in the header.
     // It can't be trusted!
     cbsCrypt(compressed, cbsLen - sizeof(cbsHeader_t));
-    decompressedSize = header->decompressedSize;
+    decompressedSize = header.decompressedSize;
     decompressed = malloc(decompressedSize);
     int z_ret = uncompress(decompressed, &decompressedSize, compressed, cbsLen - sizeof(cbsHeader_t));
+    free(cbsData);
 
     if(z_ret != Z_OK)
     {
         // Compression failed.
         LOG("Decompression failed! (Z_ERR = %d)", z_ret);
-        free(cbsData);
         free(decompressed);
         return 0;
     }
@@ -358,35 +358,36 @@ int importCBS(const char *save, const char *mc_path)
         LOG(" %8d bytes  : %s", entryHeader.length, entryHeader.name);
         update_progress_bar(offset + sizeof(cbsEntry_t), decompressedSize, entryHeader.name);
 
-        snprintf(dstName, sizeof(dstName), "%s%s/%s", mc_path, header->name, entryHeader.name);
+        snprintf(dstName, sizeof(dstName), "%s%s/%s", mc_path, header.name, entryHeader.name);
         if (!(dstFile = fopen(dstName, "wb")))
-            LOG("[!] Error writing %s", dstName);
-        else
         {
-            fwrite(&decompressed[offset], 1, entryHeader.length, dstFile);
-            fclose(dstFile);
-
-            memset(&mcEntry, 0, sizeof(McFsEntry));
-            mcEntry.mode = entryHeader.mode;
-            mcEntry.length = entryHeader.length;
-            mcEntry.created = entryHeader.created;
-            mcEntry.modified = entryHeader.modified;
-            memcpy(mcEntry.name, entryHeader.name, sizeof(mcEntry.name));
-
-            setMcTblEntryInfo(dstName, &mcEntry);
+            LOG("[!] Error writing %s", dstName);
+            free(decompressed);
+            return 0;
         }
+
+        fwrite(&decompressed[offset], 1, entryHeader.length, dstFile);
+        fclose(dstFile);
+
+        memset(&mcEntry, 0, sizeof(McFsEntry));
+        mcEntry.mode = entryHeader.mode;
+        mcEntry.length = entryHeader.length;
+        mcEntry.created = entryHeader.created;
+        mcEntry.modified = entryHeader.modified;
+        memcpy(mcEntry.name, entryHeader.name, sizeof(mcEntry.name));
+
+        setMcTblEntryInfo(dstName, &mcEntry);
     }
     free(decompressed);
 
     memset(&mcEntry, 0, sizeof(McFsEntry));
-    mcEntry.mode = header->mode;
-    mcEntry.created = header->created;
-    mcEntry.modified = header->modified;
-    memcpy(mcEntry.name, header->name, sizeof(mcEntry.name));
+    mcEntry.mode = header.mode;
+    mcEntry.created = header.created;
+    mcEntry.modified = header.modified;
+    memcpy(mcEntry.name, header.name, sizeof(mcEntry.name));
 
-    snprintf(dstName, sizeof(dstName), "%s%s", mc_path, header->name);
+    snprintf(dstName, sizeof(dstName), "%s%s", mc_path, header.name);
     setMcTblEntryInfo(dstName, &mcEntry);
-    free(cbsData);
 
     return 1;
 }
@@ -455,22 +456,24 @@ int importXPS(const char *save, const char *mc_path)
 
         snprintf(dstName, sizeof(dstName), "%s/%s", tmp, entry.name);
         if(!(outFile = fopen(dstName, "wb")))
-            LOG("[!] Error writing %s", dstName);
-        else
         {
-            fwrite(data, 1, entry.length, outFile);
-            fclose(outFile);
-
-            mcEntry.mode = ES16(entry.mode);
-            mcEntry.created = entry.created;
-            mcEntry.modified = entry.modified;
-            mcEntry.length = entry.length;
-            memcpy(mcEntry.name, entry.name, sizeof(mcEntry.name));
-
-            setMcTblEntryInfo(dstName, &mcEntry);
+            LOG("[!] Error writing %s", dstName);
+            free(data);
+            fclose(xpsFile);
+            return 0;
         }
 
+        fwrite(data, 1, entry.length, outFile);
+        fclose(outFile);
         free(data);
+
+        mcEntry.mode = ES16(entry.mode);
+        mcEntry.created = entry.created;
+        mcEntry.modified = entry.modified;
+        mcEntry.length = entry.length;
+        memcpy(mcEntry.name, entry.name, sizeof(mcEntry.name));
+
+        setMcTblEntryInfo(dstName, &mcEntry);
     }
 
     fclose(xpsFile);
@@ -539,6 +542,7 @@ int importPSV(const char *save, const char* mc_path)
 
         fwrite(data, 1, ps2fi.filesize, outFile);
         fclose(outFile);
+        free(data);
 
         entry.mode = ps2fi.attribute;
         entry.created = ps2fi.created;
@@ -548,7 +552,6 @@ int importPSV(const char *save, const char* mc_path)
 
         setMcTblEntryInfo(dstName, &entry);
 
-        free(data);
         fseek(psvFile, dataPos, SEEK_SET);
     }
 

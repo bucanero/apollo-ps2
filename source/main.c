@@ -344,21 +344,21 @@ void update_vmc_path(char* path)
 
 void update_db_path(char* path)
 {
-	if (file_exists("cdfs:/" APOLLO_PATH "PS2/games.txt") == SUCCESS)
+	if (file_exists(DISC_PATH APOLLO_PATH "PS2/games.txt") == SUCCESS)
 	{
-		strcpy(path, "cdfs:/" APOLLO_PATH);
+		strcpy(path, DISC_PATH APOLLO_PATH);
 		return;
 	}
 
-	if (file_exists("mass:/" APOLLO_PATH "PS2/games.txt") == SUCCESS)
+	if (file_exists(USB_PATH APOLLO_PATH "PS2/games.txt") == SUCCESS)
 	{
-		strcpy(path, "mass:/" APOLLO_PATH);
+		strcpy(path, USB_PATH APOLLO_PATH);
 		return;
 	}
 
-	if (file_exists("host:/" APOLLO_PATH "PS2/games.txt") == SUCCESS)
+	if (file_exists(HOST_PATH APOLLO_PATH "PS2/games.txt") == SUCCESS)
 	{
-		strcpy(path, "host:/" APOLLO_PATH);
+		strcpy(path, HOST_PATH APOLLO_PATH);
 		return;
 	}
 

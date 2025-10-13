@@ -13,7 +13,7 @@
 
 
 char *strcasestr(const char *, const char *);
-static const char* ext_src[MAX_USB_DEVICES+1] = {"mass:/", "host:/", "cdfs:/", NULL};
+static const char* ext_src[MAX_USB_DEVICES+1] = {USB_PATH, HOST_PATH, DISC_PATH, NULL};
 static const char* sort_opt[] = {"Disabled", "by Name", "by Title ID", "by Type", NULL};
 
 menu_option_t menu_options[] = {

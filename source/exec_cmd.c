@@ -29,7 +29,7 @@ static int _set_dest_path(char* path, int dest, const char* folder)
 		break;
 
 	case STORAGE_HOST:
-		sprintf(path, "%s%s", "host:/", folder);
+		sprintf(path, "%s%s", HOST_PATH, folder);
 		break;
 
 	default:
@@ -156,9 +156,6 @@ static void zipSave(const save_entry_t* entry, int dst)
 		fprintf(f, "%08d.zip=[%s] %s\n", fid, entry->title_id, entry->name);
 		fclose(f);
 	}
-
-	sprintf(export_file, "%s%s", exp_path, OWNER_XML_FILE);
-//	save_xml_owner(export_file);
 
 	free(export_file);
 	free(tmp);
@@ -375,61 +372,6 @@ static void extractArchive(const char* file_path)
 		show_message("Error: %s couldn't be extracted", file_path);
 }
 
-/*
-static void copySavePFS(const save_entry_t* save)
-{
-	char src_path[256];
-	char hdd_path[256];
-	char mount[32];
-	sfo_patch_t patch = {
-		.user_id = apollo_config.user_id,
-		.account_id = apollo_config.account_id,
-	};
-
-	if (!vita_SaveMount(save, mount))
-	{
-		LOG("[!] Error: can't create/mount save!");
-		return;
-	}
-	vita_SaveUmount(mount);
-
-	snprintf(src_path, sizeof(src_path), "%s%s", save->path, save->dir_name);
-	snprintf(hdd_path, sizeof(hdd_path), "/user/home/%08x/savedata/%s/sdimg_%s", apollo_config.user_id, save->title_id, save->dir_name);
-	LOG("Copying <%s> to %s...", src_path, hdd_path);
-	if (copy_file(src_path, hdd_path) != SUCCESS)
-	{
-		LOG("[!] Error: can't copy %s", hdd_path);
-		return;
-	}
-
-	snprintf(src_path, sizeof(src_path), "%s%s.bin", save->path, save->dir_name);
-	snprintf(hdd_path, sizeof(hdd_path), "/user/home/%08x/savedata/%s/%s.bin", apollo_config.user_id, save->title_id, save->dir_name);
-	LOG("Copying <%s> to %s...", src_path, hdd_path);
-	if (copy_file(src_path, hdd_path) != SUCCESS)
-	{
-		LOG("[!] Error: can't copy %s", hdd_path);
-		return;
-	}
-
-	if (!vita_SaveMount(save, mount))
-	{
-		LOG("[!] Error: can't remount save");
-		show_message("Error! Can't mount encrypted save.\n(incompatible save-game firmware version)");
-		return;
-	}
-
-	snprintf(hdd_path, sizeof(hdd_path), APOLLO_SANDBOX_PATH "sce_sys/param.sfo", mount);
-	if (show_dialog(1, "Resign save %s/%s?", save->title_id, save->dir_name))
-		patch_sfo(hdd_path, &patch);
-
-//	*strrchr(hdd_path, 'p') = 0;
-//	_update_save_details(hdd_path, mount);
-	vita_SaveUmount(mount);
-
-	show_message("Encrypted save copied successfully!\n%s/%s", save->title_id, save->dir_name);
-	return;
-}
-*/
 /*
 static int webReqHandler(dWebRequest_t* req, dWebResponse_t* res, void* list)
 {
@@ -813,13 +755,11 @@ if(0)//		if (!get_psp_save_key(entry, key) || !psp_EncryptSavedata(entry->path, 
 
 static void resignSave(save_entry_t* entry)
 {
-    LOG("Resigning save '%s'...", entry->name);
-
     LOG("Applying cheats to '%s'...", entry->name);
     if (!apply_cheat_patches(entry))
         show_message("Error! Cheat codes couldn't be applied");
-
-    show_message("Save %s successfully modified!", entry->title_id);
+    else
+        show_message("Save %s successfully modified!", entry->dir_name);
 }
 
 static int deleteSave(const save_entry_t* save)
@@ -914,7 +854,7 @@ static void export_ps2save(const save_entry_t* save, int type, int dst_id)
 	char outPath[256];
 	struct tm t;
 
-	_set_dest_path(outPath, dst_id, (type == FILE_TYPE_PSV) ? PS3_SAVES_PATH_USB : USER_PATH_USB);
+	_set_dest_path(outPath, dst_id, (type == FILE_TYPE_PSV) ? PS3_SAVES_PATH_USB : PS2_SAVES_PATH_USB);
 	mkdirs(outPath);
 	if (type != FILE_TYPE_PSV)
 	{
@@ -958,7 +898,7 @@ static void export_vmcsave(const save_entry_t* save, int type, int dst_id)
 	char outPath[256];
 	struct tm t;
 
-	_set_dest_path(outPath, dst_id, (type == FILE_TYPE_PSV) ? PS3_SAVES_PATH_USB : USER_PATH_USB);
+	_set_dest_path(outPath, dst_id, (type == FILE_TYPE_PSV) ? PS3_SAVES_PATH_USB : PS2_SAVES_PATH_USB);
 	mkdirs(outPath);
 	if (type != FILE_TYPE_PSV)
 	{
@@ -1291,7 +1231,7 @@ void execCodeCommand(code_entry_t* code, const char* codecmd)
 			extractArchive(code->file);
 			code->activated = 0;
 			break;
-
+/*
 		case CMD_URL_DOWNLOAD:
 			downloadLink(selected_entry->path);
 			code->activated = 0;
@@ -1301,7 +1241,7 @@ void execCodeCommand(code_entry_t* code, const char* codecmd)
 //			enableWebServer(dbg_simpleWebServerHandler, NULL, 8080);
 			code->activated = 0;
 			break;
-
+*/
 		default:
 			break;
 	}

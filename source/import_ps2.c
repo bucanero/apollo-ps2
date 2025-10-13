@@ -139,6 +139,12 @@ int importMAX(const char *save, const char* mc_path)
     maxHeader_t header;
     char dstName[256];
 
+    if(check_memcard_type(mc_path) != sceMcTypePS2)
+    {
+        LOG("Error: Memory Card is not PS2 type");
+        return 0;
+    }
+
     if (!isMAXFile(save))
     {
         LOG("Invalid MAX file: %s", save);
@@ -210,6 +216,12 @@ int importPSU(const char *save, const char* mc_path)
     char dstName[128];
     uint8_t *data;
     McFsEntry entry, dirEntry;
+
+    if(check_memcard_type(mc_path) != sceMcTypePS2)
+    {
+        LOG("Error: Memory Card is not PS2 type");
+        return 0;
+    }
 
     psuFile = fopen(save, "rb");
     if(!psuFile)
@@ -294,6 +306,12 @@ int importCBS(const char *save, const char *mc_path)
     size_t cbsLen;
     char dstName[256];
     McFsEntry mcEntry;
+
+    if(check_memcard_type(mc_path) != sceMcTypePS2)
+    {
+        LOG("Error: Memory Card is not PS2 type");
+        return 0;
+    }
 
     if(!isCBSFile(save))
     {
@@ -383,6 +401,12 @@ int importXPS(const char *save, const char *mc_path)
     xpsEntry_t entry;
     McFsEntry mcEntry, dirEntry;
 
+    if(check_memcard_type(mc_path) != sceMcTypePS2)
+    {
+        LOG("Error: Memory Card is not PS2 type");
+        return 0;
+    }
+
     xpsFile = fopen(save, "rb");
     if(!xpsFile)
         return 0;
@@ -465,6 +489,12 @@ int importPSV(const char *save, const char* mc_path)
     ps2_MainDirInfo_t ps2md;
     ps2_FileInfo_t ps2fi;
 
+    if(check_memcard_type(mc_path) != sceMcTypePS2)
+    {
+        LOG("Error: Memory Card is not PS2 type");
+        return 0;
+    }
+
     psvFile = fopen(save, "rb");
     if(!psvFile)
         return 0;
@@ -543,6 +573,12 @@ int importPSV_buffer(const uint8_t *savebuf, size_t bufsize, const char* mc_path
     McFsEntry entry;
     ps2_MainDirInfo_t *ps2md;
     ps2_FileInfo_t *ps2fi;
+
+    if(check_memcard_type(mc_path) != sceMcTypePS2)
+    {
+        LOG("Error: Memory Card is not PS2 type");
+        return 0;
+    }
 
     if ((memcmp(savebuf, PSV_MAGIC, 4) != 0) || (savebuf[0x3C] != 0x02))
     {
@@ -944,8 +980,7 @@ int vmc_import_max(const char *save)
     if(ret != header.compressedSize)
     {
         LOG("Compressed size: actual=%d, expected=%d\n", ret, header.compressedSize);
-        free(compressed);
-        return 0;
+        header.compressedSize = ret;
     }
 
     uint8_t *decompressed = malloc(header.decompressedSize);

@@ -17,7 +17,8 @@
 #define MC0_PATH                "mc0:/"
 #define MC1_PATH                "mc1:/"
 #define USB_PATH                "mass:/"
-#define USER_PATH_USB           "PS2/SAVEDATA/"
+#define HOST_PATH               "host:/"
+#define DISC_PATH               "cdfs:/"
 
 #define PS1_SAVES_PATH_USB      "PS1/SAVEDATA/"
 #define PS2_SAVES_PATH_USB      "PS2/SAVEDATA/"

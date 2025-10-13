@@ -136,7 +136,7 @@ static option_entry_t* _createExtOptions(int count, const char* name, char value
 	list_append(options[0].opts, optval);
 
 	optval = malloc(sizeof(option_value_t));
-	asprintf(&optval->name, "%s (%s)", name, "host:/");
+	asprintf(&optval->name, "%s (%s)", name, HOST_PATH);
 	asprintf(&optval->value, "%c%c", value, STORAGE_HOST);
 	list_append(options[0].opts, optval);
 
@@ -751,7 +751,7 @@ int ReadOfflineSaves(save_entry_t * game)
 		list_append(item->options[0].opts, optval);
 
 		optval = malloc(sizeof(option_value_t));
-		asprintf(&optval->name, "Copy to Storage (%s)", "host:/");
+		asprintf(&optval->name, "Copy to Storage (%s)", HOST_PATH);
 		asprintf(&optval->value, "%c%c", CMD_DOWNLOAD_MC, STORAGE_HOST);
 		list_append(item->options[0].opts, optval);
 		list_append(game->codes, item);

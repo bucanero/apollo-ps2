@@ -217,6 +217,10 @@ static int LoadTextures_Menu(void)
 	if (TTFLoadFont(0, NULL, font_ttf, size_font_ttf) != SUCCESS)
 		return 0;
 
+	// Try loading NotoSansJP font for unicode support
+	if (TTFLoadFont(1, APOLLO_APP_PATH "DATA/FONT.OTF", NULL, 0) != SUCCESS)
+		LOG("No extra font found for UTF-8 support!");
+
 	free_mem = (u32*) init_ttf_table((u8*) free_mem);
 	set_ttf_window(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, WIN_SKIP_LF);
 

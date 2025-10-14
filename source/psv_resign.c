@@ -17,6 +17,7 @@
 #include "mcio.h"
 #include "ps2mc.h"
 #include "saves.h"
+#include "shiftjis.h"
 
 #define PSV_TYPE_PS1    0x01
 #define PSV_TYPE_PS2    0x02
@@ -367,7 +368,7 @@ int exportPSV(const char *save, const char* psv_path)
 }
 
 //Convert Shift-JIS characters to ASCII equivalent
-int sjis2ascii(uint8_t* bData)
+static void sjis2ascii(uint8_t* bData)
 {
 	uint16_t ch;
 	int i, j = 0;
@@ -402,7 +403,7 @@ int sjis2ascii(uint8_t* bData)
 		{
 			//End of the string
 			bData[j] = 0;
-			return (j);
+			return;
 		}
 
 		// Character not found
@@ -411,11 +412,10 @@ int sjis2ascii(uint8_t* bData)
 	}
 
 	bData[j] = 0;
-	return (j);
+	return;
 }
 
 // PSV files (PS1/PS2) savegame titles are stored in Shift-JIS
-/*
 char* sjis2utf8(char* input)
 {
     // Simplify the input and decode standard ASCII characters
@@ -470,7 +470,6 @@ char* sjis2utf8(char* input)
     output[indexOutput] = 0;
     return output;
 }
-*/
 
 int vmc_import_psv(const char *input)
 {

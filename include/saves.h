@@ -285,7 +285,7 @@ int vmc_import_max(const char *input);
 int vmc_import_cbs(const char *input);
 
 uint8_t* loadVmcIcon(const char *save, const char* icon);
-int sjis2ascii(uint8_t* bData);
+char* sjis2utf8(char* input);
 int psv_resign(const char *src_psv);
 int vmp_resign(const char *src_vmp);
 

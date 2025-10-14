@@ -1033,13 +1033,14 @@ static void check_ps1_savegame(const char* path, const char* d_name, list_t *lis
 		(read_file(savePath, buf, sizeof(buf)) < 0) || buf[0] != 'S' || buf[1] != 'C')
 		return;
 
-	sjis2ascii(buf+4);
-	item = _createSaveEntry(SAVE_FLAG_PS1 | flags, buf+4);
+	char* tmp = sjis2utf8(buf+4);
+	item = _createSaveEntry(SAVE_FLAG_PS1 | flags, tmp);
 	item->path = strdup(path);
 	item->type = FILE_TYPE_PS1;
 	item->dir_name = strdup(d_name);
 	asprintf(&item->icon, "%c", 0);
 	asprintf(&item->title_id, "%.10s", d_name+((strlen(d_name) < 12) ? 0 : 2));
+	free(tmp);
 
 	if(strlen(item->title_id) == 10 && item->title_id[4] == '-')
 		memmove(&item->title_id[4], &item->title_id[5], 6);
@@ -1091,13 +1092,15 @@ static void read_ps2_savegames(const char* userPath, list_t *list, int flags)
 			memmove(&sysPath[iconsys.nlOffset+2], &sysPath[iconsys.nlOffset], sizeof(iconsys.title) - iconsys.nlOffset);
 			memcpy(&sysPath[iconsys.nlOffset], "\x81\x50", 2);
 		}
-		sjis2ascii(sysPath);
-		item = _createSaveEntry(SAVE_FLAG_PS2 | flags, sysPath);
+
+		char* tmp = sjis2utf8(sysPath);
+		item = _createSaveEntry(SAVE_FLAG_PS2 | flags, tmp);
 		item->type = FILE_TYPE_PS2;
 		item->icon = strdup(iconsys.view);
 		item->dir_name = strdup(dir->d_name);
 		asprintf(&item->title_id, "%.10s", dir->d_name+((strlen(dir->d_name) < 12) ? 0 : 2));
 		asprintf(&item->path, "%s%s/", userPath, dir->d_name);
+		free(tmp);
 
 		if(strlen(item->title_id) == 10 && item->title_id[4] == '-')
 			memmove(&item->title_id[4], &item->title_id[5], 6);
@@ -1605,14 +1608,15 @@ list_t * ReadVmc1List(const char* userPath)
 
 		LOG("Reading '%s'...", mcdata[i].saveName);
 
-		item = _createSaveEntry(SAVE_FLAG_PS1 | SAVE_FLAG_VMC, mcdata[i].saveTitle);
+		char* tmp = sjis2utf8(mcdata[i].saveTitle);
+		item = _createSaveEntry(SAVE_FLAG_PS1 | SAVE_FLAG_VMC, tmp);
 		item->type = FILE_TYPE_PS1;
 		item->title_id = strdup(mcdata[i].saveProdCode);
 		item->dir_name =  strdup(mcdata[i].saveName);
 		//hack to keep the save block
 		asprintf(&item->icon, "%c", i);
 		asprintf(&item->path, "%s\n%s", userPath, mcdata[i].saveName);
-		sjis2ascii(item->name);
+		free(tmp);
 
 		if(strlen(item->title_id) == 10 && item->title_id[4] == '-')
 			memmove(&item->title_id[4], &item->title_id[5], 6);
@@ -1706,13 +1710,15 @@ list_t * ReadVmc2List(const char* userPath)
 					memmove(&filePath[iconsys.nlOffset+2], &filePath[iconsys.nlOffset], sizeof(iconsys.title) - iconsys.nlOffset);
 					memcpy(&filePath[iconsys.nlOffset], "\x81\x50", 2);
 				}
-				sjis2ascii(filePath);
-				item = _createSaveEntry(SAVE_FLAG_PS2 | SAVE_FLAG_VMC, filePath);
+
+				char* tmp = sjis2utf8(filePath);
+				item = _createSaveEntry(SAVE_FLAG_PS2 | SAVE_FLAG_VMC, tmp);
 				item->type = FILE_TYPE_PS2;
 				item->icon = strdup(iconsys.view);
 				item->dir_name = strdup(dirent.name);
 				asprintf(&item->title_id, "%.10s", dirent.name+((strlen(dirent.name) < 12) ? 0 : 2));
 				asprintf(&item->path, "%s\n%s/", userPath, dirent.name);
+				free(tmp);
 
 				if(strlen(item->title_id) == 10 && item->title_id[4] == '-')
 					memmove(&item->title_id[4], &item->title_id[5], 6);

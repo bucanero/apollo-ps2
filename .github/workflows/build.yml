@@ -19,7 +19,7 @@ jobs:
           apk update
           apk add gmp mpc1 mpfr4 make cmake git
           git clone https://github.com/bucanero/dbglogger
-          git clone https://github.com/bucanero/apollo-lib
+          git clone --branch v1.4.0 https://github.com/bucanero/apollo-lib
           git clone https://github.com/bucanero/oosdk_libraries
 
       - name: build dbglogger

@@ -411,7 +411,7 @@ int ReadCodes(save_entry_t * save)
 	list_append(save->codes, code);
 
 	LOG("Loading BSD codes '%s'...", filePath);
-	load_patch_code_list(buffer, save->codes, &get_file_entries, save->path);
+	apollo_load_code_list(buffer, save->codes, &get_file_entries, save->path);
 	free (buffer);
 
 skip_end:

@@ -63,7 +63,9 @@ int importPS1psv(const char *save, const char* mc_path, const char* fname)
     if (read_buffer(save, &data, &dataSize) < 0)
         return 0;
 
-    if ((memcmp(data, "\x00VSP", 4) != 0) || (data[0x3C] != 0x01))
+    // The save data follows a 0x84 byte header: anything smaller would be
+    // probed and copied out of bounds.
+    if ((dataSize <= 0x84) || (memcmp(data, "\x00VSP", 4) != 0) || (data[0x3C] != 0x01))
     {
         free(data);
         return 0;
@@ -77,7 +79,7 @@ int importPS1psv(const char *save, const char* mc_path, const char* fname)
 
 int importPS1psv_buffer(const uint8_t *data, size_t dataSize, const char* mc_path)
 {
-    if ((memcmp(data, "\x00VSP", 4) != 0) || (data[0x3C] != 0x01))
+    if ((dataSize <= 0x84) || (memcmp(data, "\x00VSP", 4) != 0) || (data[0x3C] != 0x01))
         return 0;
 
     return write_ps1_save(mc_path, &data[0x64], data + 0x84, dataSize - 0x84);
@@ -92,7 +94,9 @@ int importPS1mcs(const char *save, const char* mc_path, const char* fname)
     if (read_buffer(save, &data, &dataSize) < 0)
         return 0;
 
-    if (data[0] != 'Q' || data[0x80] != 'S' || data[0x81] != 'C')
+    // The header is 0x80 bytes and the data follows it, so anything smaller
+    // cannot be a save - and the reads below would run off the buffer.
+    if (dataSize <= PS1CARD_HEADER_SIZE + 2 || data[0] != 'Q' || data[0x80] != 'S' || data[0x81] != 'C')
     {
         free(data);
         return 0;
@@ -113,7 +117,8 @@ int importPS1psx(const char *save, const char* mc_path, const char* fname)
     if (read_buffer(save, &data, &dataSize) < 0)
         return 0;
 
-    if (data[0x36] != 'S' || data[0x37] != 'C')
+    // 'SC' is read at 0x36 and the data runs from there
+    if (dataSize <= 0x38 || data[0x36] != 'S' || data[0x37] != 'C')
     {
         free(data);
         return 0;

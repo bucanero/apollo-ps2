@@ -627,7 +627,7 @@ static int xpsChecksumOk(FILE *f, long bodyStart, uint32_t bodySize)
 int importXPS(const char *save, const char *mc_path)
 {
     uint32_t len;
-    long bodyStart;
+    long bodyStart, bodyEnd;
     FILE *xpsFile, *outFile;
     char dstName[128];
     char tmp[100];
@@ -686,8 +686,18 @@ int importXPS(const char *save, const char *mc_path)
     }
     fseek(xpsFile, bodyStart, SEEK_SET);
 
-    // Read main directory entry
-    fread(&entry, 1, sizeof(xpsEntry_t), xpsFile);
+    // Read main directory entry. Check the read itself too: a short read would
+    // leave entry.length uninitialized, and it drives the loop below.
+    if (fread(&entry, 1, sizeof(xpsEntry_t), xpsFile) != sizeof(xpsEntry_t) ||
+        entry.length <= 2)
+    {
+        LOG("Invalid XPS file: %s", save);
+        fclose(xpsFile);
+        return 0;
+    }
+    entry.name[sizeof(entry.name) - 1] = 0;
+
+    bodyEnd = bodyStart + (long) len;
 
     snprintf(tmp, sizeof(tmp), "%s%s", mc_path, entry.name);
     mkdir(tmp, 0777);
@@ -705,7 +715,18 @@ int importXPS(const char *save, const char *mc_path)
     // Copy each file entry
     for(int numFiles = entry.length - 2; numFiles > 0; numFiles--)
     {
-        fread(&entry, 1, sizeof(xpsEntry_t), xpsFile);
+        // Check the header read before using any of its fields, and bound the
+        // declared length by what is left of the body before allocating.
+        long pos;
+        if(fread(&entry, 1, sizeof(xpsEntry_t), xpsFile) != sizeof(xpsEntry_t) ||
+           (pos = ftell(xpsFile)) < 0 || entry.length > (uint32_t)(bodyEnd - pos))
+        {
+            LOG("[!] Corrupt save: truncated or oversized entry");
+            fclose(xpsFile);
+            return 0;
+        }
+        entry.name[sizeof(entry.name) - 1] = 0;
+
         data = malloc(entry.length);
         if(!data || fread(data, 1, entry.length, xpsFile) != entry.length)
         {

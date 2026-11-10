@@ -4,6 +4,7 @@
 */
 
 #include <stdio.h>
+#include <stddef.h>
 #include <sys/time.h>
 #include <zlib.h>
 #include <libmc.h>
@@ -86,9 +87,84 @@ static void printMAXHeader(const maxHeader_t *header)
     LOG("decompressedSize : %u", header->decompressedSize);
 }
 
-static int roundUp(int i, int j)
+/*
+ * A .max carries a CRC-32 of the whole file, computed with its own four header
+ * bytes taken as zero. Nothing else in the container can catch a corrupted
+ * byte: the LZARI stream has no integrity check of its own, so a flipped bit
+ * silently becomes a flipped bit in the save. A stored zero means the writer
+ * left the field alone, which the original Action Replay software does.
+ */
+static int maxChecksumOk(FILE *f, uint32_t stored)
 {
-    return (i + j - 1) / j * j;
+    const long at = (long) offsetof(maxHeader_t, crc);
+    uint8_t buf[4096];
+    uLong crc = crc32(0L, Z_NULL, 0);
+    long pos = 0;
+    size_t n, i;
+
+    if(stored == 0)
+        return 1;
+
+    if(fseek(f, 0, SEEK_SET) != 0)
+        return 0;
+
+    while((n = fread(buf, 1, sizeof(buf), f)) > 0)
+    {
+        for(i = 0; i < n; i++)
+            if(pos + (long) i >= at && pos + (long) i < at + 4)
+                buf[i] = 0;
+
+        crc = crc32(crc, buf, (uInt) n);
+        pos += (long) n;
+    }
+
+    return (uint32_t) crc == stored;
+}
+
+/*
+ * Entries are 16-byte aligned, counting from 8 bytes before the buffer: the
+ * next one begins at roundUp(offset + 8, 16) - 8. Kept in uint32_t the whole
+ * way - the old roundUp(int, int) helper could overflow and wrap negative.
+ */
+static uint32_t nextEntryOffset(uint32_t offset)
+{
+    return offset + (16 - ((offset + 8) % 16)) % 16;
+}
+
+/*
+ * Walk the entry chain and check every header and every file's data lies
+ * inside what unlzari() actually produced. A truncated or corrupt stream still
+ * "succeeds" with a short buffer, and the import loops index it by each
+ * entry's declared length - so refuse instead of writing a broken save.
+ */
+static int maxEntriesFit(const uint8_t *buf, uint32_t len, uint32_t numFiles)
+{
+    const maxEntry_t *e;
+    uint32_t offset = 0, i;
+
+    for(i = 0; i < numFiles; i++)
+    {
+        uint32_t next, length;
+
+        /* offset <= len is an invariant of the loop, so len - offset is safe */
+        if(len - offset < sizeof(maxEntry_t))
+            return 0;
+
+        e = (const maxEntry_t*) &buf[offset];
+        length = e->length;
+        offset += sizeof(maxEntry_t);
+
+        if(length > len - offset)
+            return 0;
+
+        offset += length;
+
+        /* Padding that runs past the data is only meaningful after the last
+         * entry; clamping keeps offset <= len. */
+        next = nextEntryOffset(offset);
+        offset = (next > len) ? len : next;
+    }
+    return 1;
 }
 
 static int isMAXFile(const char *path)
@@ -132,12 +208,107 @@ static int setMcTblEntryInfo(const char* dstName, const McFsEntry *entry)
     return val;
 }
 
+/*
+ * Validate and decompress a .max save. Returns the decompressed entry data
+ * (caller frees) with every entry checked to fit inside it, or NULL.
+ */
+static uint8_t* loadMAX(const char *save, maxHeader_t *header)
+{
+    const long streamStart = sizeof(maxHeader_t) - 4;
+    long fileLen;
+    uint32_t avail, ret;
+    uint8_t *compressed, *decompressed;
+
+    if (!isMAXFile(save))
+    {
+        LOG("Invalid MAX file: %s", save);
+        return NULL;
+    }
+
+    FILE *f = fopen(save, "rb");
+    if(!f)
+        return NULL;
+
+    if(fread(header, 1, sizeof(maxHeader_t), f) != sizeof(maxHeader_t))
+    {
+        fclose(f);
+        return NULL;
+    }
+
+    if(!maxChecksumOk(f, header->crc))
+    {
+        LOG("ERROR! Damaged save: CRC mismatch, refusing to import %s", save);
+        fclose(f);
+        return NULL;
+    }
+
+    // compressedSize cannot be trusted: real saves under-report it
+    // (BASLUS-20963FF1200.max claims 17529 for a 17533 byte stream), which
+    // starves the decoder and silently truncates the last file. Read from the
+    // start of the stream to the end of the file instead; the stream carries
+    // its own length in its first word, so extra bytes are harmless.
+    fseek(f, 0, SEEK_END);
+    fileLen = ftell(f);
+    if(fileLen < streamStart)
+    {
+        fclose(f);
+        return NULL;
+    }
+
+    avail = (uint32_t)(fileLen - streamStart);
+    compressed = malloc(avail);
+    if(!compressed)
+    {
+        fclose(f);
+        return NULL;
+    }
+
+    fseek(f, streamStart, SEEK_SET); // Seek to beginning of LZARI stream.
+    ret = fread(compressed, 1, avail, f);
+    fclose(f);
+    if(ret != avail)
+    {
+        LOG("Compressed size: actual=%u, expected=%u", ret, avail);
+        avail = ret;
+    }
+
+    // calloc: a short stream leaves the tail untouched, it must read as zeros
+    decompressed = calloc(1, header->decompressedSize);
+    if(!decompressed)
+    {
+        free(compressed);
+        return NULL;
+    }
+
+    ret = unlzari(compressed, avail, decompressed, header->decompressedSize);
+    free(compressed);
+
+    // As with other save formats, decompressedSize isn't acccurate.
+    if(ret == 0)
+    {
+        LOG("Decompression failed.");
+        free(decompressed);
+        return NULL;
+    }
+
+    if(!maxEntriesFit(decompressed, ret, header->numFiles))
+    {
+        LOG("ERROR! Truncated or corrupt save: %u decompressed bytes do not "
+            "cover the %u files the header declares.", ret, header->numFiles);
+        free(decompressed);
+        return NULL;
+    }
+
+    return decompressed;
+}
+
 int importMAX(const char *save, const char* mc_path)
 {
     FILE* out;
     maxEntry_t *entry;
     maxHeader_t header;
     char dstName[256];
+    uint8_t *decompressed;
 
     if(check_memcard_type(mc_path) != sceMcTypePS2)
     {
@@ -145,44 +316,11 @@ int importMAX(const char *save, const char* mc_path)
         return 0;
     }
 
-    if (!isMAXFile(save))
-    {
-        LOG("Invalid MAX file: %s", save);
-        return 0;
-    }
-
-    FILE *f = fopen(save, "rb");
-    if(!f)
+    if ((decompressed = loadMAX(save, &header)) == NULL)
         return 0;
 
-    fread(&header, 1, sizeof(maxHeader_t), f);
     snprintf(dstName, sizeof(dstName), "%s%s", mc_path, header.dirName);
     mkdir(dstName, 0777);
-
-    // Get compressed file entries
-    uint8_t *compressed = malloc(header.compressedSize);
-
-    fseek(f, sizeof(maxHeader_t) - 4, SEEK_SET); // Seek to beginning of LZARI stream.
-    uint32_t ret = fread(compressed, 1, header.compressedSize, f);
-    fclose(f);
-    if(ret != header.compressedSize)
-    {
-        LOG("Compressed size: actual=%d, expected=%d\n", ret, header.compressedSize);
-        header.compressedSize = ret;
-    }
-
-    uint8_t *decompressed = malloc(header.decompressedSize);
-
-    ret = unlzari(compressed, header.compressedSize, decompressed, header.decompressedSize);
-    free(compressed);
-
-    // As with other save formats, decompressedSize isn't acccurate.
-    if(ret == 0)
-    {
-        LOG("Decompression failed.\n");
-        free(decompressed);
-        return 0;
-    }
 
     LOG("Save contents:\n");
     // Write the file's data
@@ -202,7 +340,7 @@ int importMAX(const char *save, const char* mc_path)
             fclose(out);
         }
 
-        offset = roundUp(offset + entry->length + 8, 16) - 8;
+        offset = nextEntryOffset(offset + entry->length);
     }
 
     free(decompressed);
@@ -294,16 +432,85 @@ static int isCBSFile(const char *path)
     return 1;
 }
 
+/*
+ * Validate, decrypt and decompress a .cbs save. Returns the decompressed entry
+ * data (caller frees) with every entry checked to fit inside it, or NULL.
+ */
+static uint8_t* loadCBS(const char *save, cbsHeader_t *header, uLong *decompressedSize)
+{
+    uint8_t *cbsData;
+    uint8_t *decompressed;
+    cbsEntry_t entryHeader;
+    size_t cbsLen;
+    uint32_t offset;
+
+    if(!isCBSFile(save))
+    {
+        LOG("Invalid CBS file: %s", save);
+        return NULL;
+    }
+
+    if(read_buffer(save, &cbsData, &cbsLen) < 0)
+        return NULL;
+
+    memcpy(header, cbsData, sizeof(cbsHeader_t));
+
+    // Some tools create .CBS saves with an incorrect compressed size in the header.
+    // It can't be trusted!
+    cbsCrypt(cbsData + sizeof(cbsHeader_t), cbsLen - sizeof(cbsHeader_t));
+    *decompressedSize = header->decompressedSize;
+    decompressed = malloc(*decompressedSize);
+    if(!decompressed)
+    {
+        free(cbsData);
+        return NULL;
+    }
+
+    int z_ret = uncompress(decompressed, decompressedSize, cbsData + sizeof(cbsHeader_t), cbsLen - sizeof(cbsHeader_t));
+    free(cbsData);
+
+    if(z_ret != Z_OK)
+    {
+        LOG("Decompression failed! (Z_ERR = %d)", z_ret);
+        free(decompressed);
+        return NULL;
+    }
+
+    // decompressedSize is unsigned: the old loop condition wrapped to a huge
+    // value for a save smaller than one entry header. Such a save has no
+    // files at all, so refuse it rather than create an empty directory.
+    if(*decompressedSize <= sizeof(cbsEntry_t))
+    {
+        LOG("ERROR! Corrupt save: no file entries (%u bytes)", (uint32_t) *decompressedSize);
+        free(decompressed);
+        return NULL;
+    }
+
+    // Entry lengths come from the file; check them all before anything is written.
+    for(offset = 0; offset < (*decompressedSize - sizeof(cbsEntry_t)); offset += entryHeader.length)
+    {
+        memcpy(&entryHeader, &decompressed[offset], sizeof(cbsEntry_t));
+        offset += sizeof(cbsEntry_t);
+
+        if(entryHeader.length > *decompressedSize - offset)
+        {
+            LOG("ERROR! Corrupt save: '%.32s' claims %u bytes, %u remain.",
+                entryHeader.name, entryHeader.length, (uint32_t)(*decompressedSize - offset));
+            free(decompressed);
+            return NULL;
+        }
+    }
+
+    return decompressed;
+}
+
 int importCBS(const char *save, const char *mc_path)
 {
     FILE *dstFile;
-    uint8_t *cbsData;
-    uint8_t *compressed;
     uint8_t *decompressed;
     cbsHeader_t header;
     cbsEntry_t entryHeader;
     uLong decompressedSize;
-    size_t cbsLen;
     char dstName[256];
     McFsEntry mcEntry;
 
@@ -313,41 +520,17 @@ int importCBS(const char *save, const char *mc_path)
         return 0;
     }
 
-    if(!isCBSFile(save))
-    {
-        LOG("Invalid CBS file: %s", save);
-        return 0;
-    }
-
-    if(read_buffer(save, &cbsData, &cbsLen) < 0)
+    if((decompressed = loadCBS(save, &header, &decompressedSize)) == NULL)
         return 0;
 
-    memcpy(&header, cbsData, sizeof(cbsHeader_t));
     snprintf(dstName, sizeof(dstName), "%s%s", mc_path, header.name);
     mkdir(dstName, 0777);
-
-    // Get data for file entries
-    compressed = cbsData + sizeof(cbsHeader_t);
-    // Some tools create .CBS saves with an incorrect compressed size in the header.
-    // It can't be trusted!
-    cbsCrypt(compressed, cbsLen - sizeof(cbsHeader_t));
-    decompressedSize = header.decompressedSize;
-    decompressed = malloc(decompressedSize);
-    int z_ret = uncompress(decompressed, &decompressedSize, compressed, cbsLen - sizeof(cbsHeader_t));
-    free(cbsData);
-
-    if(z_ret != Z_OK)
-    {
-        // Compression failed.
-        LOG("Decompression failed! (Z_ERR = %d)", z_ret);
-        free(decompressed);
-        return 0;
-    }
 
     LOG("Save contents:\n");
 
     // Write the file's data
-    for(uint32_t offset = 0; offset < (decompressedSize - sizeof(cbsEntry_t)); offset += entryHeader.length)
+    for(uint32_t offset = 0; decompressedSize > sizeof(cbsEntry_t) &&
+                             offset < (decompressedSize - sizeof(cbsEntry_t)); offset += entryHeader.length)
     {
         /* Entry header can't be read directly because it might not be 32-bit aligned.
         GCC will likely emit an lw instruction for reading the 32-bit variables in the
@@ -392,9 +575,59 @@ int importCBS(const char *save, const char *mc_path)
     return 1;
 }
 
+/*
+ * The four bytes after the body are a checksum of it. Not every writer appends
+ * them - a file that stops at the last byte of data is accepted - but when
+ * they are there they have to agree, because nothing else in an .xps can catch
+ * a corrupted byte. A stored zero means the writer left the field alone.
+ */
+static int xpsChecksumOk(FILE *f, long bodyStart, uint32_t bodySize)
+{
+    uint8_t buf[4096];
+    uint32_t sum = 0, stored;
+    long fileLen, end;
+    size_t left = bodySize, n, i;
+
+    if(fseek(f, 0, SEEK_END) != 0)
+        return 0;
+
+    fileLen = ftell(f);
+    if(fileLen < 0 || bodyStart < 0)
+        return 0;
+
+    end = bodyStart + (long) bodySize;
+    if(end < bodyStart || end > fileLen)
+        return 0;               /* the body overflows, or runs past the file */
+
+    /* No trailer (or not one this format defines): nothing to check against */
+    if(fileLen - end != 4)
+        return 1;
+
+    if(fseek(f, bodyStart, SEEK_SET) != 0)
+        return 0;
+
+    while(left > 0)
+    {
+        n = fread(buf, 1, (left < sizeof(buf)) ? left : sizeof(buf), f);
+        if(n == 0)
+            return 0;
+
+        for(i = 0; i < n; i++)
+            sum += (uint32_t) buf[i] << (sum % 24);
+
+        left -= n;
+    }
+
+    if(fread(&stored, 1, sizeof(stored), f) != sizeof(stored))
+        return 0;
+
+    return (stored == 0) || (stored == sum);
+}
+
 int importXPS(const char *save, const char *mc_path)
 {
     uint32_t len;
+    long bodyStart, bodyEnd;
     FILE *xpsFile, *outFile;
     char dstName[128];
     char tmp[100];
@@ -420,16 +653,51 @@ int importXPS(const char *save, const char *mc_path)
         return 0;
     }
 
-    // Skip the variable size header
-    fread(&len, 1, sizeof(uint32_t), xpsFile);
-    fread(&tmp, 1, len, xpsFile);
-    fread(&len, 1, sizeof(uint32_t), xpsFile);
-    fread(&tmp, 1, len, xpsFile);
-    fread(&len, 1, sizeof(uint32_t), xpsFile);
-    fread(&len, 1, sizeof(uint32_t), xpsFile);
+    // Skip the variable size header: three length-prefixed strings (title,
+    // date and the writing tool's comment), then the size of the rest of the
+    // file. The comment is empty in most saves, which makes its length look
+    // like a spare zero word - but PS2SaveConverter fills it in, and reading
+    // only two strings then skipping 8 bytes lands in the middle of it.
+    // Seek past them instead of reading: they can be longer than tmp[].
+    for (int i = 0; i < 3; i++)
+    {
+        if (fread(&len, 1, sizeof(uint32_t), xpsFile) != sizeof(uint32_t) ||
+            fseek(xpsFile, len, SEEK_CUR) != 0)
+        {
+            LOG("Invalid XPS file: %s", save);
+            fclose(xpsFile);
+            return 0;
+        }
+    }
+    if (fread(&len, 1, sizeof(uint32_t), xpsFile) != sizeof(uint32_t) ||
+        (bodyStart = ftell(xpsFile)) < 0)
+    {
+        LOG("Invalid XPS file: %s", save);
+        fclose(xpsFile);
+        return 0;
+    }
 
-    // Read main directory entry
-    fread(&entry, 1, sizeof(xpsEntry_t), xpsFile);
+    if (len < sizeof(xpsEntry_t) ||
+        !xpsChecksumOk(xpsFile, bodyStart, len))
+    {
+        LOG("ERROR! Damaged save: checksum mismatch, refusing to import %s", save);
+        fclose(xpsFile);
+        return 0;
+    }
+    fseek(xpsFile, bodyStart, SEEK_SET);
+
+    // Read main directory entry. Check the read itself too: a short read would
+    // leave entry.length uninitialized, and it drives the loop below.
+    if (fread(&entry, 1, sizeof(xpsEntry_t), xpsFile) != sizeof(xpsEntry_t) ||
+        entry.length <= 2)
+    {
+        LOG("Invalid XPS file: %s", save);
+        fclose(xpsFile);
+        return 0;
+    }
+    entry.name[sizeof(entry.name) - 1] = 0;
+
+    bodyEnd = bodyStart + (long) len;
 
     snprintf(tmp, sizeof(tmp), "%s%s", mc_path, entry.name);
     mkdir(tmp, 0777);
@@ -447,9 +715,26 @@ int importXPS(const char *save, const char *mc_path)
     // Copy each file entry
     for(int numFiles = entry.length - 2; numFiles > 0; numFiles--)
     {
-        fread(&entry, 1, sizeof(xpsEntry_t), xpsFile);
+        // Check the header read before using any of its fields, and bound the
+        // declared length by what is left of the body before allocating.
+        long pos;
+        if(fread(&entry, 1, sizeof(xpsEntry_t), xpsFile) != sizeof(xpsEntry_t) ||
+           (pos = ftell(xpsFile)) < 0 || entry.length > (uint32_t)(bodyEnd - pos))
+        {
+            LOG("[!] Corrupt save: truncated or oversized entry");
+            fclose(xpsFile);
+            return 0;
+        }
+        entry.name[sizeof(entry.name) - 1] = 0;
+
         data = malloc(entry.length);
-        fread(data, 1, entry.length, xpsFile);
+        if(!data || fread(data, 1, entry.length, xpsFile) != entry.length)
+        {
+            LOG("[!] Corrupt save: '%.64s' is truncated", entry.name);
+            free(data);
+            fclose(xpsFile);
+            return 0;
+        }
 
         LOG(" %8d bytes  : %s\n", entry.length, entry.name);
         update_progress_bar(dirEntry.length - numFiles, dirEntry.length, entry.name);
@@ -959,44 +1244,15 @@ int vmc_import_max(const char *save)
     maxHeader_t header;
     char dstName[256];
 
-    if (!isMAXFile(save))
+    uint8_t *decompressed = loadMAX(save, &header);
+    if (!decompressed)
         return 0;
-
-    FILE *f = fopen(save, "rb");
-    if(!f)
-        return 0;
-
-    fread(&header, 1, sizeof(maxHeader_t), f);
 
     r = mcio_mcMkDir(header.dirName);
     if (r < 0)
         LOG("Error: can't create directory '%s'... (%d)", header.dirName, r);
     else
         mcio_mcClose(r);
-
-    // Get compressed file entries
-    uint8_t *compressed = malloc(header.compressedSize);
-
-    fseek(f, sizeof(maxHeader_t) - 4, SEEK_SET); // Seek to beginning of LZARI stream.
-    uint32_t ret = fread(compressed, 1, header.compressedSize, f);
-    fclose(f);
-    if(ret != header.compressedSize)
-    {
-        LOG("Compressed size: actual=%d, expected=%d\n", ret, header.compressedSize);
-        header.compressedSize = ret;
-    }
-
-    uint8_t *decompressed = malloc(header.decompressedSize);
-    ret = unlzari(compressed, header.compressedSize, decompressed, header.decompressedSize);
-    free(compressed);
-
-    // As with other save formats, decompressedSize isn't acccurate.
-    if(ret == 0)
-    {
-        LOG("Decompression failed.\n");
-        free(decompressed);
-        return 0;
-    }
 
     LOG("Save contents:\n");
     // Write the file's data
@@ -1024,7 +1280,7 @@ int vmc_import_max(const char *save)
             return 0;
         }
 
-        offset = roundUp(offset + entry->length + 8, 16) - 8;
+        offset = nextEntryOffset(offset + entry->length);
     }
 
     free(decompressed);
@@ -1035,51 +1291,27 @@ int vmc_import_max(const char *save)
 int vmc_import_cbs(const char *save)
 {
     int r, fd;
-    uint8_t *cbsData;
-    uint8_t *compressed;
     uint8_t *decompressed;
     cbsHeader_t header;
     cbsEntry_t entryHeader;
     uLong decompressedSize;
-    size_t cbsLen;
     char dstName[256];
     struct io_dirent mcEntry;
 
-    if(!isCBSFile(save))
+    if((decompressed = loadCBS(save, &header, &decompressedSize)) == NULL)
         return 0;
 
-    if(read_buffer(save, &cbsData, &cbsLen) < 0)
-        return 0;
-
-    memcpy(&header, cbsData, sizeof(cbsHeader_t));
     r = mcio_mcMkDir(header.name);
     if (r < 0)
         LOG("Error: can't create directory '%s'... (%d)", header.name, r);
     else
         mcio_mcClose(r);
 
-    // Get data for file entries
-    compressed = cbsData + sizeof(cbsHeader_t);
-    // Some tools create .CBS saves with an incorrect compressed size in the header.
-    // It can't be trusted!
-    cbsCrypt(compressed, cbsLen - sizeof(cbsHeader_t));
-    decompressedSize = header.decompressedSize;
-    decompressed = malloc(decompressedSize);
-    r = uncompress(decompressed, &decompressedSize, compressed, cbsLen - sizeof(cbsHeader_t));
-    free(cbsData);
-
-    if(r != Z_OK)
-    {
-        // Compression failed.
-        LOG("Decompression failed! (Z_ERR = %d)", r);
-        free(decompressed);
-        return 0;
-    }
-
     LOG("Save contents:\n");
 
     // Write the file's data
-    for(uint32_t offset = 0; offset < (decompressedSize - sizeof(cbsEntry_t)); offset += entryHeader.length)
+    for(uint32_t offset = 0; decompressedSize > sizeof(cbsEntry_t) &&
+                             offset < (decompressedSize - sizeof(cbsEntry_t)); offset += entryHeader.length)
     {
         /* Entry header can't be read directly because it might not be 32-bit aligned.
         GCC will likely emit an lw instruction for reading the 32-bit variables in the

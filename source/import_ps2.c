@@ -677,7 +677,8 @@ int importXPS(const char *save, const char *mc_path)
         return 0;
     }
 
-    if (!xpsChecksumOk(xpsFile, bodyStart, len))
+    if (len < sizeof(xpsEntry_t) ||
+        !xpsChecksumOk(xpsFile, bodyStart, len))
     {
         LOG("ERROR! Damaged save: checksum mismatch, refusing to import %s", save);
         fclose(xpsFile);

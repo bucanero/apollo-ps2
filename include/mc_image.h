@@ -26,8 +26,10 @@ typedef struct
     int ecc;                // image carries 16 byte spare (ECC) per page
 } mc_image_info_t;
 
-// Dump a PS2 card (port 0/1) to an image file, raw (.VMC) or with ECC (.PS2)
-int mc_dump_ps2_image(int port, const char* path, int ecc);
+// Dump a PS2 card (port 0/1) to an image file, raw (.VMC) or with ECC (.PS2).
+// Pages with ECC errors are dumped as read; `ecc_errors` (optional) gets how
+// many there were. A .PS2 image gets freshly computed ECC for every page.
+int mc_dump_ps2_image(int port, const char* path, int ecc, uint32_t* ecc_errors);
 
 // Dump a PS1 card (port 0/1) to a raw 128 KB .MCR image
 int mc_dump_ps1_image(int port, const char* path);

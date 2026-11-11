@@ -109,7 +109,7 @@ static int mcimg_call(int cmd, int port, uint32_t page, uint32_t count, int send
 	return mcimg_buf.hdr.result;
 }
 
-static int read_card(int port, uint32_t first, uint32_t count, int unit, uint8_t* dst);
+static int read_card(int port, uint32_t first, uint32_t count, int unit, uint8_t* dst, uint32_t* ecc_errors);
 static int parse_superblock(const uint8_t* sb, uint32_t* total_pages);
 
 static int get_card(int port, mc_card_t* card)
@@ -151,15 +151,16 @@ static int get_card(int port, mc_card_t* card)
 
 	// The card didn't answer the spec query: take the size from its superblock
 	LOG("mc%d: McGetCardSpec failed (%d), using the superblock", port, mcimg_buf.spec.spec_result);
-	if (read_card(port, 0, 1, MC_PAGE_SIZE, block_buf) != MC_IMG_OK)
+	if (read_card(port, 0, 1, MC_PAGE_SIZE, block_buf, NULL) != MC_IMG_OK)
 		return MC_IMG_ERR_READ;
 
 	ret = parse_superblock(block_buf, &card->total_pages);
 	return (ret == MC_IMG_ERR_BADIMAGE) ? MC_IMG_ERR_UNFORMATTED : ret;
 }
 
-// Reads count pages (PS2) or frames (PS1) into dst
-static int read_card(int port, uint32_t first, uint32_t count, int unit, uint8_t* dst)
+// Reads count pages (PS2) or frames (PS1) into dst; adds PS2 pages with
+// uncorrectable ECC errors (returned as read) to *ecc_errors
+static int read_card(int port, uint32_t first, uint32_t count, int unit, uint8_t* dst, uint32_t* ecc_errors)
 {
 	int r = mcimg_call(MCIMG_CMD_READ, port, first, count, 0, count * unit);
 
@@ -167,6 +168,13 @@ static int read_card(int port, uint32_t first, uint32_t count, int unit, uint8_t
 	{
 		LOG("mc%d: read error %d at %u", port, r, first);
 		return MC_IMG_ERR_READ;
+	}
+
+	if (mcimg_buf.hdr.ecc_errors)
+	{
+		LOG("mc%d: %u page(s) with ECC errors at %u", port, mcimg_buf.hdr.ecc_errors, first);
+		if (ecc_errors)
+			*ecc_errors += mcimg_buf.hdr.ecc_errors;
 	}
 
 	memcpy(dst, mcimg_buf.data, count * unit);
@@ -197,12 +205,15 @@ static int parse_superblock(const uint8_t* sb, uint32_t* total_pages)
 	return MC_IMG_OK;
 }
 
-int mc_dump_ps2_image(int port, const char* path, int ecc)
+int mc_dump_ps2_image(int port, const char* path, int ecc, uint32_t* ecc_errors)
 {
 	FILE* fp;
 	mc_card_t card;
 	uint32_t block, i;
 	int ret;
+
+	if (ecc_errors)
+		*ecc_errors = 0;
 
 	if ((ret = get_card(port, &card)) != MC_IMG_OK)
 		return ret;
@@ -217,7 +228,7 @@ int mc_dump_ps2_image(int port, const char* path, int ecc)
 	init_progress_bar("Dumping Memory Card...");
 	for (block = 0; block < card.total_pages / MC_BLOCK_PAGES; block++)
 	{
-		if ((ret = read_card(port, block * MC_BLOCK_PAGES, MC_BLOCK_PAGES, MC_PAGE_SIZE, block_buf)) != MC_IMG_OK)
+		if ((ret = read_card(port, block * MC_BLOCK_PAGES, MC_BLOCK_PAGES, MC_PAGE_SIZE, block_buf, ecc_errors)) != MC_IMG_OK)
 			break;
 
 		for (i = 0; i < MC_BLOCK_PAGES && ret == MC_IMG_OK; i++)
@@ -271,7 +282,7 @@ int mc_dump_ps1_image(int port, const char* path)
 	init_progress_bar("Dumping PS1 Memory Card...");
 	for (uint32_t frame = 0; frame < PS1_FRAMES; frame += step)
 	{
-		if ((ret = read_card(port, frame, step, PS1_FRAME_SIZE, block_buf)) != MC_IMG_OK)
+		if ((ret = read_card(port, frame, step, PS1_FRAME_SIZE, block_buf, NULL)) != MC_IMG_OK)
 			break;
 
 		/*
@@ -423,7 +434,7 @@ int mc_restore_ps2_image(int port, const char* path)
 
 		// read it back: catches bad blocks and silent write failures
 		if (mcimg_call(MCIMG_CMD_READ, port, block * MC_BLOCK_PAGES, MC_BLOCK_PAGES, 0, MC_BLOCK_SIZE) != 0 ||
-			memcmp(mcimg_buf.data, block_buf, MC_BLOCK_SIZE) != 0)
+			mcimg_buf.hdr.ecc_errors != 0 || memcmp(mcimg_buf.data, block_buf, MC_BLOCK_SIZE) != 0)
 		{
 			LOG("Verify failed at block %u", block);
 			ret = MC_IMG_ERR_VERIFY;

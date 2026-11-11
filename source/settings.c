@@ -3,11 +3,11 @@
 #include <string.h>
 #include <time.h>
 #include <zlib.h>
-#include <ahx_rpc.h>
 
 #include "types.h"
 #include "menu.h"
 #include "saves.h"
+#include "music.h"
 #include "common.h"
 #include "icons.h"
 
@@ -76,9 +76,9 @@ void music_callback(int sel)
 	apollo_config.music = !sel;
 
 	if(apollo_config.music)
-		AHX_Play();
+		music_play();
 	else
-		AHX_Pause();
+		music_pause();
 }
 
 void sort_callback(int sel)

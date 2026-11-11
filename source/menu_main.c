@@ -102,7 +102,11 @@ static code_entry_t* LoadRawPatch(void)
 
 	centry->name = strdup(selected_entry->title_id);
 	snprintf(patchPath, sizeof(patchPath), APOLLO_DATA_PATH "%s.savepatch", selected_entry->title_id);
-	centry->codes = readTextFile(patchPath);
+	if ((centry->codes = readTextFile(patchPath)) == NULL)
+	{
+		snprintf(patchPath, sizeof(patchPath), DISC_PATCH_PATH "%s.savepatch", selected_entry->title_id);
+		centry->codes = readTextFile(patchPath);
+	}
 
 	return centry;
 }
@@ -811,6 +815,13 @@ static void doPatchMenu(void)
 	{
 		selected_centry = list_get_item(selected_entry->codes, menu_sel);
 
+		// Python codes (listed, but this build can't run them) say why
+		if (selected_centry->type == PATCH_PYTHON)
+		{
+			show_message("This code needs Apollo with Python support\n(PS3/PS4 apps or the web patcher)");
+			return;
+		}
+
 		if (selected_centry->type != PATCH_NULL)
 			selected_centry->activated = !selected_centry->activated;
 
@@ -826,7 +837,8 @@ static void doPatchMenu(void)
 				list_node_t* node;
 
 				for (node = list_head(selected_entry->codes); (code = list_get(node)); node = list_next(node))
-					if (wildcard_match_icase(code->name, "*(REQUIRED)*") && code->options_count == 0)
+					if (wildcard_match_icase(code->name, "*(REQUIRED)*") && code->options_count == 0 &&
+						!(code->flags & APOLLO_CODE_FLAG_DISABLED))
 						code->activated = 1;
 			}
 			/*

@@ -641,7 +641,7 @@ static void copyAllSavesUSB(const save_entry_t* save, int dev, int all)
 	show_message("%d/%d Saves copied to:\n%s", done, done+err_count, dst_path);
 }
 
-static void* ps2_host_callback(int id, int* size)
+static void* ps2_host_callback(int id, uint32_t* size)
 {
 	memset(host_buf, 0, sizeof(host_buf));
 
@@ -687,7 +687,8 @@ static int apply_cheat_patches(const save_entry_t* entry)
 
 	for (node = list_head(entry->codes); (code = list_get(node)); node = list_next(node))
 	{
-		if (!code->activated || (code->type != PATCH_GAMEGENIE && code->type != PATCH_BSD))
+		if (!code->activated || (code->flags & APOLLO_CODE_FLAG_DISABLED) ||
+			(code->type != PATCH_GAMEGENIE && code->type != PATCH_BSD))
 			continue;
 
 		LOG("Active code: [%s]", code->name);
@@ -726,7 +727,7 @@ if(0)//				if (get_psp_save_key(entry, key) && psp_DecryptSavedata(entry->path, 
 			}
 		}
 
-		if (!apply_cheat_patch_code(tmpfile, entry->title_id, code, &ps2_host_callback))
+		if (!apollo_apply_code(tmpfile, code, &ps2_host_callback))
 		{
 			LOG("Error: failed to apply (%s)", code->name);
 			ret = 0;
@@ -748,7 +749,7 @@ if(0)//		if (!get_psp_save_key(entry, key) || !psp_EncryptSavedata(entry->path, 
 	}
 
 	list_free(decrypted_files);
-	free_patch_var_list();
+	apollo_free_var_list();
 	stop_loading_screen();
 
 	return ret;
@@ -978,6 +979,7 @@ static void dumpMemoryCard(const save_entry_t* save, int dst, int type)
 	struct tm t;
 	char dst_path[256];
 	int ret, port = save->path[2] - '0';
+	uint32_t ecc_errors = 0;
 	const char* ext = (type == CMD_DUMP_MC_PS1) ? "MCR" : (type == CMD_DUMP_MC_PS2) ? "PS2" : "VMC";
 
 	_set_dest_path(dst_path, dst, (type == CMD_DUMP_MC_PS1) ? IMP_PS1VMC_PATH_USB : IMP_PS2VMC_PATH_USB);
@@ -994,9 +996,11 @@ static void dumpMemoryCard(const save_entry_t* save, int dst, int type)
 	if (type == CMD_DUMP_MC_PS1)
 		ret = mc_dump_ps1_image(port, dst_path);
 	else
-		ret = mc_dump_ps2_image(port, dst_path, type == CMD_DUMP_MC_PS2);
+		ret = mc_dump_ps2_image(port, dst_path, type == CMD_DUMP_MC_PS2, &ecc_errors);
 
-	if (ret == MC_IMG_OK)
+	if (ret == MC_IMG_OK && ecc_errors)
+		show_message("Memory Card dumped to:\n%s\n\nWarning: %u page(s) had ECC errors\nand were saved as read", dst_path, (unsigned int) ecc_errors);
+	else if (ret == MC_IMG_OK)
 		show_message("Memory Card successfully dumped to:\n%s", dst_path);
 	else
 		show_message("Error! Failed to dump mc%d:\n%s", port, mc_image_error(ret));

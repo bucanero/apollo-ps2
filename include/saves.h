@@ -19,6 +19,7 @@
 #define USB_PATH                "mass:/"
 #define HOST_PATH               "host:/"
 #define DISC_PATH               "cdfs:/"
+#define DISC_PATCH_PATH         DISC_PATH APOLLO_PATH "PATCHES/"  // .savepatch files on an Apollo disc
 
 #define PS1_SAVES_PATH_USB      "PS1/SAVEDATA/"
 #define PS2_SAVES_PATH_USB      "PS2/SAVEDATA/"
@@ -190,6 +191,7 @@ enum code_type_enum
     PATCH_NULL,
     PATCH_GAMEGENIE = APOLLO_CODE_GAMEGENIE,
     PATCH_BSD = APOLLO_CODE_BSD,
+    PATCH_PYTHON = APOLLO_CODE_PYTHON,
     PATCH_COMMAND,
     PATCH_SFO,
     PATCH_TROP_UNLOCK,

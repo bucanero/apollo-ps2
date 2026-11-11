@@ -1,6 +1,9 @@
 name: PS2 Build
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
 
 env:
   BUILD_TYPE: Release
@@ -19,7 +22,7 @@ jobs:
           apk update
           apk add gmp mpc1 mpfr4 make cmake git
           git clone https://github.com/bucanero/dbglogger
-          git clone --branch v1.4.0 https://github.com/bucanero/apollo-lib
+          git clone --branch dc-ps2 https://github.com/bucanero/apollo-lib
           git clone https://github.com/bucanero/oosdk_libraries
 
       - name: build dbglogger
@@ -59,4 +62,24 @@ jobs:
         with:
           name: apollo-ps2-build_${{ env.sha_name }}
           path: APOLLO.ELF
+          if-no-files-found: error
+
+      # Disc image with the offline saves database and save patches. Only on
+      # tags and manual runs: it pulls ~400 MB of saves.
+      - name: Build disc image
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+        run: |
+          apk add xorriso
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/bucanero/apollo-saves
+          git -C apollo-saves sparse-checkout set PS1 PS2
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/bucanero/apollo-patches
+          git -C apollo-patches sparse-checkout set PS1 PS2
+          sh tools/make_iso.sh APOLLO.ELF apollo-saves apollo-patches apollo-ps2.iso
+
+      - name: Upload disc image
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: apollo-ps2-iso_${{ env.sha_name }}
+          path: apollo-ps2.iso
           if-no-files-found: error

@@ -923,22 +923,37 @@ int importPSV_buffer(const uint8_t *savebuf, size_t bufsize, const char* mc_path
 
 uint8_t* loadVmcIcon(const char *save, const char* icon)
 {
-    int r, fd;
+    int r, fd, has_sys = 0;
     char filepath[128];
     struct io_dirent dirent;
+    uint8_t iconsys[PS2ICON_SYS_SIZE];
+
+    // The save's icon.sys has the lights the model is shaded with
+    snprintf(filepath, sizeof(filepath), "%s/icon.sys", save);
+    fd = mcio_mcOpen(filepath, sceMcFileAttrReadable | sceMcFileAttrFile);
+    if (fd >= 0)
+    {
+        has_sys = (mcio_mcRead(fd, iconsys, sizeof(iconsys)) == sizeof(iconsys));
+        mcio_mcClose(fd);
+    }
 
     snprintf(filepath, sizeof(filepath), "%s/%s", save, icon);
     LOG("Reading '%s'...", filepath);
 
     // Read icon entry
-    mcio_mcStat(filepath, &dirent);
+    if (mcio_mcStat(filepath, &dirent) < 0 || dirent.stat.size == 0)
+        return NULL;
+
     fd = mcio_mcOpen(filepath, sceMcFileAttrReadable | sceMcFileAttrFile);
     if (fd < 0)
         return NULL;
 
     uint8_t *p = malloc(dirent.stat.size);
     if (p == NULL)
+    {
+        mcio_mcClose(fd);
         return NULL;
+    }
 
     r = mcio_mcRead(fd, p, dirent.stat.size);
     mcio_mcClose(fd);
@@ -949,7 +964,7 @@ uint8_t* loadVmcIcon(const char *save, const char* icon)
         return NULL;
     }
 
-    uint8_t* tex = ps2IconTexture(p);
+    uint8_t* tex = ps2IconRender(p, dirent.stat.size, has_sys ? iconsys : NULL);
     free(p);
 
     return tex;

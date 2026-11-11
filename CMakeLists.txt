@@ -39,6 +39,10 @@ FUNCTION(ADD_RESOURCES out_var)
         ADD_CUSTOM_COMMAND(OUTPUT ${out_f}
                 COMMAND ${CMAKE_COMMAND} -E make_directory ${out_dir}
                 COMMAND ${CMAKE_LINKER} -r -b binary -o ${out_f} ${in_f}
+                # ld -b binary gives no alignment guarantee, but embedded IRX
+                # modules are DMA'd to the IOP (SifExecModuleBuffer) and fail to
+                # load (or load garbage) from a misaligned address
+                COMMAND ${CMAKE_OBJCOPY} --set-section-alignment .data=64 ${out_f}
                 DEPENDS ${in_f}
                 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
                 COMMENT "Building resource ${out_f}"
@@ -62,6 +66,7 @@ set(MCIMAGE_DIR ${CMAKE_SOURCE_DIR}/iop/mcimage)
 add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/mcimage_irx.o
   COMMAND make -C ${MCIMAGE_DIR} IOP_OBJS_DIR=${CMAKE_CURRENT_BINARY_DIR}/mcimage/ IOP_BIN=${CMAKE_CURRENT_BINARY_DIR}/mcimage.irx
   COMMAND ${CMAKE_LINKER} -r -b binary -o mcimage_irx.o mcimage.irx
+  COMMAND ${CMAKE_OBJCOPY} --set-section-alignment .data=64 mcimage_irx.o
   DEPENDS ${MCIMAGE_DIR}/mcimage.c ${MCIMAGE_DIR}/imports.lst ${MCIMAGE_DIR}/irx_imports.h ${MCIMAGE_DIR}/Makefile include/mcimage_rpc.h
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
   COMMENT "Building IOP module mcimage.irx"

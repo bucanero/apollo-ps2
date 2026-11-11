@@ -9,6 +9,7 @@
 #include "common.h"
 #include "utils.h"
 #include "ps1card.h"
+#include "mc_image.h"
 
 static char host_buf[256];
 
@@ -972,6 +973,56 @@ static void export_ps1vmc(const char* vm1_file, int dst, int vmp)
 		show_message("Error! Failed to export PS1 memory card");
 }
 
+static void dumpMemoryCard(const save_entry_t* save, int dst, int type)
+{
+	struct tm t;
+	char dst_path[256];
+	int ret, port = save->path[2] - '0';
+	const char* ext = (type == CMD_DUMP_MC_PS1) ? "MCR" : (type == CMD_DUMP_MC_PS2) ? "PS2" : "VMC";
+
+	_set_dest_path(dst_path, dst, (type == CMD_DUMP_MC_PS1) ? IMP_PS1VMC_PATH_USB : IMP_PS2VMC_PATH_USB);
+	if (mkdirs(dst_path) != SUCCESS)
+	{
+		show_message("Error! Export folder is not available:\n%s", dst_path);
+		return;
+	}
+
+	gmtime_r(&(time_t){time(NULL)}, &t);
+	snprintf(dst_path + strlen(dst_path), sizeof(dst_path) - strlen(dst_path), "MC%d_%d-%02d-%02d_%02d%02d%02d.%s",
+		port, t.tm_year+1900, t.tm_mon+1, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec, ext);
+
+	if (type == CMD_DUMP_MC_PS1)
+		ret = mc_dump_ps1_image(port, dst_path);
+	else
+		ret = mc_dump_ps2_image(port, dst_path, type == CMD_DUMP_MC_PS2);
+
+	if (ret == MC_IMG_OK)
+		show_message("Memory Card successfully dumped to:\n%s", dst_path);
+	else
+		show_message("Error! Failed to dump mc%d:\n%s", port, mc_image_error(ret));
+}
+
+static void restoreMemoryCard(const char* image, int dst)
+{
+	int ret, port = (dst == STORAGE_MC1) ? 1 : 0;
+	mc_image_info_t info;
+
+	if ((ret = mc_check_ps2_restore(port, image, &info)) != MC_IMG_OK)
+	{
+		show_message("Error! Can't write image to mc%d:\n%s", port, mc_image_error(ret));
+		return;
+	}
+
+	if (!show_dialog(DIALOG_TYPE_YESNO, "ALL data on mc%d: will be replaced by:\n%s\n\nThis cannot be undone. Continue?", port, image))
+		return;
+
+	ret = mc_restore_ps2_image(port, image);
+	if (ret == MC_IMG_OK)
+		show_message("Memory Card image successfully written to mc%d:", port);
+	else
+		show_message("Error writing image to mc%d:\n%s\n\nThe Memory Card contents are now incomplete!", port, mc_image_error(ret));
+}
+
 static void import_save2vmc(const char* src, int type)
 {
 	int ret = 0;
@@ -1213,6 +1264,18 @@ void execCodeCommand(code_entry_t* code, const char* codecmd)
 		case CMD_EXP_SAVES_VMC:
 		case CMD_EXP_ALL_SAVES_VMC:
 			exportAllSavesVMC(selected_entry, codecmd[1], codecmd[0] == CMD_COPY_ALL_SAVES_VMC);
+			code->activated = 0;
+			break;
+
+		case CMD_DUMP_MC_PS2:
+		case CMD_DUMP_MC_VMC:
+		case CMD_DUMP_MC_PS1:
+			dumpMemoryCard(selected_entry, codecmd[1], codecmd[0]);
+			code->activated = 0;
+			break;
+
+		case CMD_RESTORE_MC:
+			restoreMemoryCard(selected_entry->path, codecmd[1]);
 			code->activated = 0;
 			break;
 

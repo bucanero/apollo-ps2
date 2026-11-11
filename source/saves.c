@@ -1419,6 +1419,29 @@ list_t * ReadUserList(const char* userPath)
 
 //	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_NET " Start local Web Server", CMD_SAVE_WEBSERVER);
 //	list_append(item->codes, cmd);
+
+	cmd = _createCmdCode(PATCH_NULL, "----- " UTF8_CHAR_STAR " Memory Card Image " UTF8_CHAR_STAR " -----", CMD_CODE_NULL);
+	list_append(item->codes, cmd);
+
+	if (mctype == sceMcTypePS1)
+	{
+		cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_VMC " Dump Memory Card to .MCR image", CMD_CODE_NULL);
+		cmd->options_count = 1;
+		cmd->options = _createExtOptions(1, "Save .MCR image to Storage", CMD_DUMP_MC_PS1);
+		list_append(item->codes, cmd);
+	}
+	else
+	{
+		cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_VMC " Dump Memory Card to .PS2 image (ECC)", CMD_CODE_NULL);
+		cmd->options_count = 1;
+		cmd->options = _createExtOptions(1, "Save .PS2 image to Storage", CMD_DUMP_MC_PS2);
+		list_append(item->codes, cmd);
+
+		cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_VMC " Dump Memory Card to .VMC image (raw)", CMD_CODE_NULL);
+		cmd->options_count = 1;
+		cmd->options = _createExtOptions(1, "Save .VMC image to Storage", CMD_DUMP_MC_VMC);
+		list_append(item->codes, cmd);
+	}
 	list_append(list, item);
 
 	read_ps2_savegames(userPath, list, SAVE_FLAG_MEMCARD | (mctype == sceMcTypePS1 ? SAVE_FLAG_PS1CARD : 0));
@@ -1670,6 +1693,14 @@ list_t * ReadVmc2List(const char* userPath)
 	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_COPY " Export all Saves to Storage (.PSV)", CMD_CODE_NULL);
 	cmd->options_count = 1;
 	cmd->options = _createExtOptions(1, "Export Saves to Storage", CMD_EXP_ALL_SAVES_VMC);
+	list_append(item->codes, cmd);
+
+	cmd = _createCmdCode(PATCH_NULL, "----- " UTF8_CHAR_STAR " Memory Card Image " UTF8_CHAR_STAR " -----", CMD_CODE_NULL);
+	list_append(item->codes, cmd);
+
+	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_WARN " Write image to Memory Card (overwrites the card)", CMD_CODE_NULL);
+	cmd->options_count = 1;
+	cmd->options = _createMcOptions(1, "Write image to MemCard", CMD_RESTORE_MC);
 	list_append(item->codes, cmd);
 	list_append(list, item);
 

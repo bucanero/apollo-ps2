@@ -90,6 +90,10 @@ enum cmd_code_enum
     CMD_COPY_ALL_SAVES_VMC,
     CMD_DUMP_FINGERPRINTS,
     CMD_SAVE_WEBSERVER,
+    CMD_DUMP_MC_PS2,
+    CMD_DUMP_MC_VMC,
+    CMD_DUMP_MC_PS1,
+    CMD_RESTORE_MC,
 
 // Export commands
     CMD_EXP_VMP2MCR,

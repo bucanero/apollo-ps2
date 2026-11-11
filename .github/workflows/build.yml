@@ -22,6 +22,22 @@ jobs:
           git clone --branch v1.4.0 https://github.com/bucanero/apollo-lib
           git clone https://github.com/bucanero/oosdk_libraries
 
+      # SDL 2.24.1 (the image's version) rebuilt with the PS2 GS mode hints
+      # backported from the SDL2 branch, so Apollo can pick NTSC/PAL (#38)
+      - name: build SDL2 (PS2 GS mode hints)
+        run: |
+          git clone --depth 1 --branch release-2.24.1 https://github.com/libsdl-org/SDL.git sdl2
+          cd sdl2
+          git apply ../patches/sdl2-2.24.1-ps2-gs-hints.patch
+          CFLAGS="-I$PS2DEV/gsKit/include -I$PS2SDK/ports/include" cmake -S . -B build -Wno-dev \
+                -DCMAKE_TOOLCHAIN_FILE=$PS2DEV/ps2sdk/ps2dev.cmake \
+                -DCMAKE_INSTALL_PREFIX=$PS2SDK/ports \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DBUILD_SHARED_LIBS=OFF \
+                -DCMAKE_POSITION_INDEPENDENT_CODE=OFF \
+                -DSDL_TESTS=OFF
+          make -C build install
+
       - name: build dbglogger
         run: |
           cd dbglogger

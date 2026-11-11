@@ -13,6 +13,7 @@
 #include <libmc.h>
 #include <elf-loader.h>
 #include <sbv_patches.h>
+#include <rom0_info.h>
 
 #include "saves.h"
 #include "utils.h"
@@ -197,6 +198,67 @@ static int initPad(void)
     }
 
     return 1;
+}
+
+/*
+ * Picks the GS video mode, before the renderer is created (that's when SDL
+ * sets it up). Apollo builds with an SDL 2.24.1 patched to read the
+ * SDL_HINT_PS2_GS_* hints (patches/sdl2-2.24.1-ps2-gs-hints.patch, a backport
+ * of SDL2 commit 7b28fb29bd); the stock 2.24.1 renderer always uses NTSC.
+ *
+ * The frame stays 640x448 in both modes: on PAL that's a 50 Hz picture with
+ * black borders above and below, and no layout changes.
+ */
+#ifndef SDL_HINT_PS2_GS_MODE
+#define SDL_HINT_PS2_GS_MODE	"SDL_PS2_GS_MODE"
+#endif
+
+static int isPalConsole(void)
+{
+	char romname[15];
+
+	// ROMVER is "VVVVRTYYYYMMDD", R = region: 'E' on PAL consoles. Same check
+	// gsKit uses (gsKit_check_rom) to pick its default mode.
+	GetRomName(romname);
+	romname[14] = 0;
+	return (romname[4] == 'E');
+}
+
+static void setVideoMode(void)
+{
+	int pal;
+
+	switch (apollo_config.video_mode)
+	{
+	case VIDEO_MODE_NTSC:
+		pal = 0;
+		break;
+
+	case VIDEO_MODE_PAL:
+		pal = 1;
+		break;
+
+	default:
+		pal = isPalConsole();
+		break;
+	}
+
+	// Holding SELECT while Apollo starts switches to the other mode, for when
+	// the TV can't show the configured one (the setting stays unchanged)
+	for (int i = 0; i < 30; i++)
+	{
+		ps2PadUpdate();
+		if (ps2PadGetConf()->padDataCurrent & PAD_SELECT)
+		{
+			pal = !pal;
+			LOG("SELECT held: switching video mode");
+			break;
+		}
+		usleep(10000);
+	}
+
+	LOG("Video mode: %s (setting %d)", pal ? "PAL" : "NTSC", apollo_config.video_mode);
+	SDL_SetHint(SDL_HINT_PS2_GS_MODE, pal ? "PAL" : "NTSC");
 }
 
 // Used only in initialization. Allocates 64 mb for textures and loads the font
@@ -468,6 +530,10 @@ int main(int argc, char *argv[])
 	http_init();
 	initPad();
 
+	// Load application settings (the video mode is needed before the renderer)
+	load_app_settings(&apollo_config);
+	setVideoMode();
+
 	// Open a handle to audio output device
 	if (SifExecModuleBuffer((void*) &_binary_data_ahx_irx_start, (int) &_binary_data_ahx_irx_size, 0, NULL, NULL) < 0)
 	{
@@ -502,9 +568,6 @@ int main(int argc, char *argv[])
 	registerSpecialChars();
 	initMenuOptions();
 	LoadSounds();
-
-	// Load application settings
-	load_app_settings(&apollo_config);
 
 	// Unpack application data on first run
 	if (file_exists(APOLLO_LOCAL_CACHE "appdata.zip") == SUCCESS)

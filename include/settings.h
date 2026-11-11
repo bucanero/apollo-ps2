@@ -35,7 +35,15 @@ typedef struct __attribute__((packed))
     uint8_t update;
     uint32_t user_id;
     char save_db[256];
+    uint8_t video_mode;     // VIDEO_MODE_* (added after save_db: older SETTINGS.BIN files lack it)
 } app_config_t;
+
+enum video_mode_enum
+{
+    VIDEO_MODE_AUTO,    // the console's region: PAL on European/Australian/Russian models
+    VIDEO_MODE_NTSC,
+    VIDEO_MODE_PAL,
+};
 
 extern menu_option_t menu_options[];
 extern app_config_t apollo_config;
@@ -46,5 +54,6 @@ void music_callback(int sel);
 void sort_callback(int sel);
 void ani_callback(int sel);
 void update_callback(int sel);
+void video_callback(int sel);
 void clearcache_callback(int sel);
 void upd_appdata_callback(int sel);

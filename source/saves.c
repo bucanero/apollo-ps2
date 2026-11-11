@@ -411,7 +411,7 @@ int ReadCodes(save_entry_t * save)
 	list_append(save->codes, code);
 
 	LOG("Loading BSD codes '%s'...", filePath);
-	load_patch_code_list(buffer, save->codes, &get_file_entries, save->path);
+	apollo_load_code_list(buffer, save->codes, &get_file_entries, save->path);
 	free (buffer);
 
 skip_end:
@@ -1042,7 +1042,7 @@ static void check_ps1_savegame(const char* path, const char* d_name, list_t *lis
 	asprintf(&item->title_id, "%.10s", d_name+((strlen(d_name) < 12) ? 0 : 2));
 	free(tmp);
 
-	if(strlen(item->title_id) == 10 && item->title_id[4] == '-')
+	if(strlen(item->title_id) == 10 && (item->title_id[4] == '-' || item->title_id[4] == 'P'))
 		memmove(&item->title_id[4], &item->title_id[5], 6);
 
 	LOG("[%s] F(%X) name '%s'", item->title_id, item->flags, item->name);
@@ -1102,7 +1102,7 @@ static void read_ps2_savegames(const char* userPath, list_t *list, int flags)
 		asprintf(&item->path, "%s%s/", userPath, dir->d_name);
 		free(tmp);
 
-		if(strlen(item->title_id) == 10 && item->title_id[4] == '-')
+		if(strlen(item->title_id) == 10 && (item->title_id[4] == '-' || item->title_id[4] == 'P'))
 			memmove(&item->title_id[4], &item->title_id[5], 6);
 
 		LOG("[%s] F(%X) name '%s'", item->title_id, item->flags, item->name);
@@ -1232,7 +1232,7 @@ static void read_psx_savegames(const char* userPath, const char* folder, list_t 
 		item->dir_name = strdup(data);
 		asprintf(&item->title_id, "%.10s", data+2);
 
-		if(strlen(item->title_id) == 10 && item->title_id[4] == '-')
+		if(strlen(item->title_id) == 10 && (item->title_id[4] == '-' || item->title_id[4] == 'P'))
 			memmove(&item->title_id[4], &item->title_id[5], 6);
 
 		LOG("[%s] F(%X) name '%s'", item->title_id, item->flags, item->name);
@@ -1618,7 +1618,7 @@ list_t * ReadVmc1List(const char* userPath)
 		asprintf(&item->path, "%s\n%s", userPath, mcdata[i].saveName);
 		free(tmp);
 
-		if(strlen(item->title_id) == 10 && item->title_id[4] == '-')
+		if(strlen(item->title_id) == 10 && (item->title_id[4] == '-' || item->title_id[4] == 'P'))
 			memmove(&item->title_id[4], &item->title_id[5], 6);
 
 		LOG("[%s] F(%X) name '%s'", item->title_id, item->flags, item->name);
@@ -1720,7 +1720,7 @@ list_t * ReadVmc2List(const char* userPath)
 				asprintf(&item->path, "%s\n%s/", userPath, dirent.name);
 				free(tmp);
 
-				if(strlen(item->title_id) == 10 && item->title_id[4] == '-')
+				if(strlen(item->title_id) == 10 && (item->title_id[4] == '-' || item->title_id[4] == 'P'))
 					memmove(&item->title_id[4], &item->title_id[5], 6);
 
 				LOG("[%s] F(%X) name '%s'", item->title_id, item->flags, item->name);

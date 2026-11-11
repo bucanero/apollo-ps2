@@ -411,7 +411,8 @@ void DrawCheatsList(int selIndex, save_entry_t* game, u8 alpha)
             if (!a)
                 goto skip_code;
 
-            SetFontColor(APP_FONT_COLOR | a, 0);
+            // codes this build can't run (Python) stay listed, dimmed
+            SetFontColor(APP_FONT_COLOR | ((code->flags & APOLLO_CODE_FLAG_DISABLED) ? a / 2 : a), 0);
 
             const char *group = "";
             if (code->flags & APOLLO_CODE_FLAG_PARENT) group = UTF8_CHAR_GROUP " ";

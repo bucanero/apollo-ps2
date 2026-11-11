@@ -81,6 +81,7 @@ add_executable(${PROJECT_NAME}
   source/ps1card.c
   source/ps2pad.c
   source/ps2icon.c
+  source/ps2render.c
   source/import_ps2.c
   source/import_ps1.c
   source/psv_resign.c

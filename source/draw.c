@@ -198,12 +198,21 @@ int LoadIconTexture(const char* fname)
 	uint8_t* icon;
 	uint8_t* tex;
 	size_t len;
+	uint8_t iconsys[PS2ICON_SYS_SIZE];
+	char sysfile[256];
+	int has_sys;
 
 	LOG("Loading '%s'", fname);
 	if (read_buffer(fname, &icon, &len) < 0)
 		return 0;
 
-	tex = ps2IconTexture(icon);
+	// the save's icon.sys (same folder) has the lights the model is shaded with
+	snprintf(sysfile, sizeof(sysfile), "%s", fname);
+	if (strrchr(sysfile, '/'))
+		strcpy(strrchr(sysfile, '/') + 1, "icon.sys");
+	has_sys = (read_file(sysfile, iconsys, sizeof(iconsys)) == 0);
+
+	tex = ps2IconRender(icon, len, has_sys ? iconsys : NULL);
 	free(icon);
 
 	if (!tex)
@@ -212,7 +221,7 @@ int LoadIconTexture(const char* fname)
 		return 0;
 	}
 
-	return (LoadRawIconTexture(128, 128, tex));
+	return (LoadRawIconTexture(PS2ICON_SIZE, PS2ICON_SIZE, tex));
 }
 
 int LoadMenuTexture(const char* path, int idx)

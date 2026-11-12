@@ -7,6 +7,7 @@
 #include "types.h"
 #include "menu.h"
 #include "saves.h"
+#include "ramcache.h"
 #include "music.h"
 #include "common.h"
 #include "icons.h"
@@ -93,6 +94,13 @@ void ani_callback(int sel)
 
 void clearcache_callback(int sel)
 {
+	if (ramcache_enabled())
+	{
+		LOG("Cleaning RAM cache...");
+		show_message("RAM cache cleaned (%d files)", ramcache_clear());
+		return;
+	}
+
 	LOG("Cleaning folder '%s'...", APOLLO_LOCAL_CACHE);
 	clean_directory(APOLLO_LOCAL_CACHE);
 

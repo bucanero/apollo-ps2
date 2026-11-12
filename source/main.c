@@ -15,6 +15,7 @@
 #include <sbv_patches.h>
 
 #include "saves.h"
+#include "ramcache.h"
 #include "music.h"
 #include "utils.h"
 #include "common.h"
@@ -504,7 +505,10 @@ int main(int argc, char *argv[])
 	}
 
 	mkdirs(APOLLO_DATA_PATH);
-	mkdirs(APOLLO_LOCAL_CACHE);
+
+	// No USB storage for the cache folder: keep cached files in RAM instead
+	if (mkdirs(APOLLO_LOCAL_CACHE) != SUCCESS)
+		ramcache_enable();
 
 	// Load texture
 	if (!LoadTextures_Menu())

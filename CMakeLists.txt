@@ -24,6 +24,8 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--wrap=gettimeofday")
 # lwIP socket calls set errno (see source/ps2socket.c)
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--wrap=lwip_connect,--wrap=lwip_recv,--wrap=lwip_recvfrom,--wrap=lwip_send,--wrap=lwip_sendto")
+# Cache files in RAM when there's no USB storage (see source/ramcache.c)
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--wrap=fopen,--wrap=stat,--wrap=remove,--wrap=unlink,--wrap=chmod,--wrap=mkdir")
 
 include_directories(
   include
@@ -93,7 +95,50 @@ foreach(irx ps2dev9 netman smap)
   list(APPEND NET_IRX_OBJS ${CMAKE_CURRENT_BINARY_DIR}/${irx}_irx.o)
 endforeach()
 
+# Optional: PS1 + PS2 save patches embedded in the ELF, used when a patch isn't
+# in APOLLO/DATA/ (USB) or on an Apollo disc. Point APOLLO_PATCHES_DIR at an
+# apollo-patches checkout; the files go in the zip flat, like the disc's PATCHES/.
+set(APOLLO_PATCHES_DIR "" CACHE PATH "apollo-patches checkout to embed PS1/PS2 .savepatch files from")
+set(PATCHES_OBJ)
+if(APOLLO_PATCHES_DIR)
+  file(GLOB patch_files ${APOLLO_PATCHES_DIR}/PS1/*.savepatch ${APOLLO_PATCHES_DIR}/PS2/*.savepatch)
+  if(NOT patch_files)
+    message(FATAL_ERROR "No PS1/PS2 .savepatch files found in ${APOLLO_PATCHES_DIR}")
+  endif()
+
+  set(patch_names)
+  foreach(f ${patch_files})
+    get_filename_component(n ${f} NAME)
+    list(APPEND patch_names ${n})
+  endforeach()
+  set(unique_names ${patch_names})
+  list(REMOVE_DUPLICATES unique_names)
+  list(LENGTH patch_names n_all)
+  list(LENGTH unique_names n_unique)
+  if(NOT n_all EQUAL n_unique)
+    message(FATAL_ERROR "A title ID has a .savepatch in both PS1/ and PS2/ of ${APOLLO_PATCHES_DIR}")
+  endif()
+  message(STATUS "Embedding ${n_all} save patches from ${APOLLO_PATCHES_DIR}")
+
+  set(PATCHES_STAGE ${CMAKE_CURRENT_BINARY_DIR}/patches)
+  add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/patches_zip.o
+    COMMAND ${CMAKE_COMMAND} -E remove_directory ${PATCHES_STAGE}
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${PATCHES_STAGE}
+    COMMAND ${CMAKE_COMMAND} -E copy ${patch_files} ${PATCHES_STAGE}
+    COMMAND ${CMAKE_COMMAND} -E chdir ${PATCHES_STAGE} ${CMAKE_COMMAND} -E tar cf ${CMAKE_CURRENT_BINARY_DIR}/patches.zip --format=zip ${patch_names}
+    COMMAND ${CMAKE_LINKER} -r -b binary -o patches_zip.o patches.zip
+    COMMAND ${CMAKE_OBJCOPY} --set-section-alignment .data=64 patches_zip.o
+    DEPENDS ${patch_files}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    COMMENT "Embedding save patches (patches.zip)"
+    VERBATIM
+  )
+  set(PATCHES_OBJ ${CMAKE_CURRENT_BINARY_DIR}/patches_zip.o)
+  add_definitions(-DAPOLLO_EMBEDDED_PATCHES)
+endif()
+
 add_executable(${PROJECT_NAME}
+  ${PATCHES_OBJ}
   ${apollo_res}
   ${NET_IRX_OBJS}
   ${CMAKE_CURRENT_BINARY_DIR}/mcimage_irx.o
@@ -104,6 +149,7 @@ add_executable(${PROJECT_NAME}
   source/exec_cmd.c
   source/http.c
   source/ps2socket.c
+  source/ramcache.c
   source/ps2time.c
   source/libfont.c
   source/lzari.c

@@ -6,6 +6,7 @@
 #include <dirent.h>
 #include <libmc.h>
 
+#include <zip.h>
 #include "saves.h"
 #include "common.h"
 #include "settings.h"
@@ -360,6 +361,78 @@ static option_entry_t* get_file_entries(const char* path, const char* mask)
 	return _getFileOptions(path, mask, CMD_CODE_NULL);
 }
 
+#ifdef APOLLO_EMBEDDED_PATCHES
+// PS1 + PS2 .savepatch files from apollo-patches, zipped at build time (see CMakeLists.txt)
+extern const uint8_t _binary_patches_zip_start;
+extern const uint8_t _binary_patches_zip_size;
+
+static char* readEmbeddedPatch(const char* name)
+{
+	zip_source_t* src;
+	zip_t* archive;
+	zip_file_t* zf;
+	zip_stat_t st;
+	char* data = NULL;
+
+	// The archive is read in place from the ELF (freep = 0)
+	src = zip_source_buffer_create(&_binary_patches_zip_start, (zip_uint64_t)(uintptr_t) &_binary_patches_zip_size, 0, NULL);
+	if (!src)
+		return NULL;
+
+	if ((archive = zip_open_from_source(src, ZIP_RDONLY, NULL)) == NULL)
+	{
+		zip_source_free(src);
+		return NULL;
+	}
+
+	if (zip_stat(archive, name, ZIP_FL_NOCASE, &st) == 0 && (zf = zip_fopen_index(archive, st.index, 0)) != NULL)
+	{
+		data = malloc(st.size + 1);
+		if (data && zip_fread(zf, data, st.size) == (zip_int64_t) st.size)
+			data[st.size] = 0;
+		else
+		{
+			free(data);
+			data = NULL;
+		}
+		zip_fclose(zf);
+	}
+
+	// closing the archive frees the source too
+	zip_close(archive);
+	return data;
+}
+#endif
+
+/*
+ * Loads a title's .savepatch: the data folder (USB) first, then an Apollo
+ * disc, then the set embedded in the ELF. Returns a text buffer to free, or
+ * NULL. The location found is written to path, for the log.
+ */
+char* readSavePatch(const char* title_id, char* path, size_t len)
+{
+	char* buffer;
+
+	snprintf(path, len, APOLLO_DATA_PATH "%s.savepatch", title_id);
+	if ((buffer = readTextFile(path)) != NULL)
+		return buffer;
+
+	snprintf(path, len, DISC_PATCH_PATH "%s.savepatch", title_id);
+	if ((buffer = readTextFile(path)) != NULL)
+		return buffer;
+
+#ifdef APOLLO_EMBEDDED_PATCHES
+	snprintf(path, len, "%s.savepatch", title_id);
+	if ((buffer = readEmbeddedPatch(path)) != NULL)
+	{
+		snprintf(path, len, "(embedded) %s.savepatch", title_id);
+		return buffer;
+	}
+#endif
+
+	return NULL;
+}
+
 /*
  * Function:		ReadLocalCodes()
  * File:			saves.c
@@ -397,14 +470,8 @@ int ReadCodes(save_entry_t * save)
 
 	_addBackupCommands(save);
 
-	// a .savepatch in the data folder, else the one on an Apollo disc
-	snprintf(filePath, sizeof(filePath), APOLLO_DATA_PATH "%s.savepatch", save->title_id);
-	if ((buffer = readTextFile(filePath)) == NULL)
-	{
-		snprintf(filePath, sizeof(filePath), DISC_PATCH_PATH "%s.savepatch", save->title_id);
-		if ((buffer = readTextFile(filePath)) == NULL)
-			goto skip_end;
-	}
+	if ((buffer = readSavePatch(save->title_id, filePath, sizeof(filePath))) == NULL)
+		goto skip_end;
 
 	code = _createCmdCode(PATCH_NULL, "----- " UTF8_CHAR_STAR " Cheats " UTF8_CHAR_STAR " -----", CMD_CODE_NULL);	
 	list_append(save->codes, code);

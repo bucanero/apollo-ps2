@@ -101,12 +101,7 @@ static code_entry_t* LoadRawPatch(void)
 	code_entry_t* centry = calloc(1, sizeof(code_entry_t));
 
 	centry->name = strdup(selected_entry->title_id);
-	snprintf(patchPath, sizeof(patchPath), APOLLO_DATA_PATH "%s.savepatch", selected_entry->title_id);
-	if ((centry->codes = readTextFile(patchPath)) == NULL)
-	{
-		snprintf(patchPath, sizeof(patchPath), DISC_PATCH_PATH "%s.savepatch", selected_entry->title_id);
-		centry->codes = readTextFile(patchPath);
-	}
+	centry->codes = readSavePatch(selected_entry->title_id, patchPath, sizeof(patchPath));
 
 	return centry;
 }

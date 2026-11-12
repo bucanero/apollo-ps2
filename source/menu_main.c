@@ -152,7 +152,10 @@ static void SetMenu(int id)
 			break;
 
 		case MENU_PATCHES: //Cheat Selection Menu
-			if (selected_entry->flags & SAVE_FLAG_UPDATED)
+			// The patch menu's own screens (code options, hex editor, details)
+			// come back to it: keep the flag until we leave to the save list
+			if (selected_entry->flags & SAVE_FLAG_UPDATED &&
+				id != MENU_PATCH_VIEW && id != MENU_CODE_OPTIONS && id != MENU_SAVE_DETAILS && id != MENU_HEX_EDITOR)
 			{
 				// Clear the flag first: reloading the list below frees every
 				// entry, selected_entry included, and writing to it afterwards
@@ -658,7 +661,18 @@ static void doHexEditor(void)
 
 	else if (ps2PadGetButtonPressed(PAD_CIRCLE))
 	{
-		if (show_dialog(DIALOG_TYPE_YESNO, "Save changes to %s?", strrchr(hex_data.filepath, '/') + 1) &&
+		if (selected_entry->flags & SAVE_FLAG_VMC)
+		{
+			// Write the changes straight to the memory card save
+			if (show_dialog(DIALOG_TYPE_YESNO, "Save changes to %s?", strrchr(hex_data.filepath, '/') + 1))
+			{
+				if (vmc_write_save_file(selected_entry, strrchr(hex_data.filepath, '/') + 1, hex_data.data, hex_data.size))
+					selected_entry->flags |= SAVE_FLAG_UPDATED;
+				else
+					show_message("Error! Couldn't save changes to:\n%s", hex_data.filepath);
+			}
+		}
+		else if (show_dialog(DIALOG_TYPE_YESNO, "Save changes to %s?", strrchr(hex_data.filepath, '/') + 1) &&
 			(write_buffer(hex_data.filepath, hex_data.data, hex_data.size) == SUCCESS))
 		{
 //			selected_centry->options[option_index].value[menu_sel][1] = CMD_IMPORT_DATA_FILE;
@@ -743,6 +757,26 @@ static void doCodeOptionsMenu(void)
 		if (code->type == PATCH_COMMAND)
 		{
 			option_value_t* optval = list_get_item(code->options[option_index].opts, menu_sel);
+
+			if (optval->value[0] == CMD_HEX_EDIT_FILE && selected_entry->flags & SAVE_FLAG_VMC)
+			{
+				// Edit the save file directly from the memory card
+				memset(&hex_data, 0, sizeof(hex_data));
+				snprintf(hex_data.filepath, sizeof(hex_data.filepath), "VMC:/%s/%s", selected_entry->dir_name, optval->name);
+				// The editor needs at least one byte to put its cursor on
+				if (!vmc_read_save_file(selected_entry, optval->name, &hex_data.data, &hex_data.size) || !hex_data.size)
+				{
+					if (hex_data.data && !hex_data.size)
+						free(hex_data.data);
+
+					show_message("Unable to load\n%s", hex_data.filepath);
+					SetMenu(last_menu_id[MENU_CODE_OPTIONS]);
+					return;
+				}
+
+				SetMenu(MENU_HEX_EDITOR);
+				return;
+			}
 
 			if (optval->value[0] == CMD_HEX_EDIT_FILE)
 			{

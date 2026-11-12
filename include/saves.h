@@ -238,6 +238,9 @@ int sortCodeList_Compare(const void* A, const void* B);
 int ReadCodes(save_entry_t * save);
 int ReadVmc1Codes(save_entry_t * save);
 int ReadVmc2Codes(save_entry_t * game);
+
+int vmc_read_save_file(const save_entry_t* save, const char* filename, uint8_t** data, size_t* size);
+int vmc_write_save_file(const save_entry_t* save, const char* filename, const uint8_t* data, size_t size);
 int ReadOnlineSaves(save_entry_t * game);
 int ReadOfflineSaves(save_entry_t * game);
 int ReadBackupCodes(save_entry_t * bup);

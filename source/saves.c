@@ -665,6 +665,18 @@ int ReadVmc2Codes(save_entry_t * save)
  *	_count_count:	Pointer to int (set to the number of codes within the ncl)
  * Return:			Returns an array of code_entry, null if failed to load
  */
+// Downloads url+file to a cache path, unless it's cached and less than a day old
+static int _cache_online_file(const char* url, const char* file, const char* path)
+{
+	struct stat stats;
+
+	if (file_exists(path) == SUCCESS && stat(path, &stats) == 0 && (stats.st_mtime + ONLINE_CACHE_TIMEOUT) >= time(NULL))
+		return 1;
+
+	// Keep a stale copy if the download fails (e.g. no network)
+	return (http_download(url, file, path, 0) || file_exists(path) == SUCCESS);
+}
+
 int ReadOnlineSaves(save_entry_t * game)
 {
 	code_entry_t* item;
@@ -729,7 +741,15 @@ int ReadOfflineSaves(save_entry_t * game)
 	option_value_t* optval;
 	char path[256];
 
-	snprintf(path, sizeof(path), "%ssaves.txt", game->path);
+	// Online database entries: same saves and options, from a cached saves.txt
+	if (game->flags & SAVE_FLAG_ONLINE)
+	{
+		snprintf(path, sizeof(path), APOLLO_LOCAL_CACHE "%s.txt", game->title_id);
+		if (!_cache_online_file(game->path, "saves.txt", path))
+			return 0;
+	}
+	else
+		snprintf(path, sizeof(path), "%ssaves.txt", game->path);
 
 	char *data = readTextFile(path);
 	if (!data)
@@ -1537,7 +1557,13 @@ list_t * ReadOfflineList(const char* sysPath)
 {
 	char base[256];
 	char path[256];
-	list_t *list = list_alloc();
+	list_t *list;
+
+	// No local database (disc, USB, host): use the online one
+	if (strncasecmp(sysPath, "http://", 7) == 0 || strncasecmp(sysPath, "https://", 8) == 0)
+		return ReadOnlineList(sysPath);
+
+	list = list_alloc();
 
 	// PSV save-games (Zip folder)
 	snprintf(base, sizeof(base), "%sPS1/", sysPath);

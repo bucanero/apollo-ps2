@@ -295,7 +295,7 @@ static void SetMenu(int id)
 				{
 					snprintf(iconfile, sizeof(iconfile), APOLLO_LOCAL_CACHE "%s.PNG", selected_entry->title_id);
 					if (file_exists(iconfile) != SUCCESS)
-						http_download(selected_entry->path, "icon0.png", iconfile, 0);
+						http_download(selected_entry->path, "icon0.png", iconfile, 1);
 				}
 				else
 					snprintf(iconfile, sizeof(iconfile), "%sicon0.png", selected_entry->path);

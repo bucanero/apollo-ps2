@@ -669,8 +669,7 @@ static void _addVmcCheatCodes(save_entry_t* save)
 	char filePath[256];
 	char* buffer;
 
-	snprintf(filePath, sizeof(filePath), APOLLO_DATA_PATH "%s.savepatch", save->title_id);
-	if ((buffer = readTextFile(filePath)) == NULL)
+	if ((buffer = readSavePatch(save->title_id, filePath, sizeof(filePath))) == NULL)
 		return;
 
 	cmd = _createCmdCode(PATCH_NULL, "----- " UTF8_CHAR_STAR " Cheats " UTF8_CHAR_STAR " -----", CMD_CODE_NULL);
@@ -1006,7 +1005,7 @@ int ReadVmc2Codes(save_entry_t * save)
  * Return:			Returns an array of code_entry, null if failed to load
  */
 // Downloads url+file to a cache path, unless it's cached and less than a day old
-static int _cache_online_file(const char* url, const char* file, const char* path)
+static int _cache_online_file(const char* url, const char* file, const char* path, int show_progress)
 {
 	struct stat stats;
 
@@ -1014,7 +1013,7 @@ static int _cache_online_file(const char* url, const char* file, const char* pat
 		return 1;
 
 	// Keep a stale copy if the download fails (e.g. no network)
-	return (http_download(url, file, path, 0) || file_exists(path) == SUCCESS);
+	return (http_download(url, file, path, show_progress) || file_exists(path) == SUCCESS);
 }
 
 int ReadOnlineSaves(save_entry_t * game)
@@ -1030,11 +1029,11 @@ int ReadOnlineSaves(save_entry_t * game)
 		stat(path, &stats);
 		// re-download if file is +1 day old
 		if ((stats.st_mtime + ONLINE_CACHE_TIMEOUT) < time(NULL))
-			http_download(game->path, "saves.txt", path, 0);
+			http_download(game->path, "saves.txt", path, 1);
 	}
 	else
 	{
-		if (!http_download(game->path, "saves.txt", path, 0))
+		if (!http_download(game->path, "saves.txt", path, 1))
 			return 0;
 	}
 
@@ -1085,7 +1084,8 @@ int ReadOfflineSaves(save_entry_t * game)
 	if (game->flags & SAVE_FLAG_ONLINE)
 	{
 		snprintf(path, sizeof(path), APOLLO_LOCAL_CACHE "%s.txt", game->title_id);
-		if (!_cache_online_file(game->path, "saves.txt", path))
+		// show progress: a slow download would otherwise look like a frozen app
+		if (!_cache_online_file(game->path, "saves.txt", path, 1))
 			return 0;
 	}
 	else

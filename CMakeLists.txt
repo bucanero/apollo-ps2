@@ -20,6 +20,10 @@ endif()
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu11")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s")
+# Every gettimeofday() caller (libcurl's timeouts) gets the fixed one in source/ps2time.c
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--wrap=gettimeofday")
+# lwIP socket calls set errno (see source/ps2socket.c)
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--wrap=lwip_connect,--wrap=lwip_recv,--wrap=lwip_recvfrom,--wrap=lwip_send,--wrap=lwip_sendto")
 
 include_directories(
   include
@@ -73,8 +77,25 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/mcimage_irx.o
   VERBATIM
 )
 
+# Network IOP modules (DEV9, NETMAN, SMAP), embedded from the ps2sdk build.
+# They're linked from the build folder so the symbols are _binary_<name>_irx_*
+set(NET_IRX_OBJS)
+foreach(irx ps2dev9 netman smap)
+  add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${irx}_irx.o
+    COMMAND ${CMAKE_COMMAND} -E copy $ENV{PS2SDK}/iop/irx/${irx}.irx ${irx}.irx
+    COMMAND ${CMAKE_LINKER} -r -b binary -o ${irx}_irx.o ${irx}.irx
+    COMMAND ${CMAKE_OBJCOPY} --set-section-alignment .data=64 ${irx}_irx.o
+    DEPENDS $ENV{PS2SDK}/iop/irx/${irx}.irx
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    COMMENT "Embedding IOP module ${irx}.irx"
+    VERBATIM
+  )
+  list(APPEND NET_IRX_OBJS ${CMAKE_CURRENT_BINARY_DIR}/${irx}_irx.o)
+endforeach()
+
 add_executable(${PROJECT_NAME}
   ${apollo_res}
+  ${NET_IRX_OBJS}
   ${CMAKE_CURRENT_BINARY_DIR}/mcimage_irx.o
   source/common.c
   source/config.c
@@ -82,6 +103,8 @@ add_executable(${PROJECT_NAME}
   source/draw.c
   source/exec_cmd.c
   source/http.c
+  source/ps2socket.c
+  source/ps2time.c
   source/libfont.c
   source/lzari.c
   source/main.c
@@ -110,19 +133,21 @@ add_executable(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
   ${SDL2_LIBRARIES}
-#  CURL::libcurl
+  CURL::libcurl
   apollo
   polarssl
   dbglogger
   freetype
   png
-  ps2ip
   zip
   lzma
   mc
   elf-loader
 #  un7zip
   z
+  socket
+  ps2ip
+  netman
 )
 
 add_custom_target(createzip

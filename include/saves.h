@@ -11,7 +11,7 @@
 #define APOLLO_USER_PATH		USB_PATH "PS2/EXPORT/"
 #define APOLLO_DATA_PATH		APOLLO_APP_PATH "DATA/"
 #define APOLLO_LOCAL_CACHE		APOLLO_APP_PATH "CACHE/"
-#define APOLLO_UPDATE_URL		"https://api.github.com/repos/bucanero/apollo-psp/releases/latest"
+#define APOLLO_UPDATE_URL		"https://api.github.com/repos/bucanero/apollo-ps2/releases/latest"
 
 #define MAX_USB_DEVICES         5
 #define MC0_PATH                "mc0:/"
@@ -242,6 +242,7 @@ int ReadOfflineSaves(save_entry_t * game);
 int ReadBackupCodes(save_entry_t * bup);
 
 int network_up(void);
+int network_get_ip(char* ip, size_t len);
 int http_init(void);
 void http_end(void);
 int http_download(const char* url, const char* filename, const char* local_dst, int show_progress);

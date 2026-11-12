@@ -196,31 +196,21 @@ target_link_libraries(${PROJECT_NAME}
   netman
 )
 
-add_custom_target(createzip
-  COMMAND @mkdir -p APOLLO/DATA
-  COMMAND @mkdir -p APOLLO/CACHE
-  COMMAND @echo "Downloading appdata.zip ..."
-  COMMAND @rm -fr apollo-psp.zip
-  COMMAND @curl -L "https://bucanero.github.io/apollo-patches/PSP/apollo-psp-update.zip" > APOLLO/CACHE/appdata.zip
-  COMMAND @cp EBOOT.PBP APOLLO/
-  COMMAND @cp ${CMAKE_SOURCE_DIR}/data/fonts/* APOLLO/DATA/
-  COMMAND @zip -r apollo-psp.zip APOLLO/
-)
-
 add_custom_target(packelf
   COMMAND @echo "Packing release ELF ..."
-  COMMAND @${PS2DEV}/bin/ps2-packer-lite ${PROJECT_NAME} APOLLO.ELF
+  COMMAND $ENV{PS2DEV}/bin/ps2-packer-lite ${PROJECT_NAME} APOLLO.ELF
   DEPENDS ${PROJECT_NAME}
 )
 
+# Release package: apollo-ps2.zip with the APOLLO-99PS2/ memory card folder
 add_custom_target(release
-  COMMAND @echo "Packing release ELF ..."
-  COMMAND @${PS2DEV}/bin/ps2-packer-lite ${PROJECT_NAME} APOLLO.ELF
-  COMMAND @echo "Copying to /APOLLO-99PS2/ ..."
-  COMMAND @mkdir -p APOLLO-99PS2/
-  COMMAND @cp -v APOLLO.ELF APOLLO-99PS2/APOLLO.ELF
-  COMMAND @cp -v ${CMAKE_SOURCE_DIR}/icon.sys APOLLO-99PS2/icon.sys
-  COMMAND @cp -v ${CMAKE_SOURCE_DIR}/icon.ico APOLLO-99PS2/icon.ico
-  COMMAND @zip -r apollo-ps2.zip APOLLO-99PS2/
-  DEPENDS ${PROJECT_NAME}
+  COMMAND ${CMAKE_COMMAND} -E echo "Creating apollo-ps2.zip ..."
+  COMMAND ${CMAKE_COMMAND} -E remove_directory APOLLO-99PS2
+  COMMAND ${CMAKE_COMMAND} -E make_directory APOLLO-99PS2
+  COMMAND ${CMAKE_COMMAND} -E copy APOLLO.ELF APOLLO-99PS2/APOLLO.ELF
+  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/icon.sys ${CMAKE_SOURCE_DIR}/icon.ico APOLLO-99PS2/
+  COMMAND ${CMAKE_COMMAND} -E remove -f apollo-ps2.zip
+  COMMAND ${CMAKE_COMMAND} -E tar cf apollo-ps2.zip --format=zip APOLLO-99PS2
+  DEPENDS packelf
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )

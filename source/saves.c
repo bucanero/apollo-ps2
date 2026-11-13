@@ -1636,7 +1636,7 @@ static void read_vmc_files(const char* userPath, const char* folder, list_t *lis
 			// PS1 VMCs
 			endsWith(dir->d_name, ".MCD") || endsWith(dir->d_name, ".MCR") || endsWith(dir->d_name, ".GME") ||
 			endsWith(dir->d_name, ".VM1") || endsWith(dir->d_name, ".VMP") || endsWith(dir->d_name, ".VGS") ||
-			endsWith(dir->d_name, ".SRM")))
+			endsWith(dir->d_name, ".SRM") || endsWith(dir->d_name, ".MC2")))
 			continue;
 
 		snprintf(psvPath, sizeof(psvPath), "%s%s%s", userPath, folder, dir->d_name);

@@ -101,12 +101,7 @@ static code_entry_t* LoadRawPatch(void)
 	code_entry_t* centry = calloc(1, sizeof(code_entry_t));
 
 	centry->name = strdup(selected_entry->title_id);
-	snprintf(patchPath, sizeof(patchPath), APOLLO_DATA_PATH "%s.savepatch", selected_entry->title_id);
-	if ((centry->codes = readTextFile(patchPath)) == NULL)
-	{
-		snprintf(patchPath, sizeof(patchPath), DISC_PATCH_PATH "%s.savepatch", selected_entry->title_id);
-		centry->codes = readTextFile(patchPath);
-	}
+	centry->codes = readSavePatch(selected_entry->title_id, patchPath, sizeof(patchPath));
 
 	return centry;
 }
@@ -258,7 +253,7 @@ static void SetMenu(int id)
 			break;
 
 		case MENU_ONLINE_DB: //Cheats Online Menu
-			network_up();
+			// The network is brought up by the first download, if the database is online
 			if (!online_saves.list && !ReloadUserSaves(&online_saves))
 				return;
 
@@ -293,19 +288,18 @@ static void SetMenu(int id)
 			char iconfile[256] = {0};
 
 			menu_textures[icon_png_file_index].size = 0;
-			if (selected_entry->flags & SAVE_FLAG_ONLINE)
+			if (selected_entry->flags & (SAVE_FLAG_ONLINE | SAVE_FLAG_OFFLINE))
 			{
-				snprintf(iconfile, sizeof(iconfile), APOLLO_LOCAL_CACHE "%s.PNG", selected_entry->title_id);
+				// Online database icons are downloaded to the cache once
+				if (selected_entry->flags & SAVE_FLAG_ONLINE)
+				{
+					snprintf(iconfile, sizeof(iconfile), APOLLO_LOCAL_CACHE "%s.PNG", selected_entry->title_id);
+					if (file_exists(iconfile) != SUCCESS)
+						http_download(selected_entry->path, "icon0.png", iconfile, 1);
+				}
+				else
+					snprintf(iconfile, sizeof(iconfile), "%sicon0.png", selected_entry->path);
 
-//				if (selected_entry->flags & SAVE_FLAG_PSP && file_exists(iconfile) != SUCCESS)
-//					http_download(selected_entry->path, "ICON0.PNG", iconfile, 0);
-
-//				if (selected_entry->flags & SAVE_FLAG_PSV && file_exists(iconfile) != SUCCESS)
-//					http_download(selected_entry->path, "icon0.png", iconfile, 0);
-			}
-			if (selected_entry->flags & SAVE_FLAG_OFFLINE)
-			{
-				snprintf(iconfile, sizeof(iconfile), "%sicon0.png", selected_entry->path);
 				LoadFileTexture(iconfile, icon_png_file_index);
 				menu_textures[icon_png_file_index].width = (selected_entry->flags & SAVE_FLAG_PS1) ? 64 : 128;
 				menu_textures[icon_png_file_index].height = (selected_entry->flags & SAVE_FLAG_PS1) ? 64 : 128;

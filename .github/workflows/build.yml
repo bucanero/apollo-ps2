@@ -43,11 +43,18 @@ jobs:
           cd apollo-lib
           make -f Makefile.ps2 install
 
+      # PS1 + PS2 save patches, embedded in the ELF (and copied to the disc image)
+      - name: Get save patches
+        run: |
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/bucanero/apollo-patches
+          git -C apollo-patches sparse-checkout set PS1 PS2
+
       - name: Configure project
         run: |
           cmake -S . \
                 -DCMAKE_TOOLCHAIN_FILE=$PS2DEV/ps2sdk/ps2dev.cmake \
                 -D CMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} \
+                -D APOLLO_PATCHES_DIR=$PWD/apollo-patches \
 
       - name: Build project
         run: make
@@ -72,8 +79,6 @@ jobs:
           apk add xorriso
           git clone --depth 1 --filter=blob:none --sparse https://github.com/bucanero/apollo-saves
           git -C apollo-saves sparse-checkout set PS1 PS2
-          git clone --depth 1 --filter=blob:none --sparse https://github.com/bucanero/apollo-patches
-          git -C apollo-patches sparse-checkout set PS1 PS2
           sh tools/make_iso.sh APOLLO.ELF apollo-saves apollo-patches apollo-ps2.iso
 
       - name: Upload disc image

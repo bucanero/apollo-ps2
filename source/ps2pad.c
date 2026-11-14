@@ -118,7 +118,7 @@ bool ps2PadGetButtonHold(unsigned int filter)
 	uint64_t time = timeInMilliseconds();
 	uint64_t delta = time - g_time;
 
-	if((ps2PadConf.buttonsHold&filter)==filter && delta > 0x4000)
+	if((ps2PadConf.buttonsHold&filter)==filter && delta > 150)
 	{
 		g_time = time;
 		return 1;

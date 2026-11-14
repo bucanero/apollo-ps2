@@ -20,9 +20,9 @@ endif()
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu11")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s")
-# Every gettimeofday() caller (libcurl's timeouts) gets the fixed one in source/ps2time.c
+# Every gettimeofday() caller (libcurl's timeouts) gets the fixed one in source/ps2_compat.c
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--wrap=gettimeofday")
-# lwIP socket calls set errno (see source/ps2socket.c)
+# lwIP socket calls set errno (see source/ps2_compat.c)
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--wrap=lwip_connect,--wrap=lwip_recv,--wrap=lwip_recvfrom,--wrap=lwip_send,--wrap=lwip_sendto")
 # Cache files in RAM when there's no USB storage (see source/ramcache.c)
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--wrap=fopen,--wrap=stat,--wrap=remove,--wrap=unlink,--wrap=chmod,--wrap=mkdir")
@@ -148,9 +148,8 @@ add_executable(${PROJECT_NAME}
   source/draw.c
   source/exec_cmd.c
   source/http.c
-  source/ps2socket.c
   source/ramcache.c
-  source/ps2time.c
+  source/ps2_compat.c
   source/libfont.c
   source/lzari.c
   source/main.c

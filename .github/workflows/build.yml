@@ -43,11 +43,12 @@ jobs:
           cd apollo-lib
           make -f Makefile.ps2 install
 
-      # PS1 + PS2 save patches, embedded in the ELF (and copied to the disc image)
+      # PS1 + PS2 save patches and the Python modules their codes import,
+      # embedded in the ELF (and copied to the disc image)
       - name: Get save patches
         run: |
           git clone --depth 1 --filter=blob:none --sparse https://github.com/bucanero/apollo-patches
-          git -C apollo-patches sparse-checkout set PS1 PS2
+          git -C apollo-patches sparse-checkout set PS1 PS2 python
 
       - name: Configure project
         run: |

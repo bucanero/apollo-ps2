@@ -22,6 +22,7 @@ typedef struct
 	int port;
 	unsigned int page;
 	unsigned int count;
+	unsigned int ecc_errors;  // out (READ): PS2 pages whose ECC could not correct them
 } mcimg_rpc_hdr_t;
 
 typedef struct

@@ -134,12 +134,52 @@ static int unpack_zip_file(struct zip_file* zfd, const char* path, uint8_t* buf)
 	return 1;
 }
 
+/*
+ * libzip's zip_open() can't read archives on the PS2 CDFS (an Apollo disc):
+ * that driver's stat() is unreliable. Plain fopen/fread works there, so on
+ * cdfs: the archive is read whole (database zips are small) and opened from
+ * memory. Everywhere else zip_open() is used as before.
+ */
+static struct zip* open_zip_archive(const char* zip_file, int flags)
+{
+	uint8_t* data;
+	size_t size;
+	zip_source_t* src;
+	struct zip* archive;
+
+	if (strncmp(zip_file, "cdfs:", 5) != 0)
+		return zip_open(zip_file, flags, NULL);
+
+	if (read_buffer(zip_file, &data, &size) < 0)
+		return NULL;
+
+	// the source takes ownership of data (freep = 1)
+	if ((src = zip_source_buffer_create(data, size, 1, NULL)) == NULL)
+	{
+		free(data);
+		return NULL;
+	}
+
+	if ((archive = zip_open_from_source(src, flags & ~ZIP_RDONLY, NULL)) == NULL)
+		zip_source_free(src);
+
+	return archive;
+}
+
 int extract_zip(const char* zip_file, const char* dest_path)
 {
 	char path[256];
 	uint8_t* buffer;
-	struct zip* archive = zip_open(zip_file, ZIP_RDONLY | ZIP_CHECKCONS, NULL);
-	int files = zip_get_num_files(archive);
+	struct zip* archive = open_zip_archive(zip_file, ZIP_RDONLY | ZIP_CHECKCONS);
+	int files;
+
+	if (!archive)
+	{
+		LOG("Failed to open ZIP file '%s'", zip_file);
+		return 0;
+	}
+
+	files = zip_get_num_files(archive);
 
 	if (files <= 0) {
 		LOG("Empty ZIP file.");
@@ -195,7 +235,7 @@ uint8_t* extract_psv(const char* zip_file, uint32_t* out_size)
 	uint8_t* buffer;
 	zip_stat_t stat;
 	zip_file_t* zfd;
-	struct zip* archive = zip_open(zip_file, ZIP_CHECKCONS, NULL);
+	struct zip* archive = open_zip_archive(zip_file, ZIP_CHECKCONS);
 
 	if (!archive)
 		return NULL;

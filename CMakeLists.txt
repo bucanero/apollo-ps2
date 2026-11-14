@@ -91,6 +91,8 @@ add_executable(${PROJECT_NAME}
   source/menu_options.c
   source/menu_main.c
   source/saves.c
+  source/music.c
+  source/ahx_player.c
   source/settings.c
   source/mcio.c
   source/ttf_fonts.c
@@ -120,7 +122,6 @@ target_link_libraries(${PROJECT_NAME}
   mc
   elf-loader
 #  un7zip
-  ahx
   z
 )
 

@@ -19,6 +19,7 @@
 #define USB_PATH                "mass:/"
 #define HOST_PATH               "host:/"
 #define DISC_PATH               "cdfs:/"
+#define DISC_PATCH_PATH         DISC_PATH APOLLO_PATH "PATCHES/"  // .savepatch files on an Apollo disc
 
 #define PS1_SAVES_PATH_USB      "PS1/SAVEDATA/"
 #define PS2_SAVES_PATH_USB      "PS2/SAVEDATA/"

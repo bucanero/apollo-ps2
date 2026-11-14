@@ -6,8 +6,8 @@
 #include <malloc.h>
 #include <string.h>
 #include <unistd.h>
-#include <ahx_rpc.h>
 #include <zlib.h>
+#include <kernel.h>
 #include <sifrpc.h>
 #include <loadfile.h>
 #include <libmc.h>
@@ -15,6 +15,7 @@
 #include <sbv_patches.h>
 
 #include "saves.h"
+#include "music.h"
 #include "utils.h"
 #include "common.h"
 #include "ps2pad.h"
@@ -35,8 +36,8 @@ extern const uint8_t _binary_data_inside_ahx_start;
 extern const uint8_t _binary_data_inside_ahx_size;
 
 // Audio player
-extern const uint8_t _binary_data_ahx_irx_start;
-extern const uint8_t _binary_data_ahx_irx_size;
+extern const uint8_t _binary_data_cdfs_irx_start;
+extern const uint8_t _binary_data_cdfs_irx_size;
 
 static void *font_ttf = NULL;
 
@@ -303,9 +304,9 @@ static int LoadTextures_Menu(void)
 
 static void LoadSounds(void)
 {
-	AHX_Init();
-	AHX_LoadSongBuffer((void*) &_binary_data_inside_ahx_start, (int) &_binary_data_inside_ahx_size);
-	AHX_SubSong(0);
+	// AHX song decoded on the EE, played through SDL audio (music.c)
+	if (!music_init(&_binary_data_inside_ahx_start, (int) &_binary_data_inside_ahx_size))
+		LOG("[ERROR] Failed to start background music");
 }
 
 void update_usb_path(char* path)
@@ -411,7 +412,6 @@ static void terminate(void)
 
 	LOG("Exiting...");
 
-	AHX_Quit();
 	sbv_patch_disable_prefix_check();
 
 	for (int i = 0; i < 4; i++)
@@ -439,6 +439,20 @@ static int initInternal(void)
 		return(0);
 	}
 
+	// SDL's startup loads the memcard/USB/fileXio drivers but not CDFS, which
+	// "cdfs:/" (an Apollo disc with the saves database and patches) needs.
+	// Without a disc in the drive, cdfs access just fails right away.
+	//
+	// data/cdfs.irx is ps2sdk's iop/cdvd/cdfs, built unmodified from ps2sdk
+	// commit 3aaaa88 (2026-11-09). It is used instead of the copy ps2_drivers
+	// (init_cdfs_driver) embeds in the pinned ps2dev image: that older build
+	// needs ~635 KB of IOP RAM (it crashed the IOP next to the old ahx.irx
+	// music module); this one needs ~188 KB. Rebuilding it from that source with the pinned
+	// SDK only needs the IOMAN_RETURN_VALUE / IOMAN_RETURN_VALUE_IMPL macros
+	// that newer ps2sdk headers define.
+	if (SifExecModuleBuffer((void*) &_binary_data_cdfs_irx_start, (int) &_binary_data_cdfs_irx_size, 0, NULL, &ret) < 0 || ret == 1)
+		LOG("Failed to load CDFS driver (%d)", ret);
+
 	return 1;
 }
 
@@ -456,6 +470,12 @@ int main(int argc, char *argv[])
 	dbglogger_init_mode(TTY_LOGGER, NULL, 0);
 #endif
 
+	// The main thread starts at priority 1, above SDL's audio thread, which
+	// then only gets to run (and feed the music) while the main thread sleeps:
+	// any long operation - card dumps, imports, zip extraction - silenced it.
+	// Run below it, so the audio thread preempts the main loop when it's due.
+	ChangeThreadPriority(GetThreadId(), 64);
+
 	// Initialize SDL functions
 	LOG("Initializing SDL");
 	if (SDL_Init(SDL_INIT_VIDEO) != SUCCESS)
@@ -467,13 +487,6 @@ int main(int argc, char *argv[])
 	initInternal();
 	http_init();
 	initPad();
-
-	// Open a handle to audio output device
-	if (SifExecModuleBuffer((void*) &_binary_data_ahx_irx_start, (int) &_binary_data_ahx_irx_size, 0, NULL, NULL) < 0)
-	{
-		LOG("[ERROR] Failed to load module: AHX");
-		return (-1);
-	}
 
 	// Create a window context
 	LOG("Creating a window");
@@ -583,6 +596,7 @@ int main(int argc, char *argv[])
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
 	// Stop all SDL sub-systems
+	music_end();
 	SDL_Quit();
 	http_end();
 	ps2PadFinish();

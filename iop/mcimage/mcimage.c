@@ -70,6 +70,7 @@ static void read_pages(mcimg_rpc_buf_t *b)
 
 	// both limits fill the same 8 KB buffer: 16 PS2 pages or 64 PS1 frames
 	b->hdr.result = 0;
+	b->hdr.ecc_errors = 0;
 	if (b->hdr.count > ((type == sceMcTypePS2) ? MCIMG_MAX_PAGES : MCIMG_MAX_PS1_FRAMES))
 	{
 		b->hdr.result = -1;
@@ -81,7 +82,18 @@ static void read_pages(mcimg_rpc_buf_t *b)
 		void *dst = &b->data[i * unit];
 
 		if (type == sceMcTypePS2)
+		{
 			b->hdr.result = McReadPage(port, MCMAN_SLOT, b->hdr.page + i, dst);
+
+			// The page's ECC doesn't match and can't correct it: MCMAN still
+			// leaves the page as read from the card. A raw dump keeps it (like
+			// other dumpers do) and counts it, instead of failing the dump.
+			if (b->hdr.result == sceMcResNoFormat)
+			{
+				b->hdr.ecc_errors++;
+				b->hdr.result = sceMcResSucceed;
+			}
+		}
 		else
 			b->hdr.result = McReadPS1PDACard(port, MCMAN_SLOT, b->hdr.page + i, dst);
 	}

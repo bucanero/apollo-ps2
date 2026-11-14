@@ -664,9 +664,14 @@ int ReadCodes(save_entry_t * save)
 
 	_addBackupCommands(save);
 
+	// a .savepatch in the data folder, else the one on an Apollo disc
 	snprintf(filePath, sizeof(filePath), APOLLO_DATA_PATH "%s.savepatch", save->title_id);
 	if ((buffer = readTextFile(filePath)) == NULL)
-		goto skip_end;
+	{
+		snprintf(filePath, sizeof(filePath), DISC_PATCH_PATH "%s.savepatch", save->title_id);
+		if ((buffer = readTextFile(filePath)) == NULL)
+			goto skip_end;
+	}
 
 	code = _createCmdCode(PATCH_NULL, "----- " UTF8_CHAR_STAR " Cheats " UTF8_CHAR_STAR " -----", CMD_CODE_NULL);	
 	list_append(save->codes, code);

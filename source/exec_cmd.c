@@ -1071,6 +1071,7 @@ static void dumpMemoryCard(const save_entry_t* save, int dst, int type)
 	struct tm t;
 	char dst_path[256];
 	int ret, port = save->path[2] - '0';
+	uint32_t ecc_errors = 0;
 	const char* ext = (type == CMD_DUMP_MC_PS1) ? "MCR" : (type == CMD_DUMP_MC_PS2) ? "PS2" : "VMC";
 
 	_set_dest_path(dst_path, dst, (type == CMD_DUMP_MC_PS1) ? IMP_PS1VMC_PATH_USB : IMP_PS2VMC_PATH_USB);
@@ -1087,9 +1088,11 @@ static void dumpMemoryCard(const save_entry_t* save, int dst, int type)
 	if (type == CMD_DUMP_MC_PS1)
 		ret = mc_dump_ps1_image(port, dst_path);
 	else
-		ret = mc_dump_ps2_image(port, dst_path, type == CMD_DUMP_MC_PS2);
+		ret = mc_dump_ps2_image(port, dst_path, type == CMD_DUMP_MC_PS2, &ecc_errors);
 
-	if (ret == MC_IMG_OK)
+	if (ret == MC_IMG_OK && ecc_errors)
+		show_message("Memory Card dumped to:\n%s\n\nWarning: %u page(s) had ECC errors\nand were saved as read", dst_path, (unsigned int) ecc_errors);
+	else if (ret == MC_IMG_OK)
 		show_message("Memory Card successfully dumped to:\n%s", dst_path);
 	else
 		show_message("Error! Failed to dump mc%d:\n%s", port, mc_image_error(ret));

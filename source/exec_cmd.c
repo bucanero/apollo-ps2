@@ -76,6 +76,17 @@ static void importDbSave(const save_entry_t* entry, const char* file, int dst)
 
 	snprintf(path, sizeof(path), "%s%s", entry->path, file);
 
+	// Online database: download the save's zip first
+	if (entry->flags & SAVE_FLAG_ONLINE)
+	{
+		if (!http_download(entry->path, file, APOLLO_LOCAL_CACHE "tmpsave.zip", 1))
+		{
+			show_message("Error downloading save game from:\n%s", path);
+			return;
+		}
+		strcpy(path, APOLLO_LOCAL_CACHE "tmpsave.zip");
+	}
+
 	if (dst != STORAGE_MC0 && dst != STORAGE_MC1)
 	{
 		char dst_path[256];
@@ -87,10 +98,16 @@ static void importDbSave(const save_entry_t* entry, const char* file, int dst)
 		else
 			show_message("Error extracting save game!\n%s", path);
 
+		if (entry->flags & SAVE_FLAG_ONLINE)
+			unlink_secure(path);
+
 		return;
 	}
 
 	psv_data = extract_psv(path, &psv_size);
+	if (entry->flags & SAVE_FLAG_ONLINE)
+		unlink_secure(path);
+
 	if (!psv_data)
 	{
 		show_message("Error extracting PSV data from:\n%s", path);

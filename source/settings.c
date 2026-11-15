@@ -7,6 +7,7 @@
 #include "types.h"
 #include "menu.h"
 #include "saves.h"
+#include "ramcache.h"
 #include "music.h"
 #include "common.h"
 #include "icons.h"
@@ -93,6 +94,13 @@ void ani_callback(int sel)
 
 void clearcache_callback(int sel)
 {
+	if (ramcache_enabled())
+	{
+		LOG("Cleaning RAM cache...");
+		show_message("RAM cache cleaned (%d files)", ramcache_clear());
+		return;
+	}
+
 	LOG("Cleaning folder '%s'...", APOLLO_LOCAL_CACHE);
 	clean_directory(APOLLO_LOCAL_CACHE);
 
@@ -103,7 +111,7 @@ void upd_appdata_callback(int sel)
 {
 	int i;
 
-	if (!http_download(ONLINE_PATCH_URL, "apollo-psp-update.zip", APOLLO_LOCAL_CACHE "appdata.zip", 1))
+	if (!http_download(ONLINE_PATCH_URL, "apollo-ps2-update.zip", APOLLO_LOCAL_CACHE "appdata.zip", 1))
 	{
 		show_message("Error! Can't download data update pack!");
 		return;
@@ -181,8 +189,8 @@ void update_callback(int sel)
 
 	if (show_dialog(DIALOG_TYPE_YESNO, "New version available! Download update?"))
 	{
-		if (http_download(start, NULL, "ms0:/APOLLO/apollo-psp.zip", 1))
-			show_message("Update downloaded to ms0:/APOLLO/apollo-psp.zip");
+		if (http_download(start, NULL, USB_PATH "APOLLO/apollo-ps2.zip", 1))
+			show_message("Update downloaded to " USB_PATH "APOLLO/apollo-ps2.zip");
 		else
 			show_message("Download error!");
 	}

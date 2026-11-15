@@ -9,6 +9,7 @@
 //#include <un7zip.h>
 
 #include "saves.h"
+#include "ramcache.h"
 #include "common.h"
 
 #define UNZIP_BUF_SIZE 0x10000
@@ -138,7 +139,8 @@ static int unpack_zip_file(struct zip_file* zfd, const char* path, uint8_t* buf)
  * libzip's zip_open() can't read archives on the PS2 CDFS (an Apollo disc):
  * that driver's stat() is unreliable. Plain fopen/fread works there, so on
  * cdfs: the archive is read whole (database zips are small) and opened from
- * memory. Everywhere else zip_open() is used as before.
+ * memory. The same goes for zips in the RAM cache. Everywhere else zip_open()
+ * is used as before.
  */
 static struct zip* open_zip_archive(const char* zip_file, int flags)
 {
@@ -147,7 +149,8 @@ static struct zip* open_zip_archive(const char* zip_file, int flags)
 	zip_source_t* src;
 	struct zip* archive;
 
-	if (strncmp(zip_file, "cdfs:", 5) != 0)
+	// Cached zips in RAM (ramcache.c) are only reachable through stdio, too
+	if (strncmp(zip_file, "cdfs:", 5) != 0 && !ramcache_is_path(zip_file))
 		return zip_open(zip_file, flags, NULL);
 
 	if (read_buffer(zip_file, &data, &size) < 0)

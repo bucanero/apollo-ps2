@@ -6,6 +6,7 @@
 #include <dirent.h>
 #include <libmc.h>
 
+#include <zip.h>
 #include "saves.h"
 #include "common.h"
 #include "settings.h"
@@ -360,6 +361,78 @@ static option_entry_t* get_file_entries(const char* path, const char* mask)
 	return _getFileOptions(path, mask, CMD_CODE_NULL);
 }
 
+#ifdef APOLLO_EMBEDDED_PATCHES
+// PS1 + PS2 .savepatch files from apollo-patches, zipped at build time (see CMakeLists.txt)
+extern const uint8_t _binary_patches_zip_start;
+extern const uint8_t _binary_patches_zip_size;
+
+static char* readEmbeddedPatch(const char* name)
+{
+	zip_source_t* src;
+	zip_t* archive;
+	zip_file_t* zf;
+	zip_stat_t st;
+	char* data = NULL;
+
+	// The archive is read in place from the ELF (freep = 0)
+	src = zip_source_buffer_create(&_binary_patches_zip_start, (zip_uint64_t)(uintptr_t) &_binary_patches_zip_size, 0, NULL);
+	if (!src)
+		return NULL;
+
+	if ((archive = zip_open_from_source(src, ZIP_RDONLY, NULL)) == NULL)
+	{
+		zip_source_free(src);
+		return NULL;
+	}
+
+	if (zip_stat(archive, name, ZIP_FL_NOCASE, &st) == 0 && (zf = zip_fopen_index(archive, st.index, 0)) != NULL)
+	{
+		data = malloc(st.size + 1);
+		if (data && zip_fread(zf, data, st.size) == (zip_int64_t) st.size)
+			data[st.size] = 0;
+		else
+		{
+			free(data);
+			data = NULL;
+		}
+		zip_fclose(zf);
+	}
+
+	// closing the archive frees the source too
+	zip_close(archive);
+	return data;
+}
+#endif
+
+/*
+ * Loads a title's .savepatch: the data folder (USB) first, then an Apollo
+ * disc, then the set embedded in the ELF. Returns a text buffer to free, or
+ * NULL. The location found is written to path, for the log.
+ */
+char* readSavePatch(const char* title_id, char* path, size_t len)
+{
+	char* buffer;
+
+	snprintf(path, len, APOLLO_DATA_PATH "%s.savepatch", title_id);
+	if ((buffer = readTextFile(path)) != NULL)
+		return buffer;
+
+	snprintf(path, len, DISC_PATCH_PATH "%s.savepatch", title_id);
+	if ((buffer = readTextFile(path)) != NULL)
+		return buffer;
+
+#ifdef APOLLO_EMBEDDED_PATCHES
+	snprintf(path, len, "%s.savepatch", title_id);
+	if ((buffer = readEmbeddedPatch(path)) != NULL)
+	{
+		snprintf(path, len, "(embedded) %s.savepatch", title_id);
+		return buffer;
+	}
+#endif
+
+	return NULL;
+}
+
 /*
  * VMC saves live inside the open memory card image, not as files on disk.
  * A PS1 save is a single data file (the save itself, named after it), while
@@ -596,8 +669,7 @@ static void _addVmcCheatCodes(save_entry_t* save)
 	char filePath[256];
 	char* buffer;
 
-	snprintf(filePath, sizeof(filePath), APOLLO_DATA_PATH "%s.savepatch", save->title_id);
-	if ((buffer = readTextFile(filePath)) == NULL)
+	if ((buffer = readSavePatch(save->title_id, filePath, sizeof(filePath))) == NULL)
 		return;
 
 	cmd = _createCmdCode(PATCH_NULL, "----- " UTF8_CHAR_STAR " Cheats " UTF8_CHAR_STAR " -----", CMD_CODE_NULL);
@@ -664,14 +736,8 @@ int ReadCodes(save_entry_t * save)
 
 	_addBackupCommands(save);
 
-	// a .savepatch in the data folder, else the one on an Apollo disc
-	snprintf(filePath, sizeof(filePath), APOLLO_DATA_PATH "%s.savepatch", save->title_id);
-	if ((buffer = readTextFile(filePath)) == NULL)
-	{
-		snprintf(filePath, sizeof(filePath), DISC_PATCH_PATH "%s.savepatch", save->title_id);
-		if ((buffer = readTextFile(filePath)) == NULL)
-			goto skip_end;
-	}
+	if ((buffer = readSavePatch(save->title_id, filePath, sizeof(filePath))) == NULL)
+		goto skip_end;
 
 	code = _createCmdCode(PATCH_NULL, "----- " UTF8_CHAR_STAR " Cheats " UTF8_CHAR_STAR " -----", CMD_CODE_NULL);	
 	list_append(save->codes, code);
@@ -938,6 +1004,18 @@ int ReadVmc2Codes(save_entry_t * save)
  *	_count_count:	Pointer to int (set to the number of codes within the ncl)
  * Return:			Returns an array of code_entry, null if failed to load
  */
+// Downloads url+file to a cache path, unless it's cached and less than a day old
+static int _cache_online_file(const char* url, const char* file, const char* path, int show_progress)
+{
+	struct stat stats;
+
+	if (file_exists(path) == SUCCESS && stat(path, &stats) == 0 && (stats.st_mtime + ONLINE_CACHE_TIMEOUT) >= time(NULL))
+		return 1;
+
+	// Keep a stale copy if the download fails (e.g. no network)
+	return (http_download(url, file, path, show_progress) || file_exists(path) == SUCCESS);
+}
+
 int ReadOnlineSaves(save_entry_t * game)
 {
 	code_entry_t* item;
@@ -951,11 +1029,11 @@ int ReadOnlineSaves(save_entry_t * game)
 		stat(path, &stats);
 		// re-download if file is +1 day old
 		if ((stats.st_mtime + ONLINE_CACHE_TIMEOUT) < time(NULL))
-			http_download(game->path, "saves.txt", path, 0);
+			http_download(game->path, "saves.txt", path, 1);
 	}
 	else
 	{
-		if (!http_download(game->path, "saves.txt", path, 0))
+		if (!http_download(game->path, "saves.txt", path, 1))
 			return 0;
 	}
 
@@ -1002,7 +1080,16 @@ int ReadOfflineSaves(save_entry_t * game)
 	option_value_t* optval;
 	char path[256];
 
-	snprintf(path, sizeof(path), "%ssaves.txt", game->path);
+	// Online database entries: same saves and options, from a cached saves.txt
+	if (game->flags & SAVE_FLAG_ONLINE)
+	{
+		snprintf(path, sizeof(path), APOLLO_LOCAL_CACHE "%s.txt", game->title_id);
+		// show progress: a slow download would otherwise look like a frozen app
+		if (!_cache_online_file(game->path, "saves.txt", path, 1))
+			return 0;
+	}
+	else
+		snprintf(path, sizeof(path), "%ssaves.txt", game->path);
 
 	char *data = readTextFile(path);
 	if (!data)
@@ -1549,7 +1636,7 @@ static void read_vmc_files(const char* userPath, const char* folder, list_t *lis
 			// PS1 VMCs
 			endsWith(dir->d_name, ".MCD") || endsWith(dir->d_name, ".MCR") || endsWith(dir->d_name, ".GME") ||
 			endsWith(dir->d_name, ".VM1") || endsWith(dir->d_name, ".VMP") || endsWith(dir->d_name, ".VGS") ||
-			endsWith(dir->d_name, ".SRM")))
+			endsWith(dir->d_name, ".SRM") || endsWith(dir->d_name, ".MC2")))
 			continue;
 
 		snprintf(psvPath, sizeof(psvPath), "%s%s%s", userPath, folder, dir->d_name);
@@ -1810,7 +1897,13 @@ list_t * ReadOfflineList(const char* sysPath)
 {
 	char base[256];
 	char path[256];
-	list_t *list = list_alloc();
+	list_t *list;
+
+	// No local database (disc, USB, host): use the online one
+	if (strncasecmp(sysPath, "http://", 7) == 0 || strncasecmp(sysPath, "https://", 8) == 0)
+		return ReadOnlineList(sysPath);
+
+	list = list_alloc();
 
 	// PSV save-games (Zip folder)
 	snprintf(base, sizeof(base), "%sPS1/", sysPath);

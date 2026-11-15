@@ -1,150 +1,215 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-//#include <curl/curl.h>
+#include <sys/time.h>
+#include <curl/curl.h>
 
-//#include <pspnet.h>
-//#include <pspnet_inet.h>
-//#include <pspnet_apctl.h>
-//#include <psputility.h>
+#include <kernel.h>
+#include <sifrpc.h>
+#include <loadfile.h>
+#include <netman.h>
+#include <ps2ip.h>
 
 #include "common.h"
 #include "saves.h"
 
 #define HTTP_SUCCESS 	1
 #define HTTP_FAILED	 	0
-#define HTTP_USER_AGENT "Mozilla/5.0 (PLAYSTATION PORTABLE; 1.00)"
+#define HTTP_USER_AGENT "Mozilla/5.0 (PLAYSTATION 2; 1.00)"
 
-static int net_up = 0;
+// Network IOP modules, embedded from the ps2sdk build (see CMakeLists.txt)
+extern const uint8_t _binary_ps2dev9_irx_start;
+extern const uint8_t _binary_ps2dev9_irx_size;
+extern const uint8_t _binary_netman_irx_start;
+extern const uint8_t _binary_netman_irx_size;
+extern const uint8_t _binary_smap_irx_start;
+extern const uint8_t _binary_smap_irx_size;
 
-void drawDialogBackground();
+#define NET_WAIT_SECONDS	10
+#define NET_RETRY_SECONDS	30	// after a failed connection, don't wait again before this
 
-/*
-char * basename (const char *filename)
+enum net_state_enum
 {
-	char *p = strrchr (filename, '/');
-	return p ? p + 1 : (char *) filename;
-}
+	NET_STATE_DOWN,
+	NET_STATE_UP,
+	NET_STATE_NO_ADAPTER,	// DEV9/SMAP didn't load: don't retry
+};
 
-static int Net_DisplayNetDialog(void)
+static int net_state = NET_STATE_DOWN;
+static int net_stack = 0;
+static time_t net_fail_time = 0;
+
+static int _load_irx(const char* name, const void* irx, int size)
 {
-	int ret = 0, done = 0;
-	pspUtilityNetconfData data;
-	struct pspUtilityNetconfAdhoc adhocparam;
+	int ret, mod_res;
 
-	memset(&adhocparam, 0, sizeof(adhocparam));
-	memset(&data, 0, sizeof(pspUtilityNetconfData));
-
-	data.base.size = sizeof(pspUtilityNetconfData);
-	data.base.language = PSP_SYSTEMPARAM_LANGUAGE_ENGLISH;
-	data.base.buttonSwap = PSP_UTILITY_ACCEPT_CROSS;
-	data.base.graphicsThread = 17;
-	data.base.accessThread = 19;
-	data.base.fontThread = 18;
-	data.base.soundThread = 16;
-	data.action = PSP_NETCONF_ACTION_CONNECTAP;
-	data.hotspot = 0;
-	data.adhocparam = &adhocparam;
-
-	if ((ret = sceUtilityNetconfInitStart(&data)) < 0) {
-		LOG("sceUtilityNetconfInitStart() failed: 0x%08x\n", ret);
-		return ret;
-	}
-
-	while(!done)
+	ret = SifExecModuleBuffer((void*) irx, size, 0, NULL, &mod_res);
+	if (ret < 0 || mod_res == 1)
 	{
-		switch(sceUtilityNetconfGetStatus()) {
-			case PSP_UTILITY_DIALOG_NONE:
-				done = 1;
-				break;
-
-			case PSP_UTILITY_DIALOG_VISIBLE:
-				if ((ret = sceUtilityNetconfUpdate(1)) < 0) {
-					LOG("sceUtilityNetconfUpdate(1) failed: 0x%08x\n", ret);
-					done = 1;
-				}
-				break;
-
-			case PSP_UTILITY_DIALOG_QUIT:
-				if ((ret = sceUtilityNetconfShutdownStart()) < 0) {
-					LOG("sceUtilityNetconfShutdownStart() failed: 0x%08x\n", ret);
-					done = 1;
-				}
-				break;
-
-			case PSP_UTILITY_DIALOG_FINISHED:
-				done = 1;
-				break;
-
-			default:
-				break;
-		}
-
-		drawDialogBackground();
-	}
-
-	return 0;
-}
-
-static int Net_isConnected(void)
-{
-	int ret = 0, state = PSP_NET_APCTL_STATE_DISCONNECTED;
-
-	if ((ret  = sceNetApctlGetState(&state)) < 0) {
-		LOG("sceNetApctlGetState() failed: 0x%08x\n", ret);
+		// mod_res 1 = NO_RESIDENT_END: the module unloaded itself (no hardware)
+		LOG("Failed to load %s (%d, %d)", name, ret, mod_res);
 		return 0;
 	}
 
-	return (state == PSP_NET_APCTL_STATE_GOT_IP);
+	return 1;
 }
-*/
+
+static void _wait_alarm_cb(s32 alarm_id, u16 time, void *common)
+{
+	iWakeupThread(*(int*)common);
+}
+
+// Polls check() once per second, for up to NET_WAIT_SECONDS
+static int _wait_net_state(int (*check)(void))
+{
+	int thread_id = GetThreadId();
+
+	for (int i = 0; check() <= 0; i++)
+	{
+		if (i >= NET_WAIT_SECONDS)
+			return 0;
+
+		// ~1 s: the alarm counts HSYNC ticks
+		SetAlarm(1000 * 16, &_wait_alarm_cb, &thread_id);
+		SleepThread();
+	}
+
+	return 1;
+}
+
+static int _link_is_up(void)
+{
+	return (NetManIoctl(NETMAN_NETIF_IOCTL_GET_LINK_STATUS, NULL, 0, NULL, 0) == NETMAN_NETIF_ETH_LINK_STATE_UP);
+}
+
+static int _dhcp_is_bound(void)
+{
+	t_ip_info ip_info;
+
+	// SMAP is registered as the "sm0" device to the TCP/IP stack
+	if (ps2ip_getconfig("sm0", &ip_info) < 0 || !ip_info.dhcp_enabled)
+		return -1;
+
+	return (ip_info.dhcp_status == DHCP_STATE_BOUND || ip_info.dhcp_status == DHCP_STATE_OFF);
+}
+
+static int _enable_dhcp(void)
+{
+	t_ip_info ip_info;
+
+	if (ps2ip_getconfig("sm0", &ip_info) < 0)
+		return 0;
+
+	if (ip_info.dhcp_enabled)
+		return 1;
+
+	ip_info.dhcp_enabled = 1;
+	return (ps2ip_setconfig(&ip_info) >= 0);
+}
+
+static int _start_network(void)
+{
+	struct ip4_addr ip, nm, gw;
+	t_ip_info ip_info;
+
+	if (!_load_irx("DEV9", &_binary_ps2dev9_irx_start, (int) &_binary_ps2dev9_irx_size) ||
+		!_load_irx("NETMAN", &_binary_netman_irx_start, (int) &_binary_netman_irx_size) ||
+		!_load_irx("SMAP", &_binary_smap_irx_start, (int) &_binary_smap_irx_size))
+	{
+		net_state = NET_STATE_NO_ADAPTER;
+		return 0;
+	}
+
+	NetManInit();
+	NetManSetLinkMode(NETMAN_NETIF_ETH_LINK_MODE_AUTO);
+
+	// TCP/IP runs on the EE (lwIP); the address comes from DHCP
+	ip4_addr_set_zero(&ip);
+	ip4_addr_set_zero(&nm);
+	ip4_addr_set_zero(&gw);
+	ps2ipInit(&ip, &nm, &gw);
+	net_stack = 1;
+
+	if (!_enable_dhcp())
+	{
+		LOG("Failed to enable DHCP");
+		return 0;
+	}
+
+	return 1;
+}
 
 int network_up(void)
 {
-	if (net_up)
+	t_ip_info ip_info;
+	struct timeval now;
+	int ret = HTTP_FAILED, own_screen;
+
+	if (net_state == NET_STATE_UP)
 		return HTTP_SUCCESS;
 
-//	Net_DisplayNetDialog();
-//	if (!Net_isConnected())
-//		return HTTP_FAILED;
+	if (net_state == NET_STATE_NO_ADAPTER)
+		return HTTP_FAILED;
 
-	net_up = 1;
+	// One failed attempt (no cable, no DHCP) shouldn't make every download wait again
+	gettimeofday(&now, NULL);
+	if (net_fail_time && now.tv_sec - net_fail_time < NET_RETRY_SECONDS)
+		return HTTP_FAILED;
 
-	return HTTP_SUCCESS;
+	// Callers may already show a loading screen: only close the one we open
+	own_screen = init_loading_screen("Connecting to the network...");
+
+	if (!net_stack && !_start_network())
+		LOG("Network adapter not available");
+
+	else if (LOG("Waiting for network link..."), !_wait_net_state(&_link_is_up))
+		LOG("Network link is down");
+
+	else if (LOG("Waiting for DHCP lease..."), !_wait_net_state(&_dhcp_is_bound))
+		LOG("DHCP failed");
+
+	else
+	{
+		if (ps2ip_getconfig("sm0", &ip_info) >= 0)
+			LOG("Network up: IP %s", ip4addr_ntoa((const ip4_addr_t*) &ip_info.ipaddr));
+
+		net_state = NET_STATE_UP;
+		ret = HTTP_SUCCESS;
+	}
+
+	if (own_screen)
+		stop_loading_screen();
+
+	if (ret != HTTP_SUCCESS)
+	{
+		gettimeofday(&now, NULL);
+		net_fail_time = now.tv_sec;
+	}
+
+	return ret;
 }
 
-//	scePowerLock(0);
-//	scePowerUnlock(0);
+int network_get_ip(char* ip, size_t len)
+{
+	t_ip_info ip_info;
+
+	if (net_state != NET_STATE_UP || ps2ip_getconfig("sm0", &ip_info) < 0)
+		return 0;
+
+	snprintf(ip, len, "%s", ip4addr_ntoa((const ip4_addr_t*) &ip_info.ipaddr));
+	return 1;
+}
 
 int http_init(void)
 {
-	int ret = 0;
-/*
-	sceUtilityLoadNetModule(PSP_NET_MODULE_COMMON);
-	sceUtilityLoadNetModule(PSP_NET_MODULE_INET);
-	
-	if ((ret = sceNetInit(128 * 1024, 42, 4 * 1024, 42, 4 * 1024)) < 0) {
-		LOG("sceNetInit() failed: 0x%08x\n", ret);
-		return HTTP_FAILED;
-	}
-
-	if ((ret = sceNetInetInit()) < 0) {
-		LOG("sceNetInetInit() failed: 0x%08x\n", ret);
-		return HTTP_FAILED;
-	}
-
-	if ((ret = sceNetApctlInit(0x8000, 48)) < 0) {
-		LOG("sceNetApctlInit() failed: 0x%08x\n", ret);
-		return HTTP_FAILED;
-	}
-*/
-//	curl_global_init(CURL_GLOBAL_ALL);
+	// The network itself is only brought up when it's first needed
+	curl_global_init(CURL_GLOBAL_ALL);
 
 	return HTTP_SUCCESS;
 }
 
 /* follow the CURLOPT_XFERINFOFUNCTION callback definition */
-static int update_progress(void *p, int64_t dltotal, int64_t dlnow, int64_t ultotal, int64_t ulnow)
+static int update_progress(void *p, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow)
 {
 	LOG("DL: %lld / %lld", dlnow, dltotal);
 	update_progress_bar(dlnow, dltotal, (const char*) p);
@@ -152,39 +217,65 @@ static int update_progress(void *p, int64_t dltotal, int64_t dlnow, int64_t ulto
 	return 0;
 }
 
+/*
+ * libcurl makes its sockets non-blocking with fcntl(), but here sockets are
+ * lwIP's (curl calls lwip_socket/lwip_recv directly) and the SDK's fcntl
+ * doesn't reach them. A blocking socket hangs curl when it closes a TLS
+ * connection the server keeps open, so set it non-blocking the lwIP way.
+ */
+static int sockopt_callback(void *clientp, curl_socket_t fd, curlsocktype purpose)
+{
+	unsigned long on = 1;
+
+	if (lwip_ioctl(fd, FIONBIO, &on) < 0)
+		LOG("lwip_ioctl(FIONBIO) failed on socket %d", fd);
+
+	return CURL_SOCKOPT_OK;
+}
+
+static int is_network_url(const char* url)
+{
+	return (strncasecmp(url, "http://", 7) == 0 || strncasecmp(url, "https://", 8) == 0 ||
+			strncasecmp(url, "ftp://", 6) == 0 || strncasecmp(url, "ftps://", 7) == 0);
+}
+
 int http_download(const char* url, const char* filename, const char* local_dst, int show_progress)
 {
 	char full_url[1024];
-//	CURL *curl;
-//	CURLcode res;
+	CURL *curl;
+	CURLcode res;
 	FILE* fd;
+
+	if (!filename) filename = "";
+	snprintf(full_url, sizeof(full_url), "%s%s", url, filename);
+	LOG("URL: %s >> %s", full_url, local_dst);
+
+	// A local database (e.g. "cdfs:/APOLLO/SAVES/" on an Apollo disc) is just copied
+	if (!is_network_url(full_url))
+	{
+		if (file_exists(full_url) != SUCCESS)
+			return HTTP_FAILED;
+
+		return (copy_file(full_url, local_dst) == SUCCESS);
+	}
 
 	if (network_up() != HTTP_SUCCESS)
 		return HTTP_FAILED;
-/*
+
 	curl = curl_easy_init();
 	if(!curl)
 	{
 		LOG("ERROR: CURL INIT");
 		return HTTP_FAILED;
 	}
-*/
+
 	fd = fopen(local_dst, "wb");
 	if (!fd) {
 		LOG("fopen Error: File path '%s'", local_dst);
+		curl_easy_cleanup(curl);
 		return HTTP_FAILED;
 	}
 
-	if (!filename) filename = "";
-	snprintf(full_url, sizeof(full_url), "%s%s", url, filename);
-	LOG("URL: %s >> %s", full_url, local_dst);
-
-	if (file_exists(full_url) != SUCCESS)
-		return HTTP_FAILED;
-
-	return (copy_file(full_url, local_dst) == SUCCESS);
-
-#if 0
 	curl_easy_setopt(curl, CURLOPT_URL, full_url);
 	// Set user agent string
 	curl_easy_setopt(curl, CURLOPT_USERAGENT, HTTP_USER_AGENT);
@@ -198,7 +289,7 @@ int http_download(const char* url, const char* filename, const char* local_dst, 
 	curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10L);
 	// Follow redirects (?)
 	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-	// The function that will be used to write the data 
+	// The function that will be used to write the data
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, fwrite);
 	// The data filedescriptor which will be written to
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, fd);
@@ -208,6 +299,11 @@ int http_download(const char* url, const char* filename, const char* local_dst, 
 	curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1L);
 	// request using SSL for the FTP transfer if available
 	curl_easy_setopt(curl, CURLOPT_USE_SSL, CURLUSESSL_TRY);
+	// lwIP sockets need to be set non-blocking by hand
+	curl_easy_setopt(curl, CURLOPT_SOCKOPTFUNCTION, sockopt_callback);
+	// Give up on a stalled transfer (less than 1 byte/s for 30 seconds)
+	curl_easy_setopt(curl, CURLOPT_LOW_SPEED_LIMIT, 1L);
+	curl_easy_setopt(curl, CURLOPT_LOW_SPEED_TIME, 30L);
 
 	if (show_progress)
 	{
@@ -234,18 +330,17 @@ int http_download(const char* url, const char* filename, const char* local_dst, 
 		unlink_secure(local_dst);
 		return HTTP_FAILED;
 	}
-#endif
+
 	return HTTP_SUCCESS;
 }
 
 void http_end(void)
 {
-//	curl_global_cleanup();
+	curl_global_cleanup();
 
-//	sceNetApctlTerm();
-//	sceNetInetTerm();
-//	sceNetTerm();
-
-//	sceUtilityUnloadNetModule(PSP_NET_MODULE_INET);
-//	sceUtilityUnloadNetModule(PSP_NET_MODULE_COMMON);
+	if (net_stack)
+	{
+		ps2ipDeinit();
+		NetManDeinit();
+	}
 }

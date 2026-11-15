@@ -15,6 +15,10 @@
  * libzip opens archives with open()/fstat() instead, so zip_util.c reads
  * cached zips into memory (ramcache_is_path) like it does for the disc.
  *
+ * MicroPython (apollo-lib) reads the modules [python:] codes import with
+ * open()/read()/close(): cached files can be opened read-only that way too,
+ * as descriptors from RAMCACHE_FD_BASE up.
+ *
  * The store is capped at RAMCACHE_MAX_SIZE: to make room, the least recently
  * used files that aren't open are dropped (they're only a cache).
  */
@@ -26,11 +30,16 @@
 #include <errno.h>
 #include <time.h>
 #include <sys/stat.h>
+#include <fcntl.h>
+#include <stdarg.h>
+#include <unistd.h>
 
 #include "saves.h"
 #include "ramcache.h"
 
 #define RAMCACHE_MAX_SIZE	(8 * 1024 * 1024)
+#define RAMCACHE_FD_BASE	0x4000	// far above the SDK's own descriptors
+#define RAMCACHE_MAX_FDS	8
 
 typedef struct ram_file
 {
@@ -58,11 +67,16 @@ int __real_remove(const char *path);
 int __real_unlink(const char *path);
 int __real_chmod(const char *path, mode_t mode);
 int __real_mkdir(const char *path, mode_t mode);
+int __real_open(const char *path, int flags, ...);
+ssize_t __real_read(int fd, void *buf, size_t n);
+off_t __real_lseek(int fd, off_t off, int whence);
+int __real_close(int fd);
 
 static int ramcache_active = 0;
 static ram_file_t* files = NULL;
 static size_t total_size = 0;
 static uint32_t use_counter = 0;
+static ram_handle_t* fds[RAMCACHE_MAX_FDS];
 
 void ramcache_enable(void)
 {
@@ -148,11 +162,11 @@ static int reserve(ram_file_t* file, size_t size)
 	if (size <= file->alloc)
 		return 1;
 
-	// grow in 64 KB steps, or doubling, whichever is larger
+	// grow by doubling, in 4 KB steps (small files, like Python modules, stay small)
 	alloc = file->alloc * 2;
 	if (alloc < size)
 		alloc = size;
-	alloc = (alloc + 0xFFFF) & ~0xFFFF;
+	alloc = (alloc + 0xFFF) & ~0xFFF;
 
 	if (!make_room(alloc - file->alloc, file) && !make_room(size - file->alloc, file))
 		return 0;
@@ -407,4 +421,102 @@ int __wrap_mkdir(const char *path, mode_t mode)
 		return 0;
 
 	return __real_mkdir(path, mode);
+}
+
+/* open()/read()/lseek()/close(): read-only descriptors on cached files */
+
+static ram_handle_t* get_fd(int fd)
+{
+	if (fd < RAMCACHE_FD_BASE || fd >= RAMCACHE_FD_BASE + RAMCACHE_MAX_FDS)
+		return NULL;
+
+	return fds[fd - RAMCACHE_FD_BASE];
+}
+
+static int ram_open(const char* path, int flags)
+{
+	ram_file_t* file;
+
+	if ((flags & O_ACCMODE) != O_RDONLY)
+	{
+		errno = EROFS;	// written through fopen() only
+		return -1;
+	}
+
+	if ((file = find_file(path)) == NULL)
+	{
+		errno = ENOENT;
+		return -1;
+	}
+
+	for (int i = 0; i < RAMCACHE_MAX_FDS; i++)
+	{
+		if (fds[i])
+			continue;
+
+		if ((fds[i] = calloc(1, sizeof(ram_handle_t))) == NULL)
+		{
+			errno = ENOMEM;
+			return -1;
+		}
+
+		fds[i]->file = file;
+		file->open_count++;
+		file->last_use = ++use_counter;
+		return RAMCACHE_FD_BASE + i;
+	}
+
+	errno = EMFILE;
+	return -1;
+}
+
+int __wrap_open(const char *path, int flags, ...)
+{
+	va_list ap;
+	int mode = 0;
+
+	if (ramcache_is_path(path))
+		return ram_open(path, flags);
+
+	if (flags & O_CREAT)
+	{
+		va_start(ap, flags);
+		mode = va_arg(ap, int);
+		va_end(ap);
+	}
+
+	return __real_open(path, flags, mode);
+}
+
+ssize_t __wrap_read(int fd, void *buf, size_t n)
+{
+	ram_handle_t* h = get_fd(fd);
+
+	return h ? ram_read(h, buf, n) : __real_read(fd, buf, n);
+}
+
+off_t __wrap_lseek(int fd, off_t off, int whence)
+{
+	ram_handle_t* h = get_fd(fd);
+#ifdef __LARGE64_FILES
+	_off64_t pos = off;	// ram_seek() takes the fopencookie offset type
+#else
+	off_t pos = off;
+#endif
+
+	if (!h)
+		return __real_lseek(fd, off, whence);
+
+	return (ram_seek(h, &pos, whence) < 0) ? -1 : (off_t) pos;
+}
+
+int __wrap_close(int fd)
+{
+	ram_handle_t* h = get_fd(fd);
+
+	if (!h)
+		return __real_close(fd);
+
+	fds[fd - RAMCACHE_FD_BASE] = NULL;
+	return ram_close(h);
 }

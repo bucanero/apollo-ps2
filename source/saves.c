@@ -362,17 +362,15 @@ static option_entry_t* get_file_entries(const char* path, const char* mask)
 }
 
 #ifdef APOLLO_EMBEDDED_PATCHES
-// PS1 + PS2 .savepatch files from apollo-patches, zipped at build time (see CMakeLists.txt)
+// PS1 + PS2 .savepatch files from apollo-patches, and the Python modules their
+// codes import (in python/), zipped at build time (see CMakeLists.txt)
 extern const uint8_t _binary_patches_zip_start;
 extern const uint8_t _binary_patches_zip_size;
 
-static char* readEmbeddedPatch(const char* name)
+static zip_t* openEmbeddedPatches(void)
 {
 	zip_source_t* src;
 	zip_t* archive;
-	zip_file_t* zf;
-	zip_stat_t st;
-	char* data = NULL;
 
 	// The archive is read in place from the ELF (freep = 0)
 	src = zip_source_buffer_create(&_binary_patches_zip_start, (zip_uint64_t)(uintptr_t) &_binary_patches_zip_size, 0, NULL);
@@ -380,27 +378,84 @@ static char* readEmbeddedPatch(const char* name)
 		return NULL;
 
 	if ((archive = zip_open_from_source(src, ZIP_RDONLY, NULL)) == NULL)
-	{
 		zip_source_free(src);
-		return NULL;
-	}
 
-	if (zip_stat(archive, name, ZIP_FL_NOCASE, &st) == 0 && (zf = zip_fopen_index(archive, st.index, 0)) != NULL)
+	return archive;
+}
+
+// Reads an entry whole, as a 0-terminated buffer to free
+static char* readZipEntry(zip_t* archive, zip_uint64_t index, zip_uint64_t size)
+{
+	zip_file_t* zf;
+	char* data;
+
+	if ((zf = zip_fopen_index(archive, index, 0)) == NULL)
+		return NULL;
+
+	data = malloc(size + 1);
+	if (data && zip_fread(zf, data, size) == (zip_int64_t) size)
+		data[size] = 0;
+	else
 	{
-		data = malloc(st.size + 1);
-		if (data && zip_fread(zf, data, st.size) == (zip_int64_t) st.size)
-			data[st.size] = 0;
-		else
-		{
-			free(data);
-			data = NULL;
-		}
-		zip_fclose(zf);
+		free(data);
+		data = NULL;
 	}
+	zip_fclose(zf);
+
+	return data;
+}
+
+static char* readEmbeddedPatch(const char* name)
+{
+	zip_t* archive;
+	zip_stat_t st;
+	char* data = NULL;
+
+	if ((archive = openEmbeddedPatches()) == NULL)
+		return NULL;
+
+	if (zip_stat(archive, name, ZIP_FL_NOCASE, &st) == 0)
+		data = readZipEntry(archive, st.index, st.size);
 
 	// closing the archive frees the source too
 	zip_close(archive);
 	return data;
+}
+
+// Writes the embedded python/ modules to dst_path; returns how many
+static int extractEmbeddedPython(const char* dst_path)
+{
+	zip_t* archive;
+	zip_stat_t st;
+	zip_int64_t n;
+	char path[256];
+	char* data;
+	int count = 0;
+
+	if ((archive = openEmbeddedPatches()) == NULL)
+		return 0;
+
+	// fails without USB storage, where the cache folder is kept in RAM
+	mkdirs(dst_path);
+
+	n = zip_get_num_entries(archive, 0);
+	for (zip_int64_t i = 0; i < n; i++)
+	{
+		if (zip_stat_index(archive, i, 0, &st) != 0 || strncmp(st.name, "python/", 7) != 0 || !st.name[7])
+			continue;
+
+		snprintf(path, sizeof(path), "%s%s", dst_path, st.name + 7);
+		if ((data = readZipEntry(archive, i, st.size)) != NULL)
+		{
+			if (write_buffer(path, (uint8_t*) data, st.size) == SUCCESS)
+				count++;
+			free(data);
+		}
+	}
+
+	zip_close(archive);
+	LOG("Unpacked %d embedded Python modules to %s", count, dst_path);
+	return count;
 }
 #endif
 
@@ -431,6 +486,30 @@ char* readSavePatch(const char* title_id, char* path, size_t len)
 #endif
 
 	return NULL;
+}
+
+/*
+ * The folder [python:] codes import their modules from: apollo-lib adds
+ * "python" to it. Same order as readSavePatch(): the data folder (USB), an
+ * Apollo disc, then the modules embedded in the ELF. MicroPython reads modules
+ * as files, so the embedded ones are unpacked to the cache folder (kept in RAM
+ * without USB storage). That's ~20 KB, redone each time: apollo-lib asks once
+ * per Apply, and the RAM cache may have dropped them since.
+ */
+const char* getPythonDataPath(void)
+{
+	if (dir_exists(APOLLO_DATA_PATH "python") == SUCCESS)
+		return APOLLO_DATA_PATH;
+
+	if (dir_exists(DISC_PATCH_PATH "python") == SUCCESS)
+		return DISC_PATCH_PATH;
+
+#ifdef APOLLO_EMBEDDED_PATCHES
+	if (extractEmbeddedPython(APOLLO_LOCAL_CACHE "python/") > 0)
+		return APOLLO_LOCAL_CACHE;
+#endif
+
+	return APOLLO_DATA_PATH;
 }
 
 /*

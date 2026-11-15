@@ -843,14 +843,7 @@ static void doPatchMenu(void)
 	{
 		selected_centry = list_get_item(selected_entry->codes, menu_sel);
 
-		// Python codes (listed, but this build can't run them) say why
-		if (selected_centry->type == PATCH_PYTHON)
-		{
-			show_message("This code needs Apollo with Python support\n(PS3/PS4 apps or the web patcher)");
-			return;
-		}
-
-		if (selected_centry->type != PATCH_NULL)
+		if (selected_centry->type != PATCH_NULL && !(selected_centry->flags & APOLLO_CODE_FLAG_DISABLED))
 			selected_centry->activated = !selected_centry->activated;
 
 		if (selected_centry->type == PATCH_COMMAND)
@@ -859,7 +852,8 @@ static void doPatchMenu(void)
 		if (selected_centry->activated)
 		{
 			// Only activate Required codes if a cheat is selected
-			if (selected_centry->type == PATCH_GAMEGENIE || selected_centry->type == PATCH_BSD)
+			if (selected_centry->type == PATCH_GAMEGENIE || selected_centry->type == PATCH_BSD ||
+				selected_centry->type == PATCH_PYTHON)
 			{
 				code_entry_t* code;
 				list_node_t* node;
@@ -914,7 +908,7 @@ static void doPatchMenu(void)
 		selected_centry = list_get_item(selected_entry->codes, menu_sel);
 
 		if (selected_centry->type == PATCH_GAMEGENIE || selected_centry->type == PATCH_BSD ||
-			selected_centry->type == PATCH_TROP_LOCK || selected_centry->type == PATCH_TROP_UNLOCK)
+			selected_centry->type == PATCH_PYTHON)
 		{
 			SetMenu(MENU_PATCH_VIEW);
 			return;

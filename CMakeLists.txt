@@ -25,7 +25,7 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--wrap=gettimeofday")
 # lwIP socket calls set errno (see source/ps2_compat.c)
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--wrap=lwip_connect,--wrap=lwip_recv,--wrap=lwip_recvfrom,--wrap=lwip_send,--wrap=lwip_sendto")
 # Cache files in RAM when there's no USB storage (see source/ramcache.c)
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--wrap=fopen,--wrap=stat,--wrap=remove,--wrap=unlink,--wrap=chmod,--wrap=mkdir")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--wrap=fopen,--wrap=stat,--wrap=remove,--wrap=unlink,--wrap=chmod,--wrap=mkdir,--wrap=open,--wrap=read,--wrap=lseek,--wrap=close")
 
 include_directories(
   include
@@ -120,15 +120,53 @@ if(APOLLO_PATCHES_DIR)
   endif()
   message(STATUS "Embedding ${n_all} save patches from ${APOLLO_PATCHES_DIR}")
 
+  # The Python modules those patches' [python:] codes import (and the modules
+  # these import in turn), from apollo-patches/python/, go in the zip's python/
+  # folder. Most of python/ is for PS3/PS4 games, so it isn't embedded whole.
+  set(py_files)
+  set(py_names)
+  set(py_scan ${patch_files})
+  while(py_scan)
+    set(py_next)
+    foreach(f ${py_scan})
+      file(STRINGS ${f} py_lines REGEX "^[ \t]*(import|from)[ \t]+[A-Za-z_]")
+      foreach(l ${py_lines})
+        # "import a as b, c" / "from a import b": the module names only
+        string(REGEX REPLACE "^[ \t]*from[ \t]+([A-Za-z0-9_]+).*$" "\\1" l "${l}")
+        string(REGEX REPLACE "^[ \t]*import[ \t]+" "" l "${l}")
+        string(REGEX REPLACE "[ \t]+as[ \t]+[A-Za-z0-9_]+" "" l "${l}")
+        string(REGEX REPLACE "[ \t#].*$" "" l "${l}")
+        string(REPLACE "," ";" mods "${l}")
+        foreach(m ${mods})
+          set(py ${APOLLO_PATCHES_DIR}/python/${m}.py)
+          list(FIND py_names "${m}" seen)
+          if(EXISTS ${py} AND seen EQUAL -1)
+            list(APPEND py_names ${m})
+            list(APPEND py_files ${py})
+            list(APPEND py_next ${py})
+          endif()
+        endforeach()
+      endforeach()
+    endforeach()
+    set(py_scan ${py_next})
+  endwhile()
+  set(py_zip_names)
+  foreach(m ${py_names})
+    list(APPEND py_zip_names python/${m}.py)
+  endforeach()
+  list(LENGTH py_names n_py)
+  message(STATUS "Embedding ${n_py} Python modules: ${py_names}")
+
   set(PATCHES_STAGE ${CMAKE_CURRENT_BINARY_DIR}/patches)
   add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/patches_zip.o
     COMMAND ${CMAKE_COMMAND} -E remove_directory ${PATCHES_STAGE}
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${PATCHES_STAGE}
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${PATCHES_STAGE}/python
     COMMAND ${CMAKE_COMMAND} -E copy ${patch_files} ${PATCHES_STAGE}
-    COMMAND ${CMAKE_COMMAND} -E chdir ${PATCHES_STAGE} ${CMAKE_COMMAND} -E tar cf ${CMAKE_CURRENT_BINARY_DIR}/patches.zip --format=zip ${patch_names}
+    COMMAND ${CMAKE_COMMAND} -E copy ${py_files} ${PATCHES_STAGE}/python
+    COMMAND ${CMAKE_COMMAND} -E chdir ${PATCHES_STAGE} ${CMAKE_COMMAND} -E tar cf ${CMAKE_CURRENT_BINARY_DIR}/patches.zip --format=zip ${patch_names} ${py_zip_names}
     COMMAND ${CMAKE_LINKER} -r -b binary -o patches_zip.o patches.zip
     COMMAND ${CMAKE_OBJCOPY} --set-section-alignment .data=64 patches_zip.o
-    DEPENDS ${patch_files}
+    DEPENDS ${patch_files} ${py_files}
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMENT "Embedding save patches (patches.zip)"
     VERBATIM

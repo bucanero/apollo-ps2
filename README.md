@@ -23,6 +23,7 @@ This homebrew app allows you to download, unlock, patch, and manage save-game fi
 
 * **Save files listing:** quick access to all the save files on Memory Cards and external devices (+ file details)
 * **Save files patching:** complete support for Save Wizard and [Bruteforce Save Data](https://bruteforcesavedata.forumms.net/) cheat patches to enhance your save-games.
+* **Python patches:** [MicroPython](https://micropython.org/) scripts for save-games that need custom decryption, checksums or edits.
 * **Hex editor:** edit save-game files byte by byte.
 * **Save import/export:** allows the user export save files to `.PSU`, `.PSV`, `.CBS` formats, and import saves from other tools and consoles (`.PSU`, `.PSV`, `.CBS`, `.MAX`, `.XPS`, `.SPS` supported).
 * **Save downloading:** easy access to an Online Database of save-game files to download straight to your PS2.
@@ -83,6 +84,7 @@ The Apollo disc image (`apollo-ps2.iso`) boots the application and includes an o
 |-------------|----------|
 | `APOLLO/PS2/`, `APOLLO/PS1/` | offline saves database ([apollo-saves](https://github.com/bucanero/apollo-saves)) |
 | `APOLLO/PATCHES/` | `.savepatch` files ([apollo-patches](https://github.com/bucanero/apollo-patches)) |
+| `APOLLO/PATCHES/python/` | Python modules used by the save patches |
 
 ## Data folders
 
@@ -93,6 +95,14 @@ Save patches (`.savepatch` files) are loaded from the first location where they'
 1. `mass:/APOLLO/DATA/` (USB drive) - use it to add new or updated patches
 2. `cdfs:/APOLLO/PATCHES/` (Apollo disc)
 3. Built-in patches (included in the application)
+
+### Python modules
+
+Python patch codes import their modules (`.py` files from the `python` folder of [apollo-patches](https://github.com/bucanero/apollo-patches)) from the first of these folders that exists:
+
+1. `mass:/APOLLO/DATA/python/` (USB drive) - if you add it, copy the whole `python` folder
+2. `cdfs:/APOLLO/PATCHES/python/` (Apollo disc)
+3. Built-in modules (the ones used by the built-in PS1/PS2 patches)
 
 ### Saves database
 
@@ -175,7 +185,7 @@ The [GitHub Actions workflow](.github/workflows/build.yml) builds everything fro
 
 Run `cmake -DCMAKE_TOOLCHAIN_FILE=$PS2DEV/ps2sdk/ps2dev.cmake . && make` to create a release build. Run `make packelf` to compress it to `APOLLO.ELF`, or `make release` to create the `apollo-ps2.zip` package (with the `APOLLO-99PS2` Memory Card folder).
 
-To include the [latest save patches](https://github.com/bucanero/apollo-patches) in the application, point `APOLLO_PATCHES_DIR` to a local copy of the `apollo-patches` repository (the `PS1` and `PS2` folders are used):
+To include the [latest save patches](https://github.com/bucanero/apollo-patches) in the application, point `APOLLO_PATCHES_DIR` to a local copy of the `apollo-patches` repository (the `PS1` and `PS2` folders are used, and the modules from `python` that their Python codes import):
 
 ```sh
 cmake -DCMAKE_TOOLCHAIN_FILE=$PS2DEV/ps2sdk/ps2dev.cmake -DAPOLLO_PATCHES_DIR=/path/to/apollo-patches .

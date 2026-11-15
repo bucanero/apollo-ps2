@@ -205,7 +205,7 @@ int DrawCodes(code_entry_t* code, u8 alpha, int y_inc, int xOff, int selIndex)
     
     SetFontSize(APP_FONT_SIZE_SELECTION);
 
-    if (code->file && (code->type == PATCH_BSD || code->type == PATCH_GAMEGENIE))
+    if (code->file && (code->type == PATCH_BSD || code->type == PATCH_GAMEGENIE || code->type == PATCH_PYTHON))
         DrawFormatString(xOff + MENU_ICON_OFF + 20, SCREEN_HEIGHT - 50, "Target File: %s", code->file);
 
     for (c = startDrawX; c < max; c++)

@@ -667,6 +667,10 @@ static void* ps2_host_callback(int id, uint32_t* size)
 	case APOLLO_HOST_TEMP_PATH:
 		return APOLLO_LOCAL_CACHE;
 
+	case APOLLO_HOST_DATA_PATH:
+		// where [python:] codes import modules from (its python/ folder)
+		return (void*) getPythonDataPath();
+
 	case APOLLO_HOST_LAN_ADDR:
 		if (1)//(sceWlanGetEtherAddr(host_buf) < 0)
 			LOG("Error getting LAN Ethernet Address");
@@ -758,7 +762,7 @@ static int apply_cheat_patches(const save_entry_t* entry)
 	for (node = list_head(entry->codes); (code = list_get(node)); node = list_next(node))
 	{
 		if (!code->activated || (code->flags & APOLLO_CODE_FLAG_DISABLED) ||
-			(code->type != PATCH_GAMEGENIE && code->type != PATCH_BSD))
+			(code->type != PATCH_GAMEGENIE && code->type != PATCH_BSD && code->type != PATCH_PYTHON))
 			continue;
 
 		LOG("Active code: [%s]", code->name);

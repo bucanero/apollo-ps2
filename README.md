@@ -108,6 +108,12 @@ Python patch codes import their modules (`.py` files from the `python` folder of
 
 The **Saves DB** menu uses the first database it finds: `cdfs:/APOLLO/` (Apollo disc), `mass:/APOLLO/`, `host:/APOLLO/`, and the [Online Database](https://github.com/bucanero/apollo-saves) otherwise.
 
+### Font
+
+Japanese save titles are drawn with the Japanese font in the PS2 BIOS (`rom0:KROM`). It covers kana and the 2,965 common (JIS level 1) kanji; anything else shows as `?`.
+
+For full coverage (rarer kanji, symbols like `①`) and smoother text, copy an OpenType or TrueType font with Japanese characters, such as [Noto Sans JP](https://fonts.google.com/noto/specimen/Noto+Sans+JP), to `mass:/APOLLO/DATA/FONT.OTF` (USB drive). It's only read from USB: from a disc, each new character would need a slow disc seek.
+
 ### PS2
 
 | PS2 | Folder |

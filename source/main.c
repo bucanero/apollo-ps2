@@ -219,9 +219,14 @@ static int LoadTextures_Menu(void)
 	if (TTFLoadFont(0, NULL, font_ttf, size_font_ttf) != SUCCESS)
 		return 0;
 
-	// Try loading NotoSansJP font for unicode support
-	if (TTFLoadFont(1, APOLLO_APP_PATH "DATA/FONT.OTF", NULL, 0) != SUCCESS)
-		LOG("No extra font found for UTF-8 support!");
+	// Optional font with more characters (e.g. NotoSansJP) on USB, used
+	// before the BIOS font for anything the Latin font doesn't have. Not read
+	// from disc: FreeType loads glyphs with small scattered reads, and each
+	// new glyph would cost a disc seek (~125 ms in PCSX2)
+	if (TTFLoadFont(1, APOLLO_DATA_PATH "FONT.OTF", NULL, 0) == SUCCESS)
+		LOG("Loaded " APOLLO_DATA_PATH "FONT.OTF");
+	else
+		LOG("No FONT.OTF: Japanese text uses the BIOS font (rom0:KROM)");
 
 	free_mem = (u32*) init_ttf_table((u8*) free_mem);
 	set_ttf_window(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, WIN_SKIP_LF);

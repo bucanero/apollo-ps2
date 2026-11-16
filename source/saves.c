@@ -1399,9 +1399,31 @@ void UnloadGameList(list_t * list)
 	LOG("UnloadGameList() :: Successfully unloaded game list");
 }
 
+/*
+ * strcasecmp() on unsigned bytes: newlib's compares plain chars, which are
+ * signed on the EE, so UTF-8 (Japanese titles) sorted before everything,
+ * even the menu entries. Byte order keeps icon-prefixed menu entries
+ * ("Bulk Save Management") first, then Latin titles, then non-Latin ones
+ * (by code point: kana before kanji).
+ */
+static int compare_names(const char* s1, const char* s2)
+{
+	const uint8_t *a = (const uint8_t*) s1, *b = (const uint8_t*) s2;
+	int c1, c2;
+
+	do
+	{
+		c1 = (*a >= 'A' && *a <= 'Z') ? *a + 32 : *a;
+		c2 = (*b >= 'A' && *b <= 'Z') ? *b + 32 : *b;
+		a++, b++;
+	} while (c1 && c1 == c2);
+
+	return c1 - c2;
+}
+
 int sortCodeList_Compare(const void* a, const void* b)
 {
-	return strcasecmp(((code_entry_t*) a)->name, ((code_entry_t*) b)->name);
+	return compare_names(((code_entry_t*) a)->name, ((code_entry_t*) b)->name);
 }
 
 /*
@@ -1416,7 +1438,7 @@ int sortCodeList_Compare(const void* a, const void* b)
  */
 int sortSaveList_Compare(const void* a, const void* b)
 {
-	return strcasecmp(((save_entry_t*) a)->name, ((save_entry_t*) b)->name);
+	return compare_names(((save_entry_t*) a)->name, ((save_entry_t*) b)->name);
 }
 
 static int parseTypeFlags(int flags)

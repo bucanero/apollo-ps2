@@ -211,6 +211,7 @@ add_executable(${PROJECT_NAME}
   source/import_ps1.c
   source/mc_image.c
   source/psv_resign.c
+  source/sjis.c
   source/zip_util.c
 )
 

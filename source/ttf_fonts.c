@@ -5,6 +5,7 @@
 #include "types.h"
 #include "ttf_render.h"
 #include "menu.h"
+#include "sjis.h"
 
 /******************************************************************************************************************************************************/
 /* TTF functions to load and convert fonts                                                                                                             */
@@ -28,7 +29,7 @@ int TTFLoadFont(int set, const char * path, void * from_memory, int size_from_me
     f_face[set] = 0;
 
     if(path) {
-        if((access(path, F_OK) < 0) || FT_New_Face(freetype, path, 0, &face[set])<0) return -1;
+        if((access(path, F_OK) < 0) || FT_New_Face(freetype, path, 0, &face[set]) != 0) return -1;
     } else {
         if(FT_New_Memory_Face(freetype, from_memory, size_from_memory, 0, &face[set])) return -1;
     }
@@ -195,7 +196,7 @@ int Render_String_UTF8(u16 * bitmap, int w, int h, u8 *string, int sw, int sh)
 
 typedef struct ttf_dyn {
     u32 ttf;
-    SDL_Texture *text[2];
+    SDL_Texture *text;          // white; tinted when drawn
     u32 r_use;
     u16 y_start;
     u16 width;
@@ -204,7 +205,10 @@ typedef struct ttf_dyn {
 
 } ttf_dyn;
 
-#define MAX_CHARS 1600
+// cached glyphs (0-127: ASCII); each is a 32x32 RGBA texture, 4 KB of EE
+// RAM, so the cache tops out at 3 MB. A screen of Japanese titles needs a
+// few hundred.
+#define MAX_CHARS 768
 #define TEX_SZ 32
 
 static ttf_dyn ttf_font_datas[MAX_CHARS];
@@ -273,12 +277,12 @@ static void DrawBox_ttf(float x, float y, float z, float w, float h, u32 rgba)
     SDL_RenderFillRectF(renderer, &rect);
 }
 
-static SDL_Texture* create_texture(const u8* bitmap, u32 rgba)
+static SDL_Texture* create_texture(const u8* bitmap)
 {
     u32 buf[TEX_SZ * TEX_SZ];
 
     for (int i = 0; i < TEX_SZ*TEX_SZ; i++)
-        buf[i] = bitmap[i] ? ((rgba & 0x00FFFFFF) | (bitmap[i] << 24)) : 0;
+        buf[i] = bitmap[i] ? (0x00FFFFFF | (bitmap[i] << 24)) : 0;
 
     SDL_Surface* surface = SDL_CreateRGBSurfaceFrom((void*) buf, TEX_SZ, TEX_SZ, 32, 4 * TEX_SZ, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
     SDL_Texture* sdl_tex = SDL_CreateTextureFromSurface(renderer, surface);
@@ -297,7 +301,11 @@ static void DrawTextBox_ttf(SDL_Texture* bitmap, float x, float y, float z, floa
         .h = h,
     };
 
-	SDL_SetTextureAlphaMod(bitmap, RGBA_A(rgba));
+    // black (shadows) when the color's RGB is 0, white otherwise
+    u8 c = (rgba & 0xFFFFFF00) ? 0xFF : 0;
+
+    SDL_SetTextureColorMod(bitmap, c, c, c);
+    SDL_SetTextureAlphaMod(bitmap, RGBA_A(rgba));
     SDL_RenderCopyF(renderer, bitmap, NULL, &dest);
 }
 
@@ -305,10 +313,60 @@ static void DrawTextBox_ttf(SDL_Texture* bitmap, float x, float y, float z, floa
 #define TTF_UY 24 * (TEX_SZ /32)
 
 
+// BIOS font glyphs (Japanese) fill the em box: TTF_UY pixels, from the
+// ideographic top (7/8 em above the baseline, row TTF_UY - 1)
+#define KROM_EM TTF_UY
+#define KROM_Y  (TTF_UY - 1 - (TTF_UY * 7 / 8))
+
+// Draws a character into its cache slot, from the TTF fonts or else the BIOS
+// font. Returns 0 if none has it.
+static int build_glyph(ttf_dyn* g, u32 chr)
+{
+    u8 bitmap[TEX_SZ * TEX_SZ];
+    FT_GlyphSlot slot = NULL;
+    FT_UInt index;
+    int n, m, ww;
+
+    memset(bitmap, 0, sizeof(bitmap));
+
+    for(n = 0; n < 4 && !slot; n++) {
+        if(!f_face[n]) continue;
+
+        FT_Set_Pixel_Sizes(face[n], TTF_UX, TTF_UY);
+        if((index = FT_Get_Char_Index(face[n], chr)) != 0 && !FT_Load_Glyph(face[n], index, FT_LOAD_RENDER))
+            slot = face[n]->glyph;
+    }
+
+    if(slot) {
+        int y_correction = TTF_UY - 1 - slot->bitmap_top;
+        if(y_correction < 0) y_correction = 0;
+
+        g->y_start = y_correction;
+        g->height = slot->bitmap.rows;
+        g->width = slot->bitmap.width;
+
+        for(n = 0, ww = 0; n < slot->bitmap.rows && n < TEX_SZ; n++, ww += slot->bitmap.width)
+            for(m = 0; m < slot->bitmap.width && m < TEX_SZ; m++)
+                bitmap[n * TEX_SZ + m] = slot->bitmap.buffer[ww + m];
+    }
+    else if(krom_render(chr, bitmap, TEX_SZ, KROM_EM)) {
+        g->y_start = KROM_Y;
+        g->height = g->width = KROM_EM;
+    }
+    else return 0;
+
+    // a reused slot still has the texture of the character it held
+    if(g->text) SDL_DestroyTexture(g->text);
+
+    g->text = create_texture(bitmap);
+    g->flags = (g->text != NULL);
+
+    return g->flags;
+}
+
 int display_ttf_string(int posx, int posy, const char *string, u32 color, u32 bkcolor, int sw, int sh, int (*DrawIcon_cb)(int, int, char))
 {
-    int l,n, m, ww, ww2;
-    u8 colorc;
+    int l,n, m;
     u32 ttf_char;
     u8 *ustring = (u8 *) string;
 
@@ -391,64 +449,12 @@ int display_ttf_string(int posx, int posy, const char *string, u32 color, u32 bk
         if(n >= MAX_CHARS) {ttf_font_datas[m].flags = 0; l= m;} else l=n;
 
         // building the character
-        if(!(ttf_font_datas[l].flags & 1)) { 
+        if(!(ttf_font_datas[l].flags & 1)) {
+            // no font has it: show '?' (kept in the cache under the character)
+            if(!build_glyph(&ttf_font_datas[l], ttf_char) && !build_glyph(&ttf_font_datas[l], '?'))
+                continue;
 
-            if(f_face[0]) FT_Set_Pixel_Sizes(face[0], TTF_UX, TTF_UY);
-            if(f_face[1]) FT_Set_Pixel_Sizes(face[1], TTF_UX, TTF_UY);
-            if(f_face[2]) FT_Set_Pixel_Sizes(face[2], TTF_UX, TTF_UY);
-            if(f_face[3]) FT_Set_Pixel_Sizes(face[3], TTF_UX, TTF_UY);
-
-            FT_GlyphSlot slot = NULL;
-
-            u8 bitmap[TEX_SZ * TEX_SZ];
-            memset(bitmap, 0, TEX_SZ * TEX_SZ);
-
-            ///////////
-
-            FT_UInt index;
-
-            if(f_face[0] && (index = FT_Get_Char_Index(face[0], ttf_char))!=0 
-                && !FT_Load_Glyph(face[0], index, FT_LOAD_RENDER )) slot = face[0]->glyph;
-            else if(f_face[1] && (index = FT_Get_Char_Index(face[1], ttf_char))!=0 
-                && !FT_Load_Glyph(face[1], index, FT_LOAD_RENDER )) slot = face[1]->glyph;
-            else if(f_face[2] && (index = FT_Get_Char_Index(face[2], ttf_char))!=0 
-                && !FT_Load_Glyph(face[2], index, FT_LOAD_RENDER )) slot = face[2]->glyph;
-            else if(f_face[3] && (index = FT_Get_Char_Index(face[3], ttf_char))!=0 
-                && !FT_Load_Glyph(face[3], index, FT_LOAD_RENDER )) slot = face[3]->glyph;
-            else ttf_char = 0;
-
-            if(ttf_char!=0) {
-                ww = ww2 = 0;
-
-                int y_correction = TTF_UY - 1 - slot->bitmap_top;
-                if(y_correction < 0) y_correction = 0;
-
-                ttf_font_datas[l].flags = 1;
-                ttf_font_datas[l].y_start = y_correction;
-                ttf_font_datas[l].height = slot->bitmap.rows;
-                ttf_font_datas[l].width = slot->bitmap.width;
-                ttf_font_datas[l].ttf = ttf_char;
-                
-
-                for(n = 0; n < slot->bitmap.rows; n++) {
-                    if(n >= TEX_SZ) break;
-                    for (m = 0; m < slot->bitmap.width; m++) {
-
-                        if(m >= TEX_SZ) continue;
-                        
-                        colorc = (u8) slot->bitmap.buffer[ww + m];
-                        
-                        if(colorc) bitmap[m + ww2] = colorc; //(colorc<<8) | 0xfff;
-                    }
-                
-                ww2 += TEX_SZ;
-
-                ww += slot->bitmap.width;
-                }
-                ttf_font_datas[l].text[0] = create_texture(bitmap, 0xFF000000);
-                ttf_font_datas[l].text[1] = create_texture(bitmap, 0xFFFFFFFF);
-            }
-            else continue;
+            ttf_font_datas[l].ttf = ttf_char;
         }
 
         // displaying the character
@@ -472,7 +478,7 @@ int display_ttf_string(int posx, int posy, const char *string, u32 color, u32 bk
 
             if (bkcolor != 0) DrawBox_ttf((float) (Win_X_ttf + posx), (float) (Win_Y_ttf + posy) + ((float) ttf_font_datas[l].y_start * sh) * 0.03125f,
             Z_ttf, (float) sw, (float) sh, bkcolor);
-            DrawTextBox_ttf(ttf_font_datas[l].text[((color & 0xFFFFFF00) != 0)], (float) (Win_X_ttf + posx), (float) (Win_Y_ttf + posy) + ((float) ttf_font_datas[l].y_start * sh) * 0.03125f,
+            DrawTextBox_ttf(ttf_font_datas[l].text, (float) (Win_X_ttf + posx), (float) (Win_Y_ttf + posy) + ((float) ttf_font_datas[l].y_start * sh) * 0.03125f,
             Z_ttf, (float) sw, (float) sh, color, 0.99f, 0.99f);
         }
 

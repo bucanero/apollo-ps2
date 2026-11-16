@@ -1,5 +1,6 @@
 #include <apollo.h>
 #include <dbglogger.h>
+#include "sjis.h"
 #define LOG dbglogger_log
 
 #define APOLLO_PATH				"APOLLO/"
@@ -297,7 +298,6 @@ int vmc_import_max(const char *input);
 int vmc_import_cbs(const char *input);
 
 uint8_t* loadVmcIcon(const char *save, const char* icon);
-char* sjis2utf8(char* input);
 int psv_resign(const char *src_psv);
 int vmp_resign(const char *src_vmp);
 

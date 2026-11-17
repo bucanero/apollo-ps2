@@ -232,6 +232,14 @@ static void Card_DataChecksum(uint8_t *pagebuf, uint8_t *ecc)
 	p_ecc[2] = ~t0 & 0x7F;
 }
 
+/* Fill the 16 byte spare area of a 512 byte page: 4x3 ECC bytes, then zeros */
+void mcio_calcPageEcc(uint8_t *pagebuf, uint8_t *spare)
+{
+	memset(spare, 0, 16);
+	for (int i = 0; i < 4; i++)
+		Card_DataChecksum(pagebuf + i*128, spare + i*3);
+}
+
 static int Card_CorrectData(uint8_t *pagebuf, uint8_t *ecc)
 {
 	int32_t xor0, xor1, xor2, xor3, xor4;

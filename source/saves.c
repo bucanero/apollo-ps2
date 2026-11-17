@@ -6,6 +6,7 @@
 #include <dirent.h>
 #include <libmc.h>
 
+#include <zip.h>
 #include "saves.h"
 #include "common.h"
 #include "settings.h"
@@ -360,6 +361,423 @@ static option_entry_t* get_file_entries(const char* path, const char* mask)
 	return _getFileOptions(path, mask, CMD_CODE_NULL);
 }
 
+#ifdef APOLLO_EMBEDDED_PATCHES
+// PS1 + PS2 .savepatch files from apollo-patches, and the Python modules their
+// codes import (in python/), zipped at build time (see CMakeLists.txt)
+extern const uint8_t _binary_patches_zip_start;
+extern const uint8_t _binary_patches_zip_size;
+
+static zip_t* openEmbeddedPatches(void)
+{
+	zip_source_t* src;
+	zip_t* archive;
+
+	// The archive is read in place from the ELF (freep = 0)
+	src = zip_source_buffer_create(&_binary_patches_zip_start, (zip_uint64_t)(uintptr_t) &_binary_patches_zip_size, 0, NULL);
+	if (!src)
+		return NULL;
+
+	if ((archive = zip_open_from_source(src, ZIP_RDONLY, NULL)) == NULL)
+		zip_source_free(src);
+
+	return archive;
+}
+
+// Reads an entry whole, as a 0-terminated buffer to free
+static char* readZipEntry(zip_t* archive, zip_uint64_t index, zip_uint64_t size)
+{
+	zip_file_t* zf;
+	char* data;
+
+	if ((zf = zip_fopen_index(archive, index, 0)) == NULL)
+		return NULL;
+
+	data = malloc(size + 1);
+	if (data && zip_fread(zf, data, size) == (zip_int64_t) size)
+		data[size] = 0;
+	else
+	{
+		free(data);
+		data = NULL;
+	}
+	zip_fclose(zf);
+
+	return data;
+}
+
+static char* readEmbeddedPatch(const char* name)
+{
+	zip_t* archive;
+	zip_stat_t st;
+	char* data = NULL;
+
+	if ((archive = openEmbeddedPatches()) == NULL)
+		return NULL;
+
+	if (zip_stat(archive, name, ZIP_FL_NOCASE, &st) == 0)
+		data = readZipEntry(archive, st.index, st.size);
+
+	// closing the archive frees the source too
+	zip_close(archive);
+	return data;
+}
+
+// Writes the embedded python/ modules to dst_path; returns how many
+static int extractEmbeddedPython(const char* dst_path)
+{
+	zip_t* archive;
+	zip_stat_t st;
+	zip_int64_t n;
+	char path[256];
+	char* data;
+	int count = 0;
+
+	if ((archive = openEmbeddedPatches()) == NULL)
+		return 0;
+
+	// fails without USB storage, where the cache folder is kept in RAM
+	mkdirs(dst_path);
+
+	n = zip_get_num_entries(archive, 0);
+	for (zip_int64_t i = 0; i < n; i++)
+	{
+		if (zip_stat_index(archive, i, 0, &st) != 0 || strncmp(st.name, "python/", 7) != 0 || !st.name[7])
+			continue;
+
+		snprintf(path, sizeof(path), "%s%s", dst_path, st.name + 7);
+		if ((data = readZipEntry(archive, i, st.size)) != NULL)
+		{
+			if (write_buffer(path, (uint8_t*) data, st.size) == SUCCESS)
+				count++;
+			free(data);
+		}
+	}
+
+	zip_close(archive);
+	LOG("Unpacked %d embedded Python modules to %s", count, dst_path);
+	return count;
+}
+#endif
+
+/*
+ * Loads a title's .savepatch: the data folder (USB) first, then an Apollo
+ * disc, then the set embedded in the ELF. Returns a text buffer to free, or
+ * NULL. The location found is written to path, for the log.
+ */
+char* readSavePatch(const char* title_id, char* path, size_t len)
+{
+	char* buffer;
+
+	snprintf(path, len, APOLLO_DATA_PATH "%s.savepatch", title_id);
+	if ((buffer = readTextFile(path)) != NULL)
+		return buffer;
+
+	snprintf(path, len, DISC_PATCH_PATH "%s.savepatch", title_id);
+	if ((buffer = readTextFile(path)) != NULL)
+		return buffer;
+
+#ifdef APOLLO_EMBEDDED_PATCHES
+	snprintf(path, len, "%s.savepatch", title_id);
+	if ((buffer = readEmbeddedPatch(path)) != NULL)
+	{
+		snprintf(path, len, "(embedded) %s.savepatch", title_id);
+		return buffer;
+	}
+#endif
+
+	return NULL;
+}
+
+/*
+ * The folder [python:] codes import their modules from: apollo-lib adds
+ * "python" to it. Same order as readSavePatch(): the data folder (USB), an
+ * Apollo disc, then the modules embedded in the ELF. MicroPython reads modules
+ * as files, so the embedded ones are unpacked to the cache folder (kept in RAM
+ * without USB storage). That's ~20 KB, redone each time: apollo-lib asks once
+ * per Apply, and the RAM cache may have dropped them since.
+ */
+const char* getPythonDataPath(void)
+{
+	if (dir_exists(APOLLO_DATA_PATH "python") == SUCCESS)
+		return APOLLO_DATA_PATH;
+
+	if (dir_exists(DISC_PATCH_PATH "python") == SUCCESS)
+		return DISC_PATCH_PATH;
+
+#ifdef APOLLO_EMBEDDED_PATCHES
+	if (extractEmbeddedPython(APOLLO_LOCAL_CACHE "python/") > 0)
+		return APOLLO_LOCAL_CACHE;
+#endif
+
+	return APOLLO_DATA_PATH;
+}
+
+/*
+ * VMC saves live inside the open memory card image, not as files on disk.
+ * A PS1 save is a single data file (the save itself, named after it), while
+ * a PS2 save is a folder of files. The PS1 save's first slot is kept in icon[0].
+ */
+int vmc_read_save_file(const save_entry_t* save, const char* filename, uint8_t** data, size_t* size)
+{
+	int fd, r;
+	uint32_t len;
+	char path[256];
+	struct io_dirent dirent;
+
+	switch (save->type)
+	{
+	case FILE_TYPE_PS1:
+		// Save data without the 128-byte directory header
+		*data = getSaveBytes((uint8_t) save->icon[0], &len);
+		*size = len - PS1CARD_HEADER_SIZE;
+		memmove(*data, *data + PS1CARD_HEADER_SIZE, *size);
+		return 1;
+
+	case FILE_TYPE_PS2:
+		snprintf(path, sizeof(path), "%s/%s", save->dir_name, filename);
+		if (mcio_mcStat(path, &dirent) < 0)
+			return 0;
+
+		fd = mcio_mcOpen(path, sceMcFileAttrReadable | sceMcFileAttrFile);
+		if (fd < 0)
+			return 0;
+
+		*size = dirent.stat.size;
+		*data = malloc(*size + 1);
+		r = mcio_mcRead(fd, *data, *size);
+		mcio_mcClose(fd);
+
+		if (r != (int) *size)
+		{
+			LOG("Error: can't read '%s' (%d)", path, r);
+			free(*data);
+			return 0;
+		}
+		return 1;
+	}
+
+	return 0;
+}
+
+static int _vmc2_write_file(const char* path, const uint8_t* data, size_t size, int create)
+{
+	int fd, r;
+
+	fd = mcio_mcOpen(path, (create ? sceMcFileCreateFile : 0) | sceMcFileAttrWriteable | sceMcFileAttrFile);
+	if (fd < 0)
+		return 0;
+
+	r = mcio_mcWrite(fd, (void*) data, size);
+
+	// Closing flushes the card cache, which can fail on its own
+	if (mcio_mcClose(fd) != sceMcResSucceed)
+		return 0;
+
+	return (r == (int) size);
+}
+
+int vmc_write_save_file(const save_entry_t* save, const char* filename, const uint8_t* data, size_t size)
+{
+	int ret;
+	char path[256];
+	uint8_t* backup;
+	size_t backup_size;
+	struct io_dirent dirent, newent;
+
+	switch (save->type)
+	{
+	case FILE_TYPE_PS1:
+		return setRawSaveBytes((uint8_t) save->icon[0], data, size);
+
+	case FILE_TYPE_PS2:
+		snprintf(path, sizeof(path), "%s/%s", save->dir_name, filename);
+		if (mcio_mcStat(path, &dirent) < 0)
+			return 0;
+
+		if (dirent.stat.size == size)
+			return _vmc2_write_file(path, data, size, 0);
+
+		// mcio can't truncate: replace the file, keeping its attributes and dates
+		if (!vmc_read_save_file(save, filename, &backup, &backup_size))
+			return 0;
+
+		LOG("Replacing '%s' (%d -> %d bytes)", path, dirent.stat.size, (int) size);
+		mcio_mcRemove(path);
+		ret = _vmc2_write_file(path, data, size, 1);
+		if (!ret)
+		{
+			LOG("Error: can't write '%s', restoring it", path);
+			mcio_mcRemove(path);
+			_vmc2_write_file(path, backup, backup_size, 1);
+		}
+		free(backup);
+
+		if (mcio_mcStat(path, &newent) == sceMcResSucceed)
+		{
+			memcpy(&newent.stat.ctime, &dirent.stat.ctime, sizeof(struct sceMcStDateTime));
+			memcpy(&newent.stat.mtime, &dirent.stat.mtime, sizeof(struct sceMcStDateTime));
+			newent.stat.mode = dirent.stat.mode;
+			newent.stat.attr = dirent.stat.attr;
+			mcio_mcSetStat(path, &newent);
+		}
+		return ret;
+	}
+
+	return 0;
+}
+
+// PS1 saves have a single data file: the save name stored on the memory card
+static option_entry_t* _getVmc1FileOptions(const char* save_name, const char* mask, uint8_t is_cmd)
+{
+	option_value_t* optval;
+	option_entry_t* opt = _initOptions(1);
+
+	optval = malloc(sizeof(option_value_t));
+	optval->name = strdup(save_name);
+
+	if (is_cmd)
+		asprintf(&optval->value, "%c", is_cmd);
+	else
+		asprintf(&optval->value, "%s", mask);
+
+	list_append(opt[0].opts, optval);
+
+	return opt;
+}
+
+static option_entry_t* get_vmc1_file_entries(const char* save_name, const char* mask)
+{
+	return _getVmc1FileOptions(save_name, mask, CMD_CODE_NULL);
+}
+
+// PS2 saves are a folder on the memory card
+static option_entry_t* _getVmc2FileOptions(const char* save_dir, const char* mask, uint8_t is_cmd)
+{
+	int dd, r;
+	struct io_dirent dirent;
+	option_value_t* optval;
+	option_entry_t* opt = _initOptions(1);
+
+	LOG("Loading filenames {%s} from 'VMC:/%s'...", mask, save_dir);
+
+	if ((dd = mcio_mcDopen(save_dir)) >= 0)
+	{
+		// mcio_mcDread returns 1 per entry, 0 at the end, or a negative error
+		while ((r = mcio_mcDread(dd, &dirent)) > 0)
+		{
+			if (strcmp(dirent.name, ".") != 0 && strcmp(dirent.name, "..") != 0 &&
+				!(dirent.stat.mode & sceMcFileAttrSubdir) && wildcard_match_icase(dirent.name, mask))
+			{
+				LOG("Adding '%s' (%s)", dirent.name, mask);
+
+				optval = malloc(sizeof(option_value_t));
+				optval->name = strdup(dirent.name);
+				if (is_cmd)
+					asprintf(&optval->value, "%c", is_cmd);
+				else
+					asprintf(&optval->value, "%s", mask);
+
+				list_append(opt[0].opts, optval);
+			}
+		}
+
+		if (r < 0)
+			LOG("Error: can't list 'VMC:/%s' (%d)", save_dir, r);
+
+		mcio_mcDclose(dd);
+	}
+
+	if (list_count(opt[0].opts) == 0)
+	{
+		optval = malloc(sizeof(option_value_t));
+		asprintf(&optval->name, CHAR_ICON_WARN " --- %s/%s --- " CHAR_ICON_WARN, save_dir, mask);
+		asprintf(&optval->value, "%c", CMD_CODE_NULL);
+		list_append(opt[0].opts, optval);
+	}
+
+	return opt;
+}
+
+static option_entry_t* get_vmc2_file_entries(const char* save_dir, const char* mask)
+{
+	return _getVmc2FileOptions(save_dir, mask, CMD_CODE_NULL);
+}
+
+static void _addVmcHexEditCommand(save_entry_t* save)
+{
+	code_entry_t* cmd;
+
+	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_SIGN " Hex Edit save game files", CMD_CODE_NULL);
+	cmd->options_count = 1;
+	if (save->type == FILE_TYPE_PS2)
+		cmd->options = _getVmc2FileOptions(save->dir_name, "*", CMD_HEX_EDIT_FILE);
+	else
+		cmd->options = _getVmc1FileOptions(save->dir_name, "*", CMD_HEX_EDIT_FILE);
+	list_append(save->codes, cmd);
+}
+
+// Whether a code's ":file" target applies to this save. PS1 targets name the
+// save itself; PS2 targets are files in the save folder, optionally behind a
+// "SAVEDIR\" filter.
+static int _vmc_code_matches(const save_entry_t* save, const char* target)
+{
+	char* dir;
+	int ret;
+
+	if (!target || !target[0] || target[0] == '~')
+		return 1;
+
+	if (save->type != FILE_TYPE_PS2)
+		return wildcard_match_icase(save->dir_name, strrchr(target, '\\') ? strrchr(target, '\\')+1 : target);
+
+	if (!strchr(target, '\\'))
+		return 1;
+
+	dir = strdup(target);
+	*strchr(dir, '\\') = 0;
+	ret = wildcard_match_icase(save->dir_name, dir);
+	free(dir);
+
+	return ret;
+}
+
+static void _addVmcCheatCodes(save_entry_t* save)
+{
+	code_entry_t* cmd;
+	list_node_t* node;
+	char filePath[256];
+	char* buffer;
+
+	if ((buffer = readSavePatch(save->title_id, filePath, sizeof(filePath))) == NULL)
+		return;
+
+	cmd = _createCmdCode(PATCH_NULL, "----- " UTF8_CHAR_STAR " Cheats " UTF8_CHAR_STAR " -----", CMD_CODE_NULL);
+	list_append(save->codes, cmd);
+
+	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_SIGN " Apply Changes", CMD_RESIGN_SAVE);
+	list_append(save->codes, cmd);
+
+	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_USER " View Raw Patch File", CMD_VIEW_RAW_PATCH);
+	list_append(save->codes, cmd);
+
+	node = list_tail(save->codes);
+	LOG("Loading BSD codes '%s'...", filePath);
+	apollo_load_code_list(buffer, save->codes, (save->type == FILE_TYPE_PS2) ? &get_vmc2_file_entries : &get_vmc1_file_entries, save->dir_name);
+	free(buffer);
+
+	// A patch can cover several saves of a game (e.g. a system file and the
+	// slot files): disable the codes that target a different file
+	for (node = list_next(node); (cmd = list_get(node)); node = list_next(node))
+		if (!_vmc_code_matches(save, cmd->file))
+		{
+			// [DEFAULT:...] codes load activated: PS1 applies every code to
+			// the save itself, so a rejected one must not stay active
+			LOG("(%s) Disabled code '%s'", cmd->file, cmd->name);
+			cmd->flags |= (APOLLO_CODE_FLAG_ALERT | APOLLO_CODE_FLAG_DISABLED);
+			cmd->activated = 0;
+		}
+}
+
 /*
  * Function:		ReadLocalCodes()
  * File:			saves.c
@@ -397,8 +815,7 @@ int ReadCodes(save_entry_t * save)
 
 	_addBackupCommands(save);
 
-	snprintf(filePath, sizeof(filePath), APOLLO_DATA_PATH "%s.savepatch", save->title_id);
-	if ((buffer = readTextFile(filePath)) == NULL)
+	if ((buffer = readSavePatch(save->title_id, filePath, sizeof(filePath))) == NULL)
 		goto skip_end;
 
 	code = _createCmdCode(PATCH_NULL, "----- " UTF8_CHAR_STAR " Cheats " UTF8_CHAR_STAR " -----", CMD_CODE_NULL);	
@@ -411,7 +828,7 @@ int ReadCodes(save_entry_t * save)
 	list_append(save->codes, code);
 
 	LOG("Loading BSD codes '%s'...", filePath);
-	load_patch_code_list(buffer, save->codes, &get_file_entries, save->path);
+	apollo_load_code_list(buffer, save->codes, &get_file_entries, save->path);
 	free (buffer);
 
 skip_end:
@@ -507,6 +924,9 @@ int ReadVmc1Codes(save_entry_t * save)
 	cmd->options = _createExtOptions(1, "Copy .PSX Save to Storage", CMD_EXP_VMC1SAVE);
 	cmd->options[0].id = PS1SAVE_AR;
 	list_append(save->codes, cmd);
+
+	_addVmcHexEditCommand(save);
+	_addVmcCheatCodes(save);
 
 	LOG("Loaded %ld codes", list_count(save->codes));
 
@@ -645,6 +1065,9 @@ int ReadVmc2Codes(save_entry_t * save)
 	else
 		add_ps2_commands(save);
 
+	_addVmcHexEditCommand(save);
+	_addVmcCheatCodes(save);
+
 	LOG("Loaded %ld codes", list_count(save->codes));
 
 	return list_count(save->codes);
@@ -660,6 +1083,18 @@ int ReadVmc2Codes(save_entry_t * save)
  *	_count_count:	Pointer to int (set to the number of codes within the ncl)
  * Return:			Returns an array of code_entry, null if failed to load
  */
+// Downloads url+file to a cache path, unless it's cached and less than a day old
+static int _cache_online_file(const char* url, const char* file, const char* path, int show_progress)
+{
+	struct stat stats;
+
+	if (file_exists(path) == SUCCESS && stat(path, &stats) == 0 && (stats.st_mtime + ONLINE_CACHE_TIMEOUT) >= time(NULL))
+		return 1;
+
+	// Keep a stale copy if the download fails (e.g. no network)
+	return (http_download(url, file, path, show_progress) || file_exists(path) == SUCCESS);
+}
+
 int ReadOnlineSaves(save_entry_t * game)
 {
 	code_entry_t* item;
@@ -673,11 +1108,11 @@ int ReadOnlineSaves(save_entry_t * game)
 		stat(path, &stats);
 		// re-download if file is +1 day old
 		if ((stats.st_mtime + ONLINE_CACHE_TIMEOUT) < time(NULL))
-			http_download(game->path, "saves.txt", path, 0);
+			http_download(game->path, "saves.txt", path, 1);
 	}
 	else
 	{
-		if (!http_download(game->path, "saves.txt", path, 0))
+		if (!http_download(game->path, "saves.txt", path, 1))
 			return 0;
 	}
 
@@ -724,7 +1159,16 @@ int ReadOfflineSaves(save_entry_t * game)
 	option_value_t* optval;
 	char path[256];
 
-	snprintf(path, sizeof(path), "%ssaves.txt", game->path);
+	// Online database entries: same saves and options, from a cached saves.txt
+	if (game->flags & SAVE_FLAG_ONLINE)
+	{
+		snprintf(path, sizeof(path), APOLLO_LOCAL_CACHE "%s.txt", game->title_id);
+		// show progress: a slow download would otherwise look like a frozen app
+		if (!_cache_online_file(game->path, "saves.txt", path, 1))
+			return 0;
+	}
+	else
+		snprintf(path, sizeof(path), "%ssaves.txt", game->path);
 
 	char *data = readTextFile(path);
 	if (!data)
@@ -955,9 +1399,31 @@ void UnloadGameList(list_t * list)
 	LOG("UnloadGameList() :: Successfully unloaded game list");
 }
 
+/*
+ * strcasecmp() on unsigned bytes: newlib's compares plain chars, which are
+ * signed on the EE, so UTF-8 (Japanese titles) sorted before everything,
+ * even the menu entries. Byte order keeps icon-prefixed menu entries
+ * ("Bulk Save Management") first, then Latin titles, then non-Latin ones
+ * (by code point: kana before kanji).
+ */
+static int compare_names(const char* s1, const char* s2)
+{
+	const uint8_t *a = (const uint8_t*) s1, *b = (const uint8_t*) s2;
+	int c1, c2;
+
+	do
+	{
+		c1 = (*a >= 'A' && *a <= 'Z') ? *a + 32 : *a;
+		c2 = (*b >= 'A' && *b <= 'Z') ? *b + 32 : *b;
+		a++, b++;
+	} while (c1 && c1 == c2);
+
+	return c1 - c2;
+}
+
 int sortCodeList_Compare(const void* a, const void* b)
 {
-	return strcasecmp(((code_entry_t*) a)->name, ((code_entry_t*) b)->name);
+	return compare_names(((code_entry_t*) a)->name, ((code_entry_t*) b)->name);
 }
 
 /*
@@ -972,7 +1438,7 @@ int sortCodeList_Compare(const void* a, const void* b)
  */
 int sortSaveList_Compare(const void* a, const void* b)
 {
-	return strcasecmp(((save_entry_t*) a)->name, ((save_entry_t*) b)->name);
+	return compare_names(((save_entry_t*) a)->name, ((save_entry_t*) b)->name);
 }
 
 static int parseTypeFlags(int flags)
@@ -1042,7 +1508,7 @@ static void check_ps1_savegame(const char* path, const char* d_name, list_t *lis
 	asprintf(&item->title_id, "%.10s", d_name+((strlen(d_name) < 12) ? 0 : 2));
 	free(tmp);
 
-	if(strlen(item->title_id) == 10 && item->title_id[4] == '-')
+	if(strlen(item->title_id) == 10 && (item->title_id[4] == '-' || item->title_id[4] == 'P'))
 		memmove(&item->title_id[4], &item->title_id[5], 6);
 
 	LOG("[%s] F(%X) name '%s'", item->title_id, item->flags, item->name);
@@ -1102,7 +1568,7 @@ static void read_ps2_savegames(const char* userPath, list_t *list, int flags)
 		asprintf(&item->path, "%s%s/", userPath, dir->d_name);
 		free(tmp);
 
-		if(strlen(item->title_id) == 10 && item->title_id[4] == '-')
+		if(strlen(item->title_id) == 10 && (item->title_id[4] == '-' || item->title_id[4] == 'P'))
 			memmove(&item->title_id[4], &item->title_id[5], 6);
 
 		LOG("[%s] F(%X) name '%s'", item->title_id, item->flags, item->name);
@@ -1232,7 +1698,7 @@ static void read_psx_savegames(const char* userPath, const char* folder, list_t 
 		item->dir_name = strdup(data);
 		asprintf(&item->title_id, "%.10s", data+2);
 
-		if(strlen(item->title_id) == 10 && item->title_id[4] == '-')
+		if(strlen(item->title_id) == 10 && (item->title_id[4] == '-' || item->title_id[4] == 'P'))
 			memmove(&item->title_id[4], &item->title_id[5], 6);
 
 		LOG("[%s] F(%X) name '%s'", item->title_id, item->flags, item->name);
@@ -1271,7 +1737,7 @@ static void read_vmc_files(const char* userPath, const char* folder, list_t *lis
 			// PS1 VMCs
 			endsWith(dir->d_name, ".MCD") || endsWith(dir->d_name, ".MCR") || endsWith(dir->d_name, ".GME") ||
 			endsWith(dir->d_name, ".VM1") || endsWith(dir->d_name, ".VMP") || endsWith(dir->d_name, ".VGS") ||
-			endsWith(dir->d_name, ".SRM")))
+			endsWith(dir->d_name, ".SRM") || endsWith(dir->d_name, ".MC2")))
 			continue;
 
 		snprintf(psvPath, sizeof(psvPath), "%s%s%s", userPath, folder, dir->d_name);
@@ -1419,6 +1885,29 @@ list_t * ReadUserList(const char* userPath)
 
 //	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_NET " Start local Web Server", CMD_SAVE_WEBSERVER);
 //	list_append(item->codes, cmd);
+
+	cmd = _createCmdCode(PATCH_NULL, "----- " UTF8_CHAR_STAR " Memory Card Image " UTF8_CHAR_STAR " -----", CMD_CODE_NULL);
+	list_append(item->codes, cmd);
+
+	if (mctype == sceMcTypePS1)
+	{
+		cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_VMC " Dump Memory Card to .MCR image", CMD_CODE_NULL);
+		cmd->options_count = 1;
+		cmd->options = _createExtOptions(1, "Save .MCR image to Storage", CMD_DUMP_MC_PS1);
+		list_append(item->codes, cmd);
+	}
+	else
+	{
+		cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_VMC " Dump Memory Card to .PS2 image (ECC)", CMD_CODE_NULL);
+		cmd->options_count = 1;
+		cmd->options = _createExtOptions(1, "Save .PS2 image to Storage", CMD_DUMP_MC_PS2);
+		list_append(item->codes, cmd);
+
+		cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_VMC " Dump Memory Card to .VMC image (raw)", CMD_CODE_NULL);
+		cmd->options_count = 1;
+		cmd->options = _createExtOptions(1, "Save .VMC image to Storage", CMD_DUMP_MC_VMC);
+		list_append(item->codes, cmd);
+	}
 	list_append(list, item);
 
 	read_ps2_savegames(userPath, list, SAVE_FLAG_MEMCARD | (mctype == sceMcTypePS1 ? SAVE_FLAG_PS1CARD : 0));
@@ -1509,7 +1998,13 @@ list_t * ReadOfflineList(const char* sysPath)
 {
 	char base[256];
 	char path[256];
-	list_t *list = list_alloc();
+	list_t *list;
+
+	// No local database (disc, USB, host): use the online one
+	if (strncasecmp(sysPath, "http://", 7) == 0 || strncasecmp(sysPath, "https://", 8) == 0)
+		return ReadOnlineList(sysPath);
+
+	list = list_alloc();
 
 	// PSV save-games (Zip folder)
 	snprintf(base, sizeof(base), "%sPS1/", sysPath);
@@ -1618,7 +2113,7 @@ list_t * ReadVmc1List(const char* userPath)
 		asprintf(&item->path, "%s\n%s", userPath, mcdata[i].saveName);
 		free(tmp);
 
-		if(strlen(item->title_id) == 10 && item->title_id[4] == '-')
+		if(strlen(item->title_id) == 10 && (item->title_id[4] == '-' || item->title_id[4] == 'P'))
 			memmove(&item->title_id[4], &item->title_id[5], 6);
 
 		LOG("[%s] F(%X) name '%s'", item->title_id, item->flags, item->name);
@@ -1671,6 +2166,14 @@ list_t * ReadVmc2List(const char* userPath)
 	cmd->options_count = 1;
 	cmd->options = _createExtOptions(1, "Export Saves to Storage", CMD_EXP_ALL_SAVES_VMC);
 	list_append(item->codes, cmd);
+
+	cmd = _createCmdCode(PATCH_NULL, "----- " UTF8_CHAR_STAR " Memory Card Image " UTF8_CHAR_STAR " -----", CMD_CODE_NULL);
+	list_append(item->codes, cmd);
+
+	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_WARN " Write image to Memory Card (overwrites the card)", CMD_CODE_NULL);
+	cmd->options_count = 1;
+	cmd->options = _createMcOptions(1, "Write image to MemCard", CMD_RESTORE_MC);
+	list_append(item->codes, cmd);
 	list_append(list, item);
 
 	item = _createSaveEntry(SAVE_FLAG_PS2, CHAR_ICON_COPY " Import Saves to Virtual Card");
@@ -1720,7 +2223,7 @@ list_t * ReadVmc2List(const char* userPath)
 				asprintf(&item->path, "%s\n%s/", userPath, dirent.name);
 				free(tmp);
 
-				if(strlen(item->title_id) == 10 && item->title_id[4] == '-')
+				if(strlen(item->title_id) == 10 && (item->title_id[4] == '-' || item->title_id[4] == 'P'))
 					memmove(&item->title_id[4], &item->title_id[5], 6);
 
 				LOG("[%s] F(%X) name '%s'", item->title_id, item->flags, item->name);

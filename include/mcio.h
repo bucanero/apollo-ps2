@@ -64,6 +64,7 @@ struct io_dirent {
 } __attribute__((packed));
 
 int mcio_vmcInit(const char* vmc);
+void mcio_calcPageEcc(uint8_t *pagebuf, uint8_t *spare);
 void mcio_vmcFinish(void);
 int mcio_mcDetect(void);
 int mcio_mcGetInfo(int *pagesize, int *blocksize, int *cardsize, int *cardflags);

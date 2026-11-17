@@ -9,6 +9,7 @@
 #include "common.h"
 #include "utils.h"
 #include "ps1card.h"
+#include "mc_image.h"
 
 static char host_buf[256];
 
@@ -75,6 +76,17 @@ static void importDbSave(const save_entry_t* entry, const char* file, int dst)
 
 	snprintf(path, sizeof(path), "%s%s", entry->path, file);
 
+	// Online database: download the save's zip first
+	if (entry->flags & SAVE_FLAG_ONLINE)
+	{
+		if (!http_download(entry->path, file, APOLLO_LOCAL_CACHE "tmpsave.zip", 1))
+		{
+			show_message("Error downloading save game from:\n%s", path);
+			return;
+		}
+		strcpy(path, APOLLO_LOCAL_CACHE "tmpsave.zip");
+	}
+
 	if (dst != STORAGE_MC0 && dst != STORAGE_MC1)
 	{
 		char dst_path[256];
@@ -86,10 +98,16 @@ static void importDbSave(const save_entry_t* entry, const char* file, int dst)
 		else
 			show_message("Error extracting save game!\n%s", path);
 
+		if (entry->flags & SAVE_FLAG_ONLINE)
+			unlink_secure(path);
+
 		return;
 	}
 
 	psv_data = extract_psv(path, &psv_size);
+	if (entry->flags & SAVE_FLAG_ONLINE)
+		unlink_secure(path);
+
 	if (!psv_data)
 	{
 		show_message("Error extracting PSV data from:\n%s", path);
@@ -640,7 +658,7 @@ static void copyAllSavesUSB(const save_entry_t* save, int dev, int all)
 	show_message("%d/%d Saves copied to:\n%s", done, done+err_count, dst_path);
 }
 
-static void* ps2_host_callback(int id, int* size)
+static void* ps2_host_callback(int id, uint32_t* size)
 {
 	memset(host_buf, 0, sizeof(host_buf));
 
@@ -648,6 +666,10 @@ static void* ps2_host_callback(int id, int* size)
 	{
 	case APOLLO_HOST_TEMP_PATH:
 		return APOLLO_LOCAL_CACHE;
+
+	case APOLLO_HOST_DATA_PATH:
+		// where [python:] codes import modules from (its python/ folder)
+		return (void*) getPythonDataPath();
 
 	case APOLLO_HOST_LAN_ADDR:
 		if (1)//(sceWlanGetEtherAddr(host_buf) < 0)
@@ -672,6 +694,58 @@ static int psp_is_decrypted(list_t* list, const char* fname)
 	return 0;
 }
 
+// VMC save files are dumped to a temp file, as their names might not be valid on disk
+static void _vmc_tmp_path(const save_entry_t *entry, const char* filename, char* path, size_t len)
+{
+	uint32_t hash = apollo_hash_fnv1((uint8_t*) entry->dir_name, strlen(entry->dir_name), 0x811C9DC5);
+
+	hash = apollo_hash_fnv1((uint8_t*) filename, strlen(filename), hash);
+	snprintf(path, len, APOLLO_LOCAL_CACHE "%08lX.VMC", (unsigned long) hash);
+}
+
+static int _vmc_is_dumped(list_t* list, const char* fname)
+{
+	list_node_t *node;
+
+	for (node = list_head(list); node; node = list_next(node))
+		if (strcmp(list_get(node), fname) == 0)
+			return 1;
+
+	return 0;
+}
+
+static int _vmc_dump_file(const save_entry_t *entry, const char* filename, const char* path)
+{
+	uint8_t* data;
+	size_t size;
+	int ret;
+
+	LOG("Dumping VMC save file '%s/%s' to '%s'", entry->dir_name, filename, path);
+	if (!vmc_read_save_file(entry, filename, &data, &size))
+		return 0;
+
+	ret = (write_buffer(path, data, size) == SUCCESS);
+	free(data);
+
+	return ret;
+}
+
+static int _vmc_inject_file(const save_entry_t *entry, const char* filename, const char* path)
+{
+	uint8_t* data;
+	size_t size;
+	int ret;
+
+	LOG("Injecting '%s' to VMC save '%s/%s'...", path, entry->dir_name, filename);
+	if (read_buffer(path, &data, &size) != SUCCESS)
+		return 0;
+
+	ret = vmc_write_save_file(entry, filename, data, size);
+	free(data);
+
+	return ret;
+}
+
 static int apply_cheat_patches(const save_entry_t* entry)
 {
 	int ret = 1;
@@ -681,12 +755,14 @@ static int apply_cheat_patches(const save_entry_t* entry)
 	list_node_t* node;
 	list_t* decrypted_files = list_alloc();
 	uint8_t key[16];
+	list_t* vmc_files = list_alloc();
 
 	init_loading_screen("Applying changes...");
 
 	for (node = list_head(entry->codes); (code = list_get(node)); node = list_next(node))
 	{
-		if (!code->activated || (code->type != PATCH_GAMEGENIE && code->type != PATCH_BSD))
+		if (!code->activated || (code->flags & APOLLO_CODE_FLAG_DISABLED) ||
+			(code->type != PATCH_GAMEGENIE && code->type != PATCH_BSD && code->type != PATCH_PYTHON))
 			continue;
 
 		LOG("Active code: [%s]", code->name);
@@ -696,7 +772,11 @@ static int apply_cheat_patches(const save_entry_t* entry)
 		else
 			filename = code->file;
 
-		if (strchr(filename, '*'))
+		// PS1 VMC saves are a single file, named after the save
+		if (entry->flags & SAVE_FLAG_VMC && entry->type != FILE_TYPE_PS2 && !strstr(code->file, "~extracted\\"))
+			filename = entry->dir_name;
+
+		else if (strchr(filename, '*'))
 		{
 			option_value_t* optval = list_get_item(code->options[0].opts, code->options[0].sel);
 			filename = optval->name;
@@ -704,6 +784,21 @@ static int apply_cheat_patches(const save_entry_t* entry)
 
 		if (strstr(code->file, "~extracted\\"))
 			snprintf(tmpfile, sizeof(tmpfile), "%s[%s]%s", APOLLO_LOCAL_CACHE, entry->title_id, filename);
+		else if (entry->flags & SAVE_FLAG_VMC)
+		{
+			_vmc_tmp_path(entry, filename, tmpfile, sizeof(tmpfile));
+			if (!_vmc_is_dumped(vmc_files, filename))
+			{
+				if (!_vmc_dump_file(entry, filename, tmpfile))
+				{
+					LOG("Error: failed to dump (%s)", filename);
+					code->activated = 0;
+					ret = 0;
+					continue;
+				}
+				list_append(vmc_files, strdup(filename));
+			}
+		}
 		else
 		{
 			snprintf(tmpfile, sizeof(tmpfile), "%s%s", entry->path, filename);
@@ -725,7 +820,7 @@ if(0)//				if (get_psp_save_key(entry, key) && psp_DecryptSavedata(entry->path, 
 			}
 		}
 
-		if (!apply_cheat_patch_code(tmpfile, entry->title_id, code, &ps2_host_callback))
+		if (!apollo_apply_code(tmpfile, code, &ps2_host_callback))
 		{
 			LOG("Error: failed to apply (%s)", code->name);
 			ret = 0;
@@ -747,7 +842,23 @@ if(0)//		if (!get_psp_save_key(entry, key) || !psp_EncryptSavedata(entry->path, 
 	}
 
 	list_free(decrypted_files);
-	free_patch_var_list();
+
+	// Write the patched files back to the memory card
+	for (node = list_head(vmc_files); (filename = list_get(node)); node = list_next(node))
+	{
+		_vmc_tmp_path(entry, filename, tmpfile, sizeof(tmpfile));
+		if (!_vmc_inject_file(entry, filename, tmpfile))
+		{
+			LOG("Error: failed to inject (%s)", filename);
+			ret = 0;
+		}
+
+		unlink_secure(tmpfile);
+		free(filename);
+	}
+	list_free(vmc_files);
+
+	apollo_free_var_list();
 	stop_loading_screen();
 
 	return ret;
@@ -760,6 +871,10 @@ static void resignSave(save_entry_t* entry)
         show_message("Error! Cheat codes couldn't be applied");
     else
         show_message("Save %s successfully modified!", entry->dir_name);
+
+    // VMC changes are written to the card image when leaving the save
+    if (entry->flags & SAVE_FLAG_VMC)
+        entry->flags |= SAVE_FLAG_UPDATED;
 }
 
 static int deleteSave(const save_entry_t* save)
@@ -970,6 +1085,59 @@ static void export_ps1vmc(const char* vm1_file, int dst, int vmp)
 		show_message("Memory card successfully exported to:\n%s", dstfile);
 	else
 		show_message("Error! Failed to export PS1 memory card");
+}
+
+static void dumpMemoryCard(const save_entry_t* save, int dst, int type)
+{
+	struct tm t;
+	char dst_path[256];
+	int ret, port = save->path[2] - '0';
+	uint32_t ecc_errors = 0;
+	const char* ext = (type == CMD_DUMP_MC_PS1) ? "MCR" : (type == CMD_DUMP_MC_PS2) ? "PS2" : "VMC";
+
+	_set_dest_path(dst_path, dst, (type == CMD_DUMP_MC_PS1) ? IMP_PS1VMC_PATH_USB : IMP_PS2VMC_PATH_USB);
+	if (mkdirs(dst_path) != SUCCESS)
+	{
+		show_message("Error! Export folder is not available:\n%s", dst_path);
+		return;
+	}
+
+	gmtime_r(&(time_t){time(NULL)}, &t);
+	snprintf(dst_path + strlen(dst_path), sizeof(dst_path) - strlen(dst_path), "MC%d_%d-%02d-%02d_%02d%02d%02d.%s",
+		port, t.tm_year+1900, t.tm_mon+1, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec, ext);
+
+	if (type == CMD_DUMP_MC_PS1)
+		ret = mc_dump_ps1_image(port, dst_path);
+	else
+		ret = mc_dump_ps2_image(port, dst_path, type == CMD_DUMP_MC_PS2, &ecc_errors);
+
+	if (ret == MC_IMG_OK && ecc_errors)
+		show_message("Memory Card dumped to:\n%s\n\nWarning: %u page(s) had ECC errors\nand were saved as read", dst_path, (unsigned int) ecc_errors);
+	else if (ret == MC_IMG_OK)
+		show_message("Memory Card successfully dumped to:\n%s", dst_path);
+	else
+		show_message("Error! Failed to dump mc%d:\n%s", port, mc_image_error(ret));
+}
+
+static void restoreMemoryCard(const char* image, int dst)
+{
+	int ret, port = (dst == STORAGE_MC1) ? 1 : 0;
+	mc_image_info_t info;
+
+	if ((ret = mc_check_ps2_restore(port, image, &info)) != MC_IMG_OK)
+	{
+		show_message("Error! Can't write image to mc%d:\n%s", port, mc_image_error(ret));
+		return;
+	}
+
+	if (!show_dialog(DIALOG_TYPE_YESNO, "ALL data on mc%d: will be replaced by:\n%s\n\nThis cannot be undone. Continue?", port, image))
+		return;
+
+	ret = mc_restore_ps2_image(port, image);
+	if (ret == MC_IMG_OK)
+		show_message("Memory Card image successfully written to mc%d:", port);
+	else
+		show_message("Error writing image to mc%d:\n%s\n\nThe Memory Card contents are now incomplete!", port, mc_image_error(ret));
 }
 
 static void import_save2vmc(const char* src, int type)
@@ -1213,6 +1381,18 @@ void execCodeCommand(code_entry_t* code, const char* codecmd)
 		case CMD_EXP_SAVES_VMC:
 		case CMD_EXP_ALL_SAVES_VMC:
 			exportAllSavesVMC(selected_entry, codecmd[1], codecmd[0] == CMD_COPY_ALL_SAVES_VMC);
+			code->activated = 0;
+			break;
+
+		case CMD_DUMP_MC_PS2:
+		case CMD_DUMP_MC_VMC:
+		case CMD_DUMP_MC_PS1:
+			dumpMemoryCard(selected_entry, codecmd[1], codecmd[0]);
+			code->activated = 0;
+			break;
+
+		case CMD_RESTORE_MC:
+			restoreMemoryCard(selected_entry->path, codecmd[1]);
 			code->activated = 0;
 			break;
 

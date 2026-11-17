@@ -38,6 +38,20 @@ int file_exists(const char *path)
 {
     struct stat s;
 
+    // CDFS can't be trusted with stat(): it reports the old ioman mode bits
+    // (so S_ISREG fails on a real file) and "succeeds" for a missing one.
+    // Opening the file is reliable there.
+    if (strncmp(path, "cdfs:", 5) == 0)
+    {
+        FILE *f = fopen(path, "rb");
+
+        if (!f)
+            return FAILED;
+
+        fclose(f);
+        return SUCCESS;
+    }
+
     if (stat(path, &s) == SUCCESS && S_ISREG(s.st_mode))
         return SUCCESS;
 

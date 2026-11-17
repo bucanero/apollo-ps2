@@ -101,8 +101,7 @@ static code_entry_t* LoadRawPatch(void)
 	code_entry_t* centry = calloc(1, sizeof(code_entry_t));
 
 	centry->name = strdup(selected_entry->title_id);
-	snprintf(patchPath, sizeof(patchPath), APOLLO_DATA_PATH "%s.savepatch", selected_entry->title_id);
-	centry->codes = readTextFile(patchPath);
+	centry->codes = readSavePatch(selected_entry->title_id, patchPath, sizeof(patchPath));
 
 	return centry;
 }
@@ -153,7 +152,10 @@ static void SetMenu(int id)
 			break;
 
 		case MENU_PATCHES: //Cheat Selection Menu
-			if (selected_entry->flags & SAVE_FLAG_UPDATED)
+			// The patch menu's own screens (code options, hex editor, details)
+			// come back to it: keep the flag until we leave to the save list
+			if (selected_entry->flags & SAVE_FLAG_UPDATED &&
+				id != MENU_PATCH_VIEW && id != MENU_CODE_OPTIONS && id != MENU_SAVE_DETAILS && id != MENU_HEX_EDITOR)
 			{
 				// Clear the flag first: reloading the list below frees every
 				// entry, selected_entry included, and writing to it afterwards
@@ -251,7 +253,7 @@ static void SetMenu(int id)
 			break;
 
 		case MENU_ONLINE_DB: //Cheats Online Menu
-			network_up();
+			// The network is brought up by the first download, if the database is online
 			if (!online_saves.list && !ReloadUserSaves(&online_saves))
 				return;
 
@@ -286,19 +288,18 @@ static void SetMenu(int id)
 			char iconfile[256] = {0};
 
 			menu_textures[icon_png_file_index].size = 0;
-			if (selected_entry->flags & SAVE_FLAG_ONLINE)
+			if (selected_entry->flags & (SAVE_FLAG_ONLINE | SAVE_FLAG_OFFLINE))
 			{
-				snprintf(iconfile, sizeof(iconfile), APOLLO_LOCAL_CACHE "%s.PNG", selected_entry->title_id);
+				// Online database icons are downloaded to the cache once
+				if (selected_entry->flags & SAVE_FLAG_ONLINE)
+				{
+					snprintf(iconfile, sizeof(iconfile), APOLLO_LOCAL_CACHE "%s.PNG", selected_entry->title_id);
+					if (file_exists(iconfile) != SUCCESS)
+						http_download(selected_entry->path, "icon0.png", iconfile, 1);
+				}
+				else
+					snprintf(iconfile, sizeof(iconfile), "%sicon0.png", selected_entry->path);
 
-//				if (selected_entry->flags & SAVE_FLAG_PSP && file_exists(iconfile) != SUCCESS)
-//					http_download(selected_entry->path, "ICON0.PNG", iconfile, 0);
-
-//				if (selected_entry->flags & SAVE_FLAG_PSV && file_exists(iconfile) != SUCCESS)
-//					http_download(selected_entry->path, "icon0.png", iconfile, 0);
-			}
-			if (selected_entry->flags & SAVE_FLAG_OFFLINE)
-			{
-				snprintf(iconfile, sizeof(iconfile), "%sicon0.png", selected_entry->path);
 				LoadFileTexture(iconfile, icon_png_file_index);
 				menu_textures[icon_png_file_index].width = (selected_entry->flags & SAVE_FLAG_PS1) ? 64 : 128;
 				menu_textures[icon_png_file_index].height = (selected_entry->flags & SAVE_FLAG_PS1) ? 64 : 128;
@@ -660,7 +661,18 @@ static void doHexEditor(void)
 
 	else if (ps2PadGetButtonPressed(PAD_CIRCLE))
 	{
-		if (show_dialog(DIALOG_TYPE_YESNO, "Save changes to %s?", strrchr(hex_data.filepath, '/') + 1) &&
+		if (selected_entry->flags & SAVE_FLAG_VMC)
+		{
+			// Write the changes straight to the memory card save
+			if (show_dialog(DIALOG_TYPE_YESNO, "Save changes to %s?", strrchr(hex_data.filepath, '/') + 1))
+			{
+				if (vmc_write_save_file(selected_entry, strrchr(hex_data.filepath, '/') + 1, hex_data.data, hex_data.size))
+					selected_entry->flags |= SAVE_FLAG_UPDATED;
+				else
+					show_message("Error! Couldn't save changes to:\n%s", hex_data.filepath);
+			}
+		}
+		else if (show_dialog(DIALOG_TYPE_YESNO, "Save changes to %s?", strrchr(hex_data.filepath, '/') + 1) &&
 			(write_buffer(hex_data.filepath, hex_data.data, hex_data.size) == SUCCESS))
 		{
 //			selected_centry->options[option_index].value[menu_sel][1] = CMD_IMPORT_DATA_FILE;
@@ -746,6 +758,26 @@ static void doCodeOptionsMenu(void)
 		{
 			option_value_t* optval = list_get_item(code->options[option_index].opts, menu_sel);
 
+			if (optval->value[0] == CMD_HEX_EDIT_FILE && selected_entry->flags & SAVE_FLAG_VMC)
+			{
+				// Edit the save file directly from the memory card
+				memset(&hex_data, 0, sizeof(hex_data));
+				snprintf(hex_data.filepath, sizeof(hex_data.filepath), "VMC:/%s/%s", selected_entry->dir_name, optval->name);
+				// The editor needs at least one byte to put its cursor on
+				if (!vmc_read_save_file(selected_entry, optval->name, &hex_data.data, &hex_data.size) || !hex_data.size)
+				{
+					if (hex_data.data && !hex_data.size)
+						free(hex_data.data);
+
+					show_message("Unable to load\n%s", hex_data.filepath);
+					SetMenu(last_menu_id[MENU_CODE_OPTIONS]);
+					return;
+				}
+
+				SetMenu(MENU_HEX_EDITOR);
+				return;
+			}
+
 			if (optval->value[0] == CMD_HEX_EDIT_FILE)
 			{
 //				code->options[option_index].value[menu_sel][1] = CMD_DECRYPT_FILE;
@@ -811,7 +843,7 @@ static void doPatchMenu(void)
 	{
 		selected_centry = list_get_item(selected_entry->codes, menu_sel);
 
-		if (selected_centry->type != PATCH_NULL)
+		if (selected_centry->type != PATCH_NULL && !(selected_centry->flags & APOLLO_CODE_FLAG_DISABLED))
 			selected_centry->activated = !selected_centry->activated;
 
 		if (selected_centry->type == PATCH_COMMAND)
@@ -820,13 +852,15 @@ static void doPatchMenu(void)
 		if (selected_centry->activated)
 		{
 			// Only activate Required codes if a cheat is selected
-			if (selected_centry->type == PATCH_GAMEGENIE || selected_centry->type == PATCH_BSD)
+			if (selected_centry->type == PATCH_GAMEGENIE || selected_centry->type == PATCH_BSD ||
+				selected_centry->type == PATCH_PYTHON)
 			{
 				code_entry_t* code;
 				list_node_t* node;
 
 				for (node = list_head(selected_entry->codes); (code = list_get(node)); node = list_next(node))
-					if (wildcard_match_icase(code->name, "*(REQUIRED)*") && code->options_count == 0)
+					if (wildcard_match_icase(code->name, "*(REQUIRED)*") && code->options_count == 0 &&
+						!(code->flags & APOLLO_CODE_FLAG_DISABLED))
 						code->activated = 1;
 			}
 			/*
@@ -874,7 +908,7 @@ static void doPatchMenu(void)
 		selected_centry = list_get_item(selected_entry->codes, menu_sel);
 
 		if (selected_centry->type == PATCH_GAMEGENIE || selected_centry->type == PATCH_BSD ||
-			selected_centry->type == PATCH_TROP_LOCK || selected_centry->type == PATCH_TROP_UNLOCK)
+			selected_centry->type == PATCH_PYTHON)
 		{
 			SetMenu(MENU_PATCH_VIEW);
 			return;

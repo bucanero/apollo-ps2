@@ -205,7 +205,7 @@ int DrawCodes(code_entry_t* code, u8 alpha, int y_inc, int xOff, int selIndex)
     
     SetFontSize(APP_FONT_SIZE_SELECTION);
 
-    if (code->file && (code->type == PATCH_BSD || code->type == PATCH_GAMEGENIE))
+    if (code->file && (code->type == PATCH_BSD || code->type == PATCH_GAMEGENIE || code->type == PATCH_PYTHON))
         DrawFormatString(xOff + MENU_ICON_OFF + 20, SCREEN_HEIGHT - 50, "Target File: %s", code->file);
 
     for (c = startDrawX; c < max; c++)
@@ -411,7 +411,8 @@ void DrawCheatsList(int selIndex, save_entry_t* game, u8 alpha)
             if (!a)
                 goto skip_code;
 
-            SetFontColor(APP_FONT_COLOR | a, 0);
+            // codes this build can't run (Python) stay listed, dimmed
+            SetFontColor(APP_FONT_COLOR | ((code->flags & APOLLO_CODE_FLAG_DISABLED) ? a / 2 : a), 0);
 
             const char *group = "";
             if (code->flags & APOLLO_CODE_FLAG_PARENT) group = UTF8_CHAR_GROUP " ";

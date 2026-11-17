@@ -864,11 +864,48 @@ if(0)//		if (!get_psp_save_key(entry, key) || !psp_EncryptSavedata(entry->path, 
 	return ret;
 }
 
+// Copy protection changes; returns 0 if one failed
+static int apply_protection_patches(save_entry_t* entry)
+{
+    int ret = 1;
+    code_entry_t* code;
+    list_node_t* node;
+
+    for (node = list_head(entry->codes); (code = list_get(node)); node = list_next(node))
+    {
+        if (!code->activated || code->type != PATCH_SFO)
+            continue;
+
+        LOG("Active: [%s]", code->name);
+        code->activated = 0;
+
+        // SFO_UNLOCK_COPY toggles: locked saves are unlocked, and the other way
+        int lock = !(entry->flags & SAVE_FLAG_LOCKED);
+        if (!set_save_protection(entry, lock))
+        {
+            ret = 0;
+            continue;
+        }
+
+        // the option now offers the opposite, and the save list shows the
+        // new state once it's reloaded
+        entry->flags = lock ? (entry->flags | SAVE_FLAG_LOCKED) : (entry->flags & ~SAVE_FLAG_LOCKED);
+        entry->flags |= SAVE_FLAG_UPDATED;
+        set_protection_code(code, lock);
+    }
+
+    return ret;
+}
+
 static void resignSave(save_entry_t* entry)
 {
+    int protect_ok = apply_protection_patches(entry);
+
     LOG("Applying cheats to '%s'...", entry->name);
     if (!apply_cheat_patches(entry))
         show_message("Error! Cheat codes couldn't be applied");
+    else if (!protect_ok)
+        show_message("Error! Copy protection of %s couldn't be changed", entry->dir_name);
     else
         show_message("Save %s successfully modified!", entry->dir_name);
 

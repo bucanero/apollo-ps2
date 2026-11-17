@@ -1370,3 +1370,73 @@ int vmc_import_cbs(const char *save)
 
     return 1;
 }
+
+/*
+ * Copy protection: the PS2 browser won't copy a save whose folder has the
+ * sceMcFileAttrDupProhibit attribute. Only memory cards (and VMC images)
+ * store attributes, so this works on PS2 saves there.
+ */
+static int mc_get_save_dir(const save_entry_t* save, sceMcTblGetDir* dinfo)
+{
+    int ret;
+
+    mcGetDir(save->path[2] - '0', 0, save->dir_name, 0, 1, dinfo);
+    mcSync(0, NULL, &ret);
+
+    return (ret == 1);
+}
+
+// 1: copy protected, 0: not, -1: unknown
+int get_save_protection(const save_entry_t* save)
+{
+    static sceMcTblGetDir dinfo __attribute__((aligned(64)));
+    struct io_dirent dirent;
+
+    if (!(save->flags & SAVE_FLAG_PS2) || !save->dir_name)
+        return -1;
+
+    if (save->flags & SAVE_FLAG_VMC)
+        return (mcio_mcStat(save->dir_name, &dirent) < 0) ? -1 : !!(dirent.stat.mode & sceMcFileAttrDupProhibit);
+
+    if (save->flags & SAVE_FLAG_MEMCARD)
+        return mc_get_save_dir(save, &dinfo) ? !!(dinfo.AttrFile & sceMcFileAttrDupProhibit) : -1;
+
+    return -1;
+}
+
+int set_save_protection(const save_entry_t* save, int protect)
+{
+    static sceMcTblGetDir dinfo __attribute__((aligned(64)));
+    struct io_dirent dirent;
+    int ret;
+
+    LOG("%s copy protection: %s", protect ? "Adding" : "Removing", save->dir_name);
+
+    if (save->flags & SAVE_FLAG_VMC)
+    {
+        if (mcio_mcStat(save->dir_name, &dirent) < 0)
+            return 0;
+
+        dirent.stat.mode = protect ? (dirent.stat.mode | sceMcFileAttrDupProhibit) : (dirent.stat.mode & ~sceMcFileAttrDupProhibit);
+        ret = mcio_mcSetStat(save->dir_name, &dirent);
+        LOG("mcio_mcSetStat(%s) %d", save->dir_name, ret);
+    }
+    else if (save->flags & SAVE_FLAG_MEMCARD)
+    {
+        mcGetInfo(save->path[2] - '0', 0, &ret, &ret, &ret);  // Wakeup call
+        mcSync(0, NULL, &ret);
+
+        if (!mc_get_save_dir(save, &dinfo))
+            return 0;
+
+        dinfo.AttrFile = protect ? (dinfo.AttrFile | sceMcFileAttrDupProhibit) : (dinfo.AttrFile & ~sceMcFileAttrDupProhibit);
+        mcSetFileInfo(save->path[2] - '0', 0, save->dir_name, &dinfo, sceMcFileInfoAttr);
+        mcSync(0, NULL, &ret);
+        LOG("mcSetFileInfo(%s) %d", save->dir_name, ret);
+    }
+    else
+        return 0;
+
+    // read it back: the card has the last word
+    return (get_save_protection(save) == !!protect);
+}

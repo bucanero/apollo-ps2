@@ -225,6 +225,23 @@ static option_entry_t* _getFileOptions(const char* save_path, const char* mask, 
 	return opt;
 }
 
+// Copy protection toggle (PS2 saves on a memory card or VMC), applied with
+// "Apply Changes" like the cheats
+static void _addProtectionCommands(save_entry_t* save)
+{
+	code_entry_t* cmd;
+
+	cmd = _createCmdCode(PATCH_NULL, "----- " UTF8_CHAR_STAR " Copy Protection " UTF8_CHAR_STAR " -----", CMD_CODE_NULL);
+	list_append(save->codes, cmd);
+
+	if (save->flags & SAVE_FLAG_LOCKED)
+		cmd = _createCmdCode(PATCH_SFO, CHAR_ICON_LOCK " Remove copy protection (unlock save)", SFO_UNLOCK_COPY);
+	else
+		cmd = _createCmdCode(PATCH_SFO, CHAR_ICON_LOCK " Add copy protection (lock save)", SFO_UNLOCK_COPY);
+
+	list_append(save->codes, cmd);
+}
+
 static void _addBackupCommands(save_entry_t* item)
 {
 	code_entry_t* cmd;
@@ -754,9 +771,6 @@ static void _addVmcCheatCodes(save_entry_t* save)
 	cmd = _createCmdCode(PATCH_NULL, "----- " UTF8_CHAR_STAR " Cheats " UTF8_CHAR_STAR " -----", CMD_CODE_NULL);
 	list_append(save->codes, cmd);
 
-	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_SIGN " Apply Changes", CMD_RESIGN_SAVE);
-	list_append(save->codes, cmd);
-
 	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_USER " View Raw Patch File", CMD_VIEW_RAW_PATCH);
 	list_append(save->codes, cmd);
 
@@ -802,6 +816,10 @@ int ReadCodes(save_entry_t * save)
 		list_append(save->codes, code);
 	}
 
+	// first on every save, like on the other Apollo platforms
+	code = _createCmdCode(PATCH_COMMAND, CHAR_ICON_SIGN " Apply Changes", CMD_RESIGN_SAVE);
+	list_append(save->codes, code);
+
 	code = _createCmdCode(PATCH_COMMAND, CHAR_ICON_USER " View Save Details", CMD_VIEW_DETAILS);
 	list_append(save->codes, code);
 
@@ -815,13 +833,13 @@ int ReadCodes(save_entry_t * save)
 
 	_addBackupCommands(save);
 
+	if ((save->flags & (SAVE_FLAG_PS2|SAVE_FLAG_MEMCARD)) == (SAVE_FLAG_PS2|SAVE_FLAG_MEMCARD))
+		_addProtectionCommands(save);
+
 	if ((buffer = readSavePatch(save->title_id, filePath, sizeof(filePath))) == NULL)
 		goto skip_end;
 
 	code = _createCmdCode(PATCH_NULL, "----- " UTF8_CHAR_STAR " Cheats " UTF8_CHAR_STAR " -----", CMD_CODE_NULL);	
-	list_append(save->codes, code);
-
-	code = _createCmdCode(PATCH_COMMAND, CHAR_ICON_SIGN " Apply Changes", CMD_RESIGN_SAVE);
 	list_append(save->codes, code);
 
 	code = _createCmdCode(PATCH_COMMAND, CHAR_ICON_USER " View Raw Patch File", CMD_VIEW_RAW_PATCH);
@@ -897,6 +915,10 @@ int ReadVmc1Codes(save_entry_t * save)
 
 		return list_count(save->codes);
 	}
+
+	// first on every save, like on the other Apollo platforms
+	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_SIGN " Apply Changes", CMD_RESIGN_SAVE);
+	list_append(save->codes, cmd);
 
 	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_USER " View Save Details", CMD_VIEW_DETAILS);
 	list_append(save->codes, cmd);
@@ -1041,6 +1063,10 @@ int ReadVmc2Codes(save_entry_t * save)
 		return list_count(save->codes);
 	}
 
+	// first on every save, like on the other Apollo platforms
+	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_SIGN " Apply Changes", CMD_RESIGN_SAVE);
+	list_append(save->codes, cmd);
+
 	cmd = _createCmdCode(PATCH_COMMAND, CHAR_ICON_USER " View Save Details", CMD_VIEW_DETAILS);
 	list_append(save->codes, cmd);
 
@@ -1066,6 +1092,10 @@ int ReadVmc2Codes(save_entry_t * save)
 		add_ps2_commands(save);
 
 	_addVmcHexEditCommand(save);
+
+	if (save->type == FILE_TYPE_PS2)
+		_addProtectionCommands(save);
+
 	_addVmcCheatCodes(save);
 
 	LOG("Loaded %ld codes", list_count(save->codes));
@@ -1311,91 +1341,25 @@ int ReadBackupCodes(save_entry_t * bup)
  */
 void UnloadGameList(list_t * list)
 {
-	list_node_t *node, *nc, *no;
+	list_node_t *node;
 	save_entry_t *item;
-	code_entry_t *code;
-	option_value_t* optval;
 
 	for (node = list_head(list); (item = list_get(node)); node = list_next(node))
 	{
-		if (item->name)
-		{
-			free(item->name);
-			item->name = NULL;
-		}
+		free(item->name);
+		free(item->path);
+		free(item->dir_name);
+		free(item->title_id);
+		free(item->icon);
 
-		if (item->path)
-		{
-			free(item->path);
-			item->path = NULL;
-		}
-
-		if (item->dir_name)
-		{
-			free(item->dir_name);
-			item->dir_name = NULL;
-		}
-
-		if (item->title_id)
-		{
-			free(item->title_id);
-			item->title_id = NULL;
-		}
-
-		if (item->icon)
-		{
-			free(item->icon);
-			item->icon = NULL;
-		}
-
-		if (item->codes)
-		{
-			for (nc = list_head(item->codes); (code = list_get(nc)); nc = list_next(nc))
-			{
-				if (code->codes)
-				{
-					free (code->codes);
-					code->codes = NULL;
-				}
-				if (code->name)
-				{
-					free (code->name);
-					code->name = NULL;
-				}
-				if (code->options && code->options_count > 0)
-				{
-					for (int z = 0; z < code->options_count; z++)
-					{
-						for (no = list_head(code->options[z].opts); (optval = list_get(no)); no = list_next(no))
-						{
-							if (optval->name)
-								free(optval->name);
-							if (optval->value)
-								free(optval->value);
-
-							free(optval);
-						}
-						list_free(code->options[z].opts);
-
-						if (code->options[z].line)
-							free(code->options[z].line);
-					}
-					
-					free (code->options);
-				}
-
-				free(code);
-			}
-			
-			list_free(item->codes);
-			item->codes = NULL;
-		}
+		apollo_free_code_list(item->codes, list_head(item->codes));
+		item->codes = NULL;
 
 		free(item);
 	}
 
 	list_free(list);
-	
+
 	LOG("UnloadGameList() :: Successfully unloaded game list");
 }
 
@@ -1537,7 +1501,10 @@ static void read_ps2_savegames(const char* userPath, list_t *list, int flags)
 			check_ps1_savegame(userPath, dir->d_name, list, flags);
 			continue;
 		}
-		else if (!S_ISDIR(dir->d_stat.st_mode))
+		// Copy protected folders on a memory card come with no file type at
+		// all (the attribute is the IOP's old "link" bit): icon.sys decides
+		else if (!S_ISDIR(dir->d_stat.st_mode) &&
+			!((flags & SAVE_FLAG_MEMCARD) && !(dir->d_stat.st_mode & S_IFMT)))
 			continue;
 
 		snprintf(sysPath, sizeof(sysPath), "%s%s/icon.sys", userPath, dir->d_name);
@@ -1570,6 +1537,9 @@ static void read_ps2_savegames(const char* userPath, list_t *list, int flags)
 
 		if(strlen(item->title_id) == 10 && (item->title_id[4] == '-' || item->title_id[4] == 'P'))
 			memmove(&item->title_id[4], &item->title_id[5], 6);
+
+		if ((flags & SAVE_FLAG_MEMCARD) && get_save_protection(item) > 0)
+			item->flags |= SAVE_FLAG_LOCKED;
 
 		LOG("[%s] F(%X) name '%s'", item->title_id, item->flags, item->name);
 		list_append(list, item);
@@ -2215,7 +2185,7 @@ list_t * ReadVmc2List(const char* userPath)
 				}
 
 				char* tmp = sjis2utf8(filePath);
-				item = _createSaveEntry(SAVE_FLAG_PS2 | SAVE_FLAG_VMC, tmp);
+				item = _createSaveEntry(SAVE_FLAG_PS2 | SAVE_FLAG_VMC | ((dirent.stat.mode & sceMcFileAttrDupProhibit) ? SAVE_FLAG_LOCKED : 0), tmp);
 				item->type = FILE_TYPE_PS2;
 				item->icon = strdup(iconsys.view);
 				item->dir_name = strdup(dirent.name);

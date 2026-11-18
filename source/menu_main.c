@@ -63,7 +63,9 @@ static void LoadFileTexture(const char* fname, int idx)
 	menu_textures[idx].size = LoadMenuTexture(fname, idx);
 }
 
-static int ReloadUserSaves(save_list_t* save_list)
+// update_path: 0 keeps the current path (e.g. the memory card being browsed)
+// instead of asking for it again
+static int LoadUserSaves(save_list_t* save_list, int update_path)
 {
 	if (save_list->list)
 	{
@@ -71,7 +73,7 @@ static int ReloadUserSaves(save_list_t* save_list)
 		save_list->list = NULL;
 	}
 
-	if (save_list->UpdatePath)
+	if (update_path && save_list->UpdatePath)
 		save_list->UpdatePath(save_list->path);
 
 	init_loading_screen("Loading saves...");
@@ -93,6 +95,11 @@ static int ReloadUserSaves(save_list_t* save_list)
 	}
 
 	return list_count(save_list->list);
+}
+
+static int ReloadUserSaves(save_list_t* save_list)
+{
+	return LoadUserSaves(save_list, 1);
 }
 
 static code_entry_t* LoadRawPatch(void)
@@ -162,26 +169,33 @@ static void SetMenu(int id)
 				// corrupts whatever the new list allocated in its place.
 				selected_entry->flags ^= SAVE_FLAG_UPDATED;
 
+				// Same list, same path: don't ask for the memory card again.
+				// If it can't be read anymore, the list is gone (and
+				// selected_entry with it): go back to the main menu
+				int ok = 1;
 				switch (id)
 				{
 				case MENU_PS2VMC_SAVES:
 					mcio_vmcFinish();
-					ReloadUserSaves(&vmc2_saves);
+					ok = LoadUserSaves(&vmc2_saves, 0);
 					break;
 				
 				case MENU_PS1VMC_SAVES:
 					saveMemoryCard(vmc1_saves.path, 0, 0);
-					ReloadUserSaves(&vmc1_saves);
+					ok = LoadUserSaves(&vmc1_saves, 0);
 					break;
 
 				case MENU_MEMCARD_SAVES:
-					ReloadUserSaves(&hdd_saves);
+					ok = LoadUserSaves(&hdd_saves, 0);
 					break;
 
 				case MENU_USB_SAVES:
-					ReloadUserSaves(&usb_saves);
+					ok = LoadUserSaves(&usb_saves, 0);
 					break;
 				}
+
+				if (!ok)
+					id = MENU_MAIN_SCREEN;
 			}
 			break;
 

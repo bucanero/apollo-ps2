@@ -292,7 +292,6 @@ int vmc_delete_save(const char* path);
 
 int get_save_protection(const save_entry_t* save);
 int set_save_protection(const save_entry_t* save, int protect);
-void set_protection_code(code_entry_t* code, int locked);
 int vmc_export_psv(const char* save, const char* out_path);
 int vmc_export_psu(const char* path, const char* output);
 int vmc_import_psv(const char *input);

@@ -225,12 +225,6 @@ static option_entry_t* _getFileOptions(const char* save_path, const char* mask, 
 	return opt;
 }
 
-void set_protection_code(code_entry_t* code, int locked)
-{
-	free(code->name);
-	code->name = strdup(locked ? CHAR_ICON_LOCK " Remove copy protection (unlock save)" : CHAR_ICON_LOCK " Add copy protection (lock save)");
-}
-
 // Copy protection toggle (PS2 saves on a memory card or VMC), applied with
 // "Apply Changes" like the cheats
 static void _addProtectionCommands(save_entry_t* save)
@@ -240,8 +234,11 @@ static void _addProtectionCommands(save_entry_t* save)
 	cmd = _createCmdCode(PATCH_NULL, "----- " UTF8_CHAR_STAR " Copy Protection " UTF8_CHAR_STAR " -----", CMD_CODE_NULL);
 	list_append(save->codes, cmd);
 
-	cmd = _createCmdCode(PATCH_SFO, "", SFO_UNLOCK_COPY);
-	set_protection_code(cmd, save->flags & SAVE_FLAG_LOCKED);
+	if (save->flags & SAVE_FLAG_LOCKED)
+		cmd = _createCmdCode(PATCH_SFO, CHAR_ICON_LOCK " Remove copy protection (unlock save)", SFO_UNLOCK_COPY);
+	else
+		cmd = _createCmdCode(PATCH_SFO, CHAR_ICON_LOCK " Add copy protection (lock save)", SFO_UNLOCK_COPY);
+
 	list_append(save->codes, cmd);
 }
 

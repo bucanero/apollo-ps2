@@ -865,7 +865,7 @@ if(0)//		if (!get_psp_save_key(entry, key) || !psp_EncryptSavedata(entry->path, 
 }
 
 // Copy protection changes; returns 0 if one failed
-static int apply_protection_patches(save_entry_t* entry)
+static int apply_save_patches(save_entry_t* entry)
 {
     int ret = 1;
     code_entry_t* code;
@@ -891,7 +891,9 @@ static int apply_protection_patches(save_entry_t* entry)
         // new state once it's reloaded
         entry->flags = lock ? (entry->flags | SAVE_FLAG_LOCKED) : (entry->flags & ~SAVE_FLAG_LOCKED);
         entry->flags |= SAVE_FLAG_UPDATED;
-        set_protection_code(code, lock);
+
+        free(code->name);
+        asprintf(&code->name, "%c %s", CHAR_TAG_LOCKED, lock ? "Remove copy protection (unlock save)" : "Add copy protection (lock save)");
     }
 
     return ret;
@@ -899,13 +901,15 @@ static int apply_protection_patches(save_entry_t* entry)
 
 static void resignSave(save_entry_t* entry)
 {
-    int protect_ok = apply_protection_patches(entry);
+    if (!apply_save_patches(entry))
+    {
+        show_message("Error! Copy protection of %s couldn't be changed", entry->dir_name);
+        return;
+    }
 
-    LOG("Applying cheats to '%s'...", entry->name);
+	LOG("Applying cheats to '%s'...", entry->name);
     if (!apply_cheat_patches(entry))
         show_message("Error! Cheat codes couldn't be applied");
-    else if (!protect_ok)
-        show_message("Error! Copy protection of %s couldn't be changed", entry->dir_name);
     else
         show_message("Save %s successfully modified!", entry->dir_name);
 

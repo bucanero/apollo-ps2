@@ -907,7 +907,7 @@ static void resignSave(save_entry_t* entry)
         return;
     }
 
-	LOG("Applying cheats to '%s'...", entry->name);
+    LOG("Applying cheats to '%s'...", entry->name);
     if (!apply_cheat_patches(entry))
         show_message("Error! Cheat codes couldn't be applied");
     else

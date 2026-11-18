@@ -92,11 +92,22 @@ jobs:
       # tags and manual runs: it pulls ~400 MB of saves.
       - name: Build disc image
         if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+        env:
+          # ps2-master-patcher release used for the PS2 logo + master disc
+          # sectors, so the disc boots as a game disc
+          MASTER_PATCHER_VERSION: v1.0.0
         run: |
           apk add xorriso
           git clone --depth 1 --filter=blob:none --sparse https://github.com/bucanero/apollo-saves
           git -C apollo-saves sparse-checkout set PS1 PS2
-          sh tools/make_iso.sh APOLLO.ELF apollo-saves apollo-patches apollo-ps2.iso
+          # static Linux build from the patcher's release (the zip doesn't keep
+          # the executable bit)
+          wget -q "https://github.com/bucanero/ps2-master-patcher/releases/download/$MASTER_PATCHER_VERSION/ps2-master-patcher-linux-x64.zip"
+          unzip -o ps2-master-patcher-linux-x64.zip ps2-master-patcher -d master-patcher
+          chmod +x master-patcher/ps2-master-patcher
+          master-patcher/ps2-master-patcher --version
+          PS2_MASTER_PATCHER=$PWD/master-patcher/ps2-master-patcher \
+            sh tools/make_iso.sh APOLLO.ELF apollo-saves apollo-patches apollo-ps2.iso
 
       - name: Upload disc image
         if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'

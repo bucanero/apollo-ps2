@@ -77,10 +77,14 @@ jobs:
       - name: Build disc image
         if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
         run: |
-          apk add xorriso
+          apk add xorriso gcc musl-dev
           git clone --depth 1 --filter=blob:none --sparse https://github.com/bucanero/apollo-saves
           git -C apollo-saves sparse-checkout set PS1 PS2
-          sh tools/make_iso.sh APOLLO.ELF apollo-saves apollo-patches apollo-ps2.iso
+          # PS2 logo + master disc sectors, so the disc boots as a game disc
+          git clone --depth 1 https://github.com/bucanero/ps2-master-patcher
+          make -C ps2-master-patcher
+          PS2_MASTER_PATCHER=$PWD/ps2-master-patcher/ps2-master-patcher \
+            sh tools/make_iso.sh APOLLO.ELF apollo-saves apollo-patches apollo-ps2.iso
 
       - name: Upload disc image
         if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'

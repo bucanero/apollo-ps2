@@ -104,6 +104,14 @@ void RegisterSpecialCharacter(char value, short fy, float scale, png_texture* im
 
 int WidthFromStr(const char * str);
 
+// new string with line breaks added so each line fits max_width pixels (in
+// the current font): at spaces, or inside a word that's too long by itself
+char* wrap_text(const char* text, int max_width);
+
+// cuts text (in place) to fit max_width pixels, ending with "..."; the buffer
+// needs room for 3 more bytes
+void shorten_text(char* text, int max_width);
+
 // function to draw one character
 
 void DrawChar(float x, float y, float z, u8 chr);

@@ -11,9 +11,15 @@ All notable changes to the `apollo-ps2` project will be documented in this file.
 * Network support
   - Online Database: browse and download saves over the PS2 Network Adapter (or a Slim PS2), on a network with DHCP
   - The network is only started when a download is needed
+* Check for Updates (Settings)
+  - Checks GitHub for a newer release and shows the result
+  - Downloads the update (`apollo-ps2.zip`) to `mass:/APOLLO/`
+* Debug Log is now an on/off setting, saved with the other settings
+  - While on, Apollo logs to `mass:/apollo.log` from start-up, adding to the file (a new log starts when the option is turned on)
 * Saves Database (formerly Online Database)
   - Offline database: uses the first one found on `cdfs:/APOLLO/` (Apollo disc), `mass:/APOLLO/` or `host:/APOLLO/`, and the Online Database otherwise
   - Import downloaded saves straight to a Memory Card, or copy them to storage
+  - Press `Triangle` on a save to see its full description
 * Apollo disc image (`apollo-ps2.iso`)
   - Boots Apollo, with the offline saves database and all the PS1/PS2 save patches: works without a network connection or USB drive
   - PS2 master disc layout: PS2 logo and master disc sectors (disc ID `APOL-99999`), made with [ps2-master-patcher](https://github.com/bucanero/ps2-master-patcher)
@@ -46,6 +52,7 @@ All notable changes to the `apollo-ps2` project will be documented in this file.
   - `.MAX`: the last file of some saves was cut off
   - Short or invalid PS1 save files (`.PSV`, `.MCS`, `.PSX`) are rejected instead of being read past their end
   - PS2 saves can't be imported to a PS1 Memory Card
+* Long text stays inside the screen: details views wrap their lines, and long names in the code lists are shortened
 
 ### Misc
 

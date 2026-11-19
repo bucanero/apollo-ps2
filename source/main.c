@@ -62,7 +62,7 @@ app_config_t apollo_config = {
     .music = 1,
     .doSort = 1,
     .doAni = 1,
-    .update = 0,
+    .dbglog = 0,
     .storage = 0,
     .user_id = 0,
 };

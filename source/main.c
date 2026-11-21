@@ -558,6 +558,7 @@ int main(int argc, char *argv[])
 
 	// Load application settings (the video mode is needed before the renderer)
 	load_app_settings(&apollo_config);
+	log_startup();
 	setVideoMode();
 
 	// Create a window context
@@ -590,10 +591,6 @@ int main(int argc, char *argv[])
 	registerSpecialChars();
 	initMenuOptions();
 	LoadSounds();
-
-	// Debug log file, if enabled (the settings are loaded before the window,
-	// for the video mode)
-	log_startup();
 
 	// Unpack application data on first run
 	if (file_exists(APOLLO_LOCAL_CACHE "appdata.zip") == SUCCESS)

@@ -82,9 +82,22 @@ The Apollo disc image (`apollo-ps2.iso`) boots the application and includes an o
 
 | Disc folder | Contents |
 |-------------|----------|
+| `SYSTEM.CNF`, `APOL_999.99` | boot configuration, and the application (`APOLLO.ELF`) |
 | `APOLLO/PS2/`, `APOLLO/PS1/` | offline saves database ([apollo-saves](https://github.com/bucanero/apollo-saves)) |
 | `APOLLO/PATCHES/` | `.savepatch` files ([apollo-patches](https://github.com/bucanero/apollo-patches)) |
 | `APOLLO/PATCHES/python/` | Python modules used by the save patches |
+
+### Master disc
+
+The image is laid out like a PS2 **master disc**, so the console takes it as a game disc:
+
+- **Disc ID `APOL-99999`**: the application is stored as `APOL_999.99` and booted by `SYSTEM.CNF` (`BOOT2 = cdrom0:\APOL_999.99;1`, `VMODE = NTSC`). The boot file name has to be a disc ID: the logo encryption and the master disc sector are derived from it.
+- **Boot sectors** (added by [ps2-master-patcher](https://github.com/bucanero/ps2-master-patcher)):
+  - sectors 0 - 11: the PS2 logo, encrypted for `APOL-99999`
+  - sectors 14 - 15: the master disc sector (disc ID, USA region, DVD disc type, image size)
+- **DVD image**: a 2048-byte sector `.iso` (about 375 MB), patched as a DVD. Burn it to a DVD; a CD-R would need a raw `.bin`/`.cue` image patched as a CD.
+
+The disc boots through the full BIOS start-up (logo, `SYSTEM.CNF`, application) in [PCSX2](https://pcsx2.net/) with a USA BIOS. As an NTSC disc, it doesn't boot on a European (PAL) BIOS in PCSX2.
 
 ## Data folders
 
@@ -202,6 +215,14 @@ To build the Apollo disc image, run [`tools/make_iso.sh`](tools/make_iso.sh) (re
 ```sh
 sh tools/make_iso.sh APOLLO.ELF /path/to/apollo-saves /path/to/apollo-patches apollo-ps2.iso
 ```
+
+To make it a [master disc](#master-disc), the script needs [ps2-master-patcher](https://github.com/bucanero/ps2-master-patcher): either in the `PATH`, or set `PS2_MASTER_PATCHER` to its path. Without it, the script builds a plain ISO (no PS2 logo or master disc sectors) and says so. The patcher's default region is USA; set `MASTER_REGION` (`J`, `U`, `E` or `W`) to change it.
+
+```sh
+PS2_MASTER_PATCHER=/path/to/ps2-master-patcher sh tools/make_iso.sh APOLLO.ELF /path/to/apollo-saves /path/to/apollo-patches apollo-ps2.iso
+```
+
+The GitHub Actions workflow builds the disc image on tags and manual runs, with the static Linux binary from a [ps2-master-patcher release](https://github.com/bucanero/ps2-master-patcher/releases) (the version is `MASTER_PATCHER_VERSION` in the workflow).
 
 To enable debug logging, pass `-DAPOLLO_ENABLE_LOGGING=ON` argument to cmake. The application will print debug messages to the EE console (TTY), which can be read with [ps2client](https://github.com/ps2dev/ps2client) or on the [PCSX2](https://pcsx2.net/) log window. Debug builds load the application data from `host:/APOLLO/` instead of `mass:/APOLLO/`.
 

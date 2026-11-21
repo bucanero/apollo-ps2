@@ -1,4 +1,5 @@
 #include <dirent.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
@@ -42,13 +43,13 @@ menu_option_t menu_options[] = {
 		.value = &apollo_config.storage,
 		.callback = owner_callback
 	},
-/*
-	{ .name = "Version Update Check", 
+	{ .name = "Check for Updates", 
 		.options = NULL, 
-		.type = APP_OPTION_BOOL, 
-		.value = &apollo_config.update, 
+		.type = APP_OPTION_CALL, 
+		.value = NULL, 
 		.callback = update_callback 
 	},
+/*
 	{ .name = "Update Application Data", 
 		.options = NULL, 
 		.type = APP_OPTION_CALL, 
@@ -62,10 +63,10 @@ menu_option_t menu_options[] = {
 		.value = NULL, 
 		.callback = clearcache_callback 
 	},
-	{ .name = "Enable Debug Log",
+	{ .name = "Debug Log",
 		.options = NULL,
-		.type = APP_OPTION_CALL,
-		.value = NULL,
+		.type = APP_OPTION_BOOL,
+		.value = &apollo_config.dbglog,
 		.callback = log_callback 
 	},
 	{ .name = NULL }
@@ -125,79 +126,104 @@ void upd_appdata_callback(int sel)
 	unlink_secure(APOLLO_LOCAL_CACHE "appdata.zip");
 }
 
+// "1.4.0" -> 0x010400, so versions compare as numbers
+static uint32_t version_number(const char* version)
+{
+	unsigned int major = 0, minor = 0, patch = 0;
+
+	sscanf(version, "%u.%u.%u", &major, &minor, &patch);
+	return ((major & 0xFF) << 16) | ((minor & 0xFF) << 8) | (patch & 0xFF);
+}
+
+// The apollo-ps2.zip download in a GitHub release (JSON), NULL if missing.
+// Found by name: the release has other assets too (e.g. a disc image).
+static char* find_release_zip(char* json)
+{
+	static const char find[] = "\"browser_download_url\":\"";
+	char *url, *end;
+
+	for (url = strstr(json, find); url; url = strstr(end + 1, find))
+	{
+		url += sizeof(find) - 1;
+		if ((end = strchr(url, '"')) == NULL)
+			return NULL;
+
+		if (end - url > 15 && strncmp(end - 15, "/apollo-ps2.zip", 15) == 0)
+		{
+			*end = 0;
+			return url;
+		}
+	}
+
+	return NULL;
+}
+
+// Checks the latest release on GitHub, and reports the result on screen
 void update_callback(int sel)
 {
-    apollo_config.update = !sel;
-
-    if (!apollo_config.update)
-        return;
+	static const char find[] = "\"name\":\"Apollo Save Tool v";
+	char *buffer, *latest, *end, *url;
 
 	LOG("checking latest Apollo version at %s", APOLLO_UPDATE_URL);
+
+	if (!network_up())
+	{
+		LOG("no network");
+		show_message("Can't check for updates: no network connection\n\n(PS2 Network Adapter and DHCP required)");
+		return;
+	}
 
 	if (!http_download(APOLLO_UPDATE_URL, NULL, APOLLO_LOCAL_CACHE "ver.check", 0))
 	{
 		LOG("http request to %s failed", APOLLO_UPDATE_URL);
+		show_message("Can't check for updates:\nGitHub couldn't be reached");
 		return;
 	}
 
-	char *buffer = readTextFile(APOLLO_LOCAL_CACHE "ver.check");
+	buffer = readTextFile(APOLLO_LOCAL_CACHE "ver.check");
+	unlink_secure(APOLLO_LOCAL_CACHE "ver.check");
 	if (!buffer)
 		return;
 
-	LOG("received %ld bytes", strlen(buffer));
+	LOG("received %d bytes", (int) strlen(buffer));
 
-	static const char find[] = "\"name\":\"Apollo Save Tool v";
-	const char* start = strstr(buffer, find);
-	if (!start)
+	if ((latest = strstr(buffer, find)) == NULL || (end = strchr(latest + sizeof(find) - 1, '"')) == NULL)
 	{
-		LOG("no name found");
+		LOG("no release name found");
+		show_message("Can't check for updates:\nunexpected reply from GitHub");
 		goto end_update;
 	}
 
-	LOG("found name");
-	start += sizeof(find) - 1;
-
-	char* end = strchr(start, '"');
-	if (!end)
-	{
-		LOG("no end of name found");
-		goto end_update;
-	}
+	latest += sizeof(find) - 1;
 	*end = 0;
-	LOG("latest version is %s", start);
+	LOG("latest version is %s (running %s)", latest, APOLLO_VERSION);
 
-	if (strcasecmp(APOLLO_VERSION, start) == 0)
+	if (version_number(latest) <= version_number(APOLLO_VERSION))
 	{
-		LOG("no need to update");
+		show_message("Apollo Save Tool v%s is up to date\n\n(latest release: v%s)", APOLLO_VERSION, latest);
 		goto end_update;
 	}
 
-	start = strstr(end+1, "\"browser_download_url\":\"");
-	if (!start)
-		goto end_update;
+	url = find_release_zip(end + 1);
+	LOG("download URL is %s", url ? url : "(not found)");
 
-	start += 24;
-	end = strchr(start, '"');
-	if (!end)
+	// No USB drive (files are kept in RAM) or no zip: just say where to get it
+	if (!url || ramcache_enabled())
 	{
-		LOG("no download URL found");
+		show_message("New version available: v%s\n\nDownload it from:\ngithub.com/bucanero/apollo-ps2/releases", latest);
 		goto end_update;
 	}
 
-	*end = 0;
-	LOG("download URL is %s", start);
-
-	if (show_dialog(DIALOG_TYPE_YESNO, "New version available! Download update?"))
+	if (show_dialog(DIALOG_TYPE_YESNO, "New version available: v%s\n\nDownload apollo-ps2.zip to\n%s ?", latest, APOLLO_APP_PATH))
 	{
-		if (http_download(start, NULL, USB_PATH "APOLLO/apollo-ps2.zip", 1))
-			show_message("Update downloaded to " USB_PATH "APOLLO/apollo-ps2.zip");
+		if (http_download(url, NULL, APOLLO_APP_PATH "apollo-ps2.zip", 1))
+			show_message("Update downloaded to:\n" APOLLO_APP_PATH "apollo-ps2.zip");
 		else
-			show_message("Download error!");
+			show_message("Error! Can't download the update");
 	}
 
 end_update:
 	free(buffer);
-	return;
 }
 
 void owner_callback(int sel)
@@ -205,10 +231,59 @@ void owner_callback(int sel)
 	apollo_config.storage = sel;
 }
 
+#define APOLLO_LOG_FILE		USB_PATH "apollo.log"
+
+// Back to the build's own logging: the console (TTY) in debug builds, none otherwise
+static void log_default(void)
+{
+	dbglogger_stop();
+#ifdef APOLLO_ENABLE_LOGGING
+	dbglogger_init_mode(TTY_LOGGER, NULL, 0);
+#endif
+}
+
+// overwrite: start a new log file instead of adding to it
+static int log_to_file(int overwrite)
+{
+	if (dbglogger_init_mode(FILE_LOGGER, APOLLO_LOG_FILE, overwrite) == FILE_LOGGER)
+	{
+		LOG("Apollo Save Tool v%s - Patch Engine v%s", APOLLO_VERSION, APOLLO_LIB_VERSION);
+		return 1;
+	}
+
+	// no USB drive
+	log_default();
+	return 0;
+}
+
 void log_callback(int sel)
 {
-	dbglogger_init_mode(FILE_LOGGER, USB_PATH "apollo.log", 1);
-	show_message("Debug Logging Enabled!\n\n" USB_PATH "apollo.log");
+	apollo_config.dbglog = !sel;
+
+	if (!apollo_config.dbglog)
+	{
+		LOG("Debug log disabled");
+		log_default();
+		show_message("Debug Logging Disabled");
+		return;
+	}
+
+	if (!log_to_file(1))
+	{
+		apollo_config.dbglog = 0;
+		show_message("Error! Can't create the log file:\n" APOLLO_LOG_FILE);
+		return;
+	}
+
+	show_message("Debug Logging Enabled!\n\n" APOLLO_LOG_FILE);
+}
+
+// At start-up, when enabled: keeps adding to the log file, so the log of a
+// session that went wrong isn't lost by starting Apollo again
+void log_startup(void)
+{
+	if (apollo_config.dbglog && !log_to_file(0))
+		LOG("Debug log: can't open " APOLLO_LOG_FILE);
 }
 
 int save_app_settings(app_config_t* config)

@@ -1,6 +1,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "saves.h"
 #include "menu.h"
@@ -419,7 +420,12 @@ void DrawCheatsList(int selIndex, save_entry_t* game, u8 alpha)
             if (code->flags & APOLLO_CODE_FLAG_CHILD)  group = " " UTF8_CHAR_ITEM " ";
             const char *alert = (code->flags & APOLLO_CODE_FLAG_ALERT) ? CHAR_ICON_WARN : "";
 
-            float dx = DrawFormatString(MENU_ICON_OFF + (MENU_TITLE_OFF * 1), game_y, "%s%s%s", group, alert, code->name);
+            // long names (e.g. saves database descriptions) are cut to fit the screen
+            char* label = malloc(strlen(group) + strlen(alert) + strlen(code->name) + 4);
+            sprintf(label, "%s%s%s", group, alert, code->name);
+            shorten_text(label, (SCREEN_WIDTH - 40) - (MENU_ICON_OFF + (MENU_TITLE_OFF * 1)));
+            float dx = DrawString(MENU_ICON_OFF + (MENU_TITLE_OFF * 1), game_y, label);
+            free(label);
             
             if (code->activated)
             {

@@ -1,5 +1,5 @@
 /* 
-	Apollo PSP main.c
+	Apollo PS2 main.c
 */
 
 #include <stdio.h>
@@ -63,7 +63,7 @@ app_config_t apollo_config = {
     .music = 1,
     .doSort = 1,
     .doAni = 1,
-    .update = 0,
+    .dbglog = 0,
     .storage = 0,
     .user_id = 0,
 };
@@ -591,6 +591,10 @@ int main(int argc, char *argv[])
 	initMenuOptions();
 	LoadSounds();
 
+	// Debug log file, if enabled (the settings are loaded before the window,
+	// for the video mode)
+	log_startup();
+
 	// Unpack application data on first run
 	if (file_exists(APOLLO_LOCAL_CACHE "appdata.zip") == SUCCESS)
 	{
@@ -613,9 +617,6 @@ int main(int argc, char *argv[])
 	// Splash screen logo (fade-out)
 	drawSplashLogo(-1);
 	SDL_DestroyTexture(menu_textures[buk_scr_png_index].texture);
-	
-	//Set options
-	update_callback(!apollo_config.update);
 
 	// Start BGM audio thread
 	music_callback(!apollo_config.music);

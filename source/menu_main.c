@@ -102,13 +102,32 @@ static int ReloadUserSaves(save_list_t* save_list)
 	return LoadUserSaves(save_list, 1);
 }
 
+// Width of the details text: from where DrawCodes() starts a line
+// (Draw_CheatsMenu_View) to the scroll bar
+#define DETAILS_TEXT_WIDTH		((SCREEN_WIDTH - 30) - (MENU_SPLIT_OFF + MENU_ICON_OFF + 20) - 10)
+
+// Breaks the details text into lines that fit the screen (frees the original)
+static char* fit_details_text(char* text)
+{
+	char* wrapped;
+
+	if (!text)
+		return NULL;
+
+	SetFontSize(APP_FONT_SIZE_SELECTION);   // as DrawCodes() draws it
+	wrapped = wrap_text(text, DETAILS_TEXT_WIDTH);
+	free(text);
+
+	return wrapped;
+}
+
 static code_entry_t* LoadRawPatch(void)
 {
 	char patchPath[256];
 	code_entry_t* centry = calloc(1, sizeof(code_entry_t));
 
 	centry->name = strdup(selected_entry->title_id);
-	centry->codes = readSavePatch(selected_entry->title_id, patchPath, sizeof(patchPath));
+	centry->codes = fit_details_text(readSavePatch(selected_entry->title_id, patchPath, sizeof(patchPath)));
 
 	return centry;
 }
@@ -122,7 +141,24 @@ static code_entry_t* LoadSaveDetails(void)
 		asprintf(&centry->codes, "Error getting details (%s)", selected_entry->name);
 
 	LOG("%s", centry->codes);
+	centry->codes = fit_details_text(centry->codes);
 	return (centry);
+}
+
+// A save from the saves database (online or offline): its full description,
+// which the code list can only show cut short
+static code_entry_t* LoadOnlineSaveDetails(void)
+{
+	code_entry_t* centry = calloc(1, sizeof(code_entry_t));
+	char* text;
+
+	centry->name = strdup(selected_entry->title_id);
+	asprintf(&text, "Game: %s\nTitle ID: %s\nFile: %s\n%s%s\n----- Details -----\n%s\n",
+		selected_entry->name, selected_entry->title_id, selected_centry->file,
+		selected_entry->path, selected_centry->file, selected_centry->name + 2);    // name: icon + ' ' + description
+
+	centry->codes = fit_details_text(text);
+	return centry;
 }
 
 static void SetMenu(int id)
@@ -920,6 +956,14 @@ static void doPatchMenu(void)
 	else if (ps2PadGetButtonPressed(PAD_TRIANGLE))
 	{
 		selected_centry = list_get_item(selected_entry->codes, menu_sel);
+
+		// saves database: the save's full description
+		if (selected_entry->flags & (SAVE_FLAG_ONLINE | SAVE_FLAG_OFFLINE))
+		{
+			selected_centry = LoadOnlineSaveDetails();
+			SetMenu(MENU_SAVE_DETAILS);
+			return;
+		}
 
 		if (selected_centry->type == PATCH_GAMEGENIE || selected_centry->type == PATCH_BSD ||
 			selected_centry->type == PATCH_PYTHON)

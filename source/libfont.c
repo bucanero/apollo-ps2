@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include <stdarg.h>
 #include <zlib.h>
 
@@ -358,6 +359,123 @@ void RegisterSpecialCharacter(char value, short fy, float scale, png_texture* im
 int WidthFromStr(const char * str)
 {
 	return width_ttf_string(str, font_datas.sx, font_datas.sy);
+}
+
+// bytes in the UTF-8 character starting with c
+static int utf8_char_len(unsigned char c)
+{
+	return (c >= 0xF0) ? 4 : (c >= 0xE0) ? 3 : (c >= 0xC0) ? 2 : 1;
+}
+
+char* wrap_text(const char* text, int max_width)
+{
+	size_t len = strlen(text);
+	char* out = malloc(len * 2 + 1);    // at most one '\n' added per character
+	char* line = malloc(len + 1);
+	const char* p = text;
+	size_t o = 0;
+
+	if (!out || !line)
+	{
+		free(out);
+		free(line);
+		return strdup(text);
+	}
+
+	for (;;)
+	{
+		size_t n = strcspn(p, "\n");   // one line of the original text
+		size_t s = 0;
+
+		while (s < n)
+		{
+			size_t i = s, fit = s, brk = 0, e;
+
+			// the longest piece from s that fits, and the last space in it
+			while (i < n)
+			{
+				size_t cl = utf8_char_len(p[i]);
+				if (i + cl > n)
+					cl = n - i;
+
+				memcpy(line, p + s, i + cl - s);
+				line[i + cl - s] = 0;
+				if (WidthFromStr(line) > max_width)
+					break;
+
+				i += cl;
+				fit = i;
+				if (p[i - 1] == ' ')
+					brk = i;
+			}
+
+			if (fit < n)
+			{
+				if (brk > s)
+					fit = brk;          // break after the last space
+				else if (fit == s)
+					fit = s + utf8_char_len(p[s]);  // at least one character
+			}
+
+			// spaces at the break are dropped
+			for (e = fit; e > s && p[e - 1] == ' '; e--);
+			memcpy(out + o, p + s, e - s);
+			o += e - s;
+
+			s = fit;
+			if (s < n)
+				out[o++] = '\n';
+		}
+
+		if (!p[n])
+			break;
+
+		out[o++] = '\n';
+		p += n + 1;
+	}
+
+	out[o] = 0;
+	free(line);
+	return out;
+}
+
+void shorten_text(char* text, int max_width)
+{
+	size_t n = strlen(text), lo = 0, hi, mid;
+	char* tmp;
+
+	if (WidthFromStr(text) <= max_width || (tmp = malloc(n + 4)) == NULL)
+		return;
+
+	// binary search for the longest start (cut at a UTF-8 character
+	// boundary) that fits with "..." after it: it's drawn on every frame
+	hi = n;
+	while (lo < hi)
+	{
+		mid = (lo + hi + 1) / 2;
+		while (mid > lo && ((unsigned char) text[mid] & 0xC0) == 0x80)
+			mid--;
+
+		if (mid == lo)
+		{
+			// no boundary between lo and hi other than lo: try the next one up
+			size_t next = lo + utf8_char_len(text[lo]);
+			if (next > hi)
+				break;
+			mid = next;
+		}
+
+		memcpy(tmp, text, mid);
+		strcpy(tmp + mid, "...");
+		if (WidthFromStr(tmp) <= max_width)
+			lo = mid;
+		else
+			hi = mid - 1;
+	}
+
+	// hi may now be inside a character: lo is always a boundary
+	strcpy(text + lo, "...");
+	free(tmp);
 }
 
 int WidthFromStrMono(u8 * str)

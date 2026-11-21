@@ -1479,6 +1479,31 @@ static void check_ps1_savegame(const char* path, const char* d_name, list_t *lis
 	list_append(list, item);
 }
 
+/*
+ * A save's title from its icon.sys, as a new UTF-8 string. nlOffset is where
+ * the second line of the title starts, and a Shift-JIS separator goes there.
+ * Games don't always store a valid one (No One Lives Forever: 0x800, in a 68
+ * byte title), so it's only used when it falls inside the title text. The
+ * title field itself isn't always NUL terminated either.
+ */
+static char* iconsys_title(const mcIcon* icon)
+{
+	char title[sizeof(icon->title) + 3];
+	size_t len = strnlen((const char*) icon->title, sizeof(icon->title));
+	size_t nl = icon->nlOffset;
+
+	memcpy(title, icon->title, len);
+	title[len] = 0;
+
+	if (nl > 0 && nl < len)
+	{
+		memmove(&title[nl + 2], &title[nl], len - nl + 1);
+		memcpy(&title[nl], "\x81\x50", 2);
+	}
+
+	return sjis2utf8(title);
+}
+
 static void read_ps2_savegames(const char* userPath, list_t *list, int flags)
 {
 	DIR *d;
@@ -1519,17 +1544,10 @@ static void read_ps2_savegames(const char* userPath, list_t *list, int flags)
 			continue;
 		}
 
-		memcpy(sysPath, iconsys.title, sizeof(iconsys.title));
-		if (iconsys.nlOffset)
-		{
-			memmove(&sysPath[iconsys.nlOffset+2], &sysPath[iconsys.nlOffset], sizeof(iconsys.title) - iconsys.nlOffset);
-			memcpy(&sysPath[iconsys.nlOffset], "\x81\x50", 2);
-		}
-
-		char* tmp = sjis2utf8(sysPath);
+		char* tmp = iconsys_title(&iconsys);
 		item = _createSaveEntry(SAVE_FLAG_PS2 | flags, tmp);
 		item->type = FILE_TYPE_PS2;
-		item->icon = strdup(iconsys.view);
+		item->icon = strndup(iconsys.view, sizeof(iconsys.view));
 		item->dir_name = strdup(dir->d_name);
 		asprintf(&item->title_id, "%.10s", dir->d_name+((strlen(dir->d_name) < 12) ? 0 : 2));
 		asprintf(&item->path, "%s%s/", userPath, dir->d_name);
@@ -2177,17 +2195,10 @@ list_t * ReadVmc2List(const char* userPath)
 				if (r != sizeof(mcIcon))
 					continue;
 
-				memcpy(filePath, iconsys.title, sizeof(iconsys.title));
-				if (iconsys.nlOffset)
-				{
-					memmove(&filePath[iconsys.nlOffset+2], &filePath[iconsys.nlOffset], sizeof(iconsys.title) - iconsys.nlOffset);
-					memcpy(&filePath[iconsys.nlOffset], "\x81\x50", 2);
-				}
-
-				char* tmp = sjis2utf8(filePath);
+				char* tmp = iconsys_title(&iconsys);
 				item = _createSaveEntry(SAVE_FLAG_PS2 | SAVE_FLAG_VMC | ((dirent.stat.mode & sceMcFileAttrDupProhibit) ? SAVE_FLAG_LOCKED : 0), tmp);
 				item->type = FILE_TYPE_PS2;
-				item->icon = strdup(iconsys.view);
+				item->icon = strndup(iconsys.view, sizeof(iconsys.view));
 				item->dir_name = strdup(dirent.name);
 				asprintf(&item->title_id, "%.10s", dirent.name+((strlen(dirent.name) < 12) ? 0 : 2));
 				asprintf(&item->path, "%s\n%s/", userPath, dirent.name);

@@ -4,6 +4,64 @@ All notable changes to the `apollo-ps2` project will be documented in this file.
 
 ## [Unreleased]()
 
+## [v1.5.0](https://github.com/bucanero/apollo-ps2/releases/tag/v1.5.0) - 2026-00-00
+
+### Added
+
+* Network support
+  - Online Database: browse and download saves over the PS2 Network Adapter (or a Slim PS2), on a network with DHCP
+  - The network is only started when a download is needed
+* Check for Updates (Settings)
+  - Checks GitHub for a newer release and shows the result
+  - Downloads the update (`apollo-ps2.zip`) to `mass:/APOLLO/`
+* Debug Log is now an on/off setting, saved with the other settings
+  - While on, Apollo logs to `mass:/apollo.log` from start-up, adding to the file (a new log starts when the option is turned on)
+* Saves Database (formerly Online Database)
+  - Offline database: uses the first one found on `cdfs:/APOLLO/` (Apollo disc), `mass:/APOLLO/` or `host:/APOLLO/`, and the Online Database otherwise
+  - Import downloaded saves straight to a Memory Card, or copy them to storage
+  - Press `Triangle` on a save to see its full description
+* Apollo disc image (`apollo-ps2.iso`)
+  - Boots Apollo, with the offline saves database and all the PS1/PS2 save patches: works without a network connection or USB drive
+  - PS2 master disc layout: PS2 logo and master disc sectors (disc ID `APOL-99999`), made with [ps2-master-patcher](https://github.com/bucanero/ps2-master-patcher)
+* Built-in save patches
+  - The PS1/PS2 save patches are built into the application, no USB drive needed
+  - Temporary files are kept in RAM when no USB drive is available
+* Python save patches ([MicroPython](https://micropython.org/))
+  - For saves that need custom decryption, checksums or edits
+  - Python modules are built in, or loaded from `mass:/APOLLO/DATA/python/` or `cdfs:/APOLLO/PATCHES/python/`
+* Memory Card dump and restore
+  - Dump PS2 Memory Cards to `.PS2` (with ECC) or raw `.VMC` images, and PS1 Memory Cards to `.MCR`
+  - Write a PS2 Memory Card image back to a Memory Card
+* Apply cheat codes and hex edit save files inside PS1 and PS2 VMC images
+* Copy protection: lock or unlock PS2 saves on Memory Cards and PS2 VMC images
+  - Select the option, then `Apply Changes`
+  - Locked saves are tagged in the save list
+* Japanese save titles (Shift-JIS)
+  - Drawn with the PS2 BIOS font (`rom0:KROM`), no extra files needed
+  - Half-width katakana are shown as full-width
+  - Optional font for full coverage (rarer kanji, symbols): `mass:/APOLLO/DATA/FONT.OTF`
+* 3D save icons: PS2 save icons are rendered from their 3D model, lit and coloured with the save's `icon.sys` settings
+
+### Fixed
+
+* Copy-protected PS2 saves were missing from the Memory Card save list
+* Crash when cancelling the Memory Card selection after changing or deleting a save
+* Crash when listing a Memory Card or VMC with a save whose `icon.sys` has an invalid title line break (e.g. No One Lives Forever)
+* Japanese titles are sorted after the Latin ones (they were listed before `Bulk Save Management`)
+* Save import
+  - Damaged or truncated saves are rejected (CRC/checksum and size checks) instead of creating a broken save
+  - `.MAX`: the last file of some saves was cut off
+  - Short or invalid PS1 save files (`.PSV`, `.MCS`, `.PSX`) are rejected instead of being read past their end
+  - PS2 saves can't be imported to a PS1 Memory Card
+* Long text stays inside the screen: details views wrap their lines, and long names in the code lists are shortened
+
+### Misc
+
+* `Apply Changes` is the first option of every save, like on the other Apollo platforms
+* Updated Apollo Patch Engine to v3.0.0
+* Background music player moved to the EE
+* The GitHub Actions workflow builds the Apollo disc image on tags and manual runs
+
 ## [v1.0.2](https://github.com/bucanero/apollo-ps2/releases/tag/v1.0.2) - 2024-12-24
 
 ### Added

@@ -1,4 +1,4 @@
-#define APOLLO_VERSION          "1.0.2"     //Apollo PS2 version (about menu)
+#define APOLLO_VERSION          "1.5.0"     //Apollo PS2 version (about menu)
 
 #define MENU_TITLE_OFF			30			//Offset of menu title text from menu mini icon
 #define MENU_ICON_OFF 			35          //X Offset to start printing menu mini icon
@@ -32,7 +32,7 @@ typedef struct __attribute__((packed))
     uint8_t doSort;
     uint8_t doAni;
     uint8_t storage;
-    uint8_t update;
+    uint8_t dbglog;
     uint32_t user_id;
     char save_db[256];
     uint8_t video_mode;     // VIDEO_MODE_* (added after save_db: older SETTINGS.BIN files lack it)
@@ -55,5 +55,6 @@ void sort_callback(int sel);
 void ani_callback(int sel);
 void update_callback(int sel);
 void video_callback(int sel);
+void log_startup(void);
 void clearcache_callback(int sel);
 void upd_appdata_callback(int sel);

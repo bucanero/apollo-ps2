@@ -4,7 +4,7 @@ All notable changes to the `apollo-ps2` project will be documented in this file.
 
 ## [Unreleased]()
 
-## [v1.4.0](https://github.com/bucanero/apollo-ps2/releases/tag/v1.4.0) - 2026-11-19
+## [v1.5.0](https://github.com/bucanero/apollo-ps2/releases/tag/v1.5.0) - 2026-00-00
 
 ### Added
 

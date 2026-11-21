@@ -46,6 +46,7 @@ All notable changes to the `apollo-ps2` project will be documented in this file.
 
 * Copy-protected PS2 saves were missing from the Memory Card save list
 * Crash when cancelling the Memory Card selection after changing or deleting a save
+* Crash when listing a Memory Card or VMC with a save whose `icon.sys` has an invalid title line break (e.g. No One Lives Forever)
 * Japanese titles are sorted after the Latin ones (they were listed before `Bulk Save Management`)
 * Save import
   - Damaged or truncated saves are rejected (CRC/checksum and size checks) instead of creating a broken save

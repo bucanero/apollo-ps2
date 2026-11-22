@@ -612,7 +612,14 @@ static void doOptionsMenu(void)
 
 	else if (ps2PadGetButtonPressed(PAD_CIRCLE))
 	{
+		// Memory Card writes take a moment: show that the app isn't frozen
+		int own_screen = init_loading_screen("Saving settings...");
+
 		save_app_settings(&apollo_config);
+
+		if (own_screen)
+			stop_loading_screen();
+
 		SetMenu(MENU_MAIN_SCREEN);
 		return;
 	}

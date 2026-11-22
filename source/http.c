@@ -5,6 +5,7 @@
 #include <curl/curl.h>
 
 #include <kernel.h>
+#include <timer.h>
 #include <sifrpc.h>
 #include <loadfile.h>
 #include <netman.h>
@@ -233,6 +234,79 @@ static int sockopt_callback(void *clientp, curl_socket_t fd, curlsocktype purpos
 	return CURL_SOCKOPT_OK;
 }
 
+/*
+ * Downloads are kept in RAM and written to the file once the transfer is over
+ *
+ * On real hardware, a USB write in the middle of a TLS transfer (curl writes
+ * each chunk as it arrives) hangs for good: the download never returns. Small
+ * files only worked because their few bytes stayed in the FILE buffer until
+ * fclose(). Every file the app downloads (lists, save zips, updates) is under
+ * 2 MB; past DL_MEM_LIMIT the data goes to the file as it arrives instead.
+ */
+#define DL_MEM_LIMIT	(4 * 1024 * 1024)
+
+typedef struct
+{
+	FILE* fd;
+	uint8_t* buf;
+	size_t size;
+	size_t alloc;
+} dl_write_t;
+
+static int flush_download(dl_write_t* w)
+{
+	if (w->size && fwrite(w->buf, 1, w->size, w->fd) != w->size)
+	{
+		LOG("Error writing %d bytes to file", (int) w->size);
+		return 0;
+	}
+
+	w->size = 0;
+	return 1;
+}
+
+static size_t write_callback(char *ptr, size_t size, size_t nmemb, void *userdata)
+{
+	dl_write_t* w = userdata;
+	size_t len = size * nmemb;
+
+	if (w->size + len > w->alloc)
+	{
+		size_t alloc = w->alloc ? w->alloc * 2 : 64 * 1024;
+		uint8_t* buf;
+
+		while (alloc < w->size + len)
+			alloc *= 2;
+
+		// too big for RAM: write what's buffered, then this chunk
+		if (alloc > DL_MEM_LIMIT || (buf = realloc(w->buf, alloc)) == NULL)
+		{
+			if (!flush_download(w))
+				return 0;
+
+			return fwrite(ptr, 1, len, w->fd);
+		}
+
+		w->buf = buf;
+		w->alloc = alloc;
+	}
+
+	memcpy(w->buf + w->size, ptr, len);
+	w->size += len;
+	return len;
+}
+
+// Different on every call and every boot: EE timer ticks since power-on, mixed
+static unsigned int rand_port_seed(void)
+{
+	static unsigned int state = 0;
+	struct timeval now;
+
+	gettimeofday(&now, NULL);
+	state = state * 1103515245u + 12345u + (unsigned int) GetTimerSystemTime() + (unsigned int) now.tv_usec;
+	return state >> 8;
+}
+
 static int is_network_url(const char* url)
 {
 	return (strncasecmp(url, "http://", 7) == 0 || strncasecmp(url, "https://", 8) == 0 ||
@@ -287,12 +361,18 @@ int http_download(const char* url, const char* filename, const char* local_dst, 
 	curl_easy_setopt(curl, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
 	// Set timeout for the connection to build
 	curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10L);
+	// This lwIP hands out local ports from the same start on every boot: after a
+	// reset, a connection reuses the port of one the router/server still holds
+	// open, and its SYN goes unanswered. Pick a random port in the dynamic range.
+	curl_easy_setopt(curl, CURLOPT_LOCALPORT, 49152L + (long)(rand_port_seed() % 16000));
+	curl_easy_setopt(curl, CURLOPT_LOCALPORTRANGE, 100L);
 	// Follow redirects (?)
 	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
 	// The function that will be used to write the data
-	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, fwrite);
-	// The data filedescriptor which will be written to
-	curl_easy_setopt(curl, CURLOPT_WRITEDATA, fd);
+	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &write_callback);
+	// The download buffer (and the file it goes to)
+	dl_write_t dl = { .fd = fd };
+	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &dl);
 	// maximum number of redirects allowed
 	curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 20L);
 	// Fail the request if the HTTP code returned is equal to or larger than 400
@@ -316,6 +396,12 @@ int http_download(const char* url, const char* filename, const char* local_dst, 
 
 	// Perform the request
 	res = curl_easy_perform(curl);
+
+	// the transfer is over: now the data goes to the file
+	if (res == CURLE_OK && !flush_download(&dl))
+		res = CURLE_WRITE_ERROR;
+
+	free(dl.buf);
 	// close file descriptor
 	fclose(fd);
 	// cleanup

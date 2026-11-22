@@ -1940,21 +1940,22 @@ static void _ReadSaveDbList(const char* base, const char* filepath, uint16_t fla
 static void _ReadOnlineListEx(const char* urlPath, uint16_t flag, list_t *list)
 {
 	char path[256];
+	struct stat stats;
 
 	snprintf(path, sizeof(path), APOLLO_LOCAL_CACHE "%04X_games.txt", flag);
 
-	if (file_exists(path) == SUCCESS && strcmp(apollo_config.save_db, ONLINE_URL) == 0)
+	// re-download if missing, empty (a download cut short by a reset), or +1 day old
+	if (strcmp(apollo_config.save_db, ONLINE_URL) != 0 ||
+		stat(path, &stats) != 0 || stats.st_size <= 0 ||
+		(stats.st_mtime + ONLINE_CACHE_TIMEOUT) < time(NULL))
 	{
-		struct stat stats;
-		stat(path, &stats);
-		// re-download if file is +1 day old
-		if ((stats.st_mtime + ONLINE_CACHE_TIMEOUT) < time(NULL))
-			http_download(urlPath, "games.txt", path, 0);
-	}
-	else
-	{
-		if (!http_download(urlPath, "games.txt", path, 0))
+		if (!http_download(urlPath, "games.txt", path, 0) ||
+			stat(path, &stats) != 0 || stats.st_size <= 0)
+		{
+			LOG("No game list for %s", urlPath);
+			unlink_secure(path);
 			return;
+		}
 	}
 
 	_ReadSaveDbList(urlPath, path, flag | SAVE_FLAG_ONLINE, list);

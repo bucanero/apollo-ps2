@@ -290,7 +290,6 @@ int save_app_settings(app_config_t* config)
 {
 	char filePath[256];
 
-	LOG("Apollo Save Tool v%s - Patch Engine v%s", APOLLO_VERSION, APOLLO_LIB_VERSION);
 	snprintf(filePath, sizeof(filePath), "%s%s%s", MC0_PATH, "APOLLO-99PS2/", "icon.sys");
 	if (mkdirs(filePath) != SUCCESS)
 	{

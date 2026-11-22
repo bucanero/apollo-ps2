@@ -1,5 +1,6 @@
 #include <apollo.h>
 #include <dbglogger.h>
+#include <mini18n.h>
 #include "sjis.h"
 #define LOG dbglogger_log
 
@@ -257,6 +258,7 @@ int extract_7zip(const char* zip_file, const char* dest_path);
 int extract_rar(const char* rar_file, const char* dest_path);
 int extract_zip(const char* zip_file, const char* dest_path);
 int zip_directory(const char* basedir, const char* inputdir, const char* output_zipfile);
+uint8_t* read_zip_buffer_file(const void* zip_data, size_t zip_size, const char* name, size_t* out_size);
 uint8_t* extract_psv(const char* zip_file, uint32_t* out_size);
 
 int show_dialog(int dialog_type, const char * format, ...);

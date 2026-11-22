@@ -47,5 +47,6 @@ void sort_callback(int sel);
 void ani_callback(int sel);
 void update_callback(int sel);
 void log_startup(void);
+void translate_settings(void);
 void clearcache_callback(int sel);
 void upd_appdata_callback(int sel);

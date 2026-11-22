@@ -6,6 +6,7 @@
 #endif
 
 #include <SDL2/SDL.h>
+#include <mini18n.h>
 
 #include "types.h"
 #include "settings.h"

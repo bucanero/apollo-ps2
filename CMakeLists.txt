@@ -175,8 +175,32 @@ if(APOLLO_PATCHES_DIR)
   add_definitions(-DAPOLLO_EMBEDDED_PATCHES)
 endif()
 
+# Translations (data/langs/lang_xx.po), embedded in the ELF as a zip. The
+# copies in the zip have only the msgid/msgstr lines (tools/strip_po.cmake):
+# ~25% smaller, mini18n skips the rest anyway.
+file(GLOB lang_paths ${CMAKE_SOURCE_DIR}/data/langs/lang_*.po)
+file(GLOB lang_files RELATIVE ${CMAKE_SOURCE_DIR}/data/langs ${CMAKE_SOURCE_DIR}/data/langs/lang_*.po)
+set(LANGS_STAGE ${CMAKE_CURRENT_BINARY_DIR}/langs)
+set(strip_cmds)
+foreach(f ${lang_files})
+  list(APPEND strip_cmds COMMAND ${CMAKE_COMMAND} -DIN=${CMAKE_SOURCE_DIR}/data/langs/${f} -DOUT=${LANGS_STAGE}/${f} -P ${CMAKE_SOURCE_DIR}/tools/strip_po.cmake)
+endforeach()
+add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/langs_zip.o
+  COMMAND ${CMAKE_COMMAND} -E remove_directory ${LANGS_STAGE}
+  COMMAND ${CMAKE_COMMAND} -E make_directory ${LANGS_STAGE}
+  ${strip_cmds}
+  COMMAND ${CMAKE_COMMAND} -E chdir ${LANGS_STAGE} ${CMAKE_COMMAND} -E tar cf ${CMAKE_CURRENT_BINARY_DIR}/langs.zip --format=zip ${lang_files}
+  COMMAND ${CMAKE_LINKER} -r -b binary -o langs_zip.o langs.zip
+  COMMAND ${CMAKE_OBJCOPY} --set-section-alignment .data=64 langs_zip.o
+  DEPENDS ${lang_paths} ${CMAKE_SOURCE_DIR}/tools/strip_po.cmake
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+  COMMENT "Embedding translations (langs.zip)"
+  VERBATIM
+)
+
 add_executable(${PROJECT_NAME}
   ${PATCHES_OBJ}
+  ${CMAKE_CURRENT_BINARY_DIR}/langs_zip.o
   ${apollo_res}
   ${NET_IRX_OBJS}
   ${CMAKE_CURRENT_BINARY_DIR}/mcimage_irx.o
@@ -221,6 +245,7 @@ target_link_libraries(${PROJECT_NAME}
   apollo
   polarssl
   dbglogger
+  mini18n
   freetype
   png
   zip

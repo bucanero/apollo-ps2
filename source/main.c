@@ -13,6 +13,7 @@
 #include <libmc.h>
 #include <elf-loader.h>
 #include <sbv_patches.h>
+#include <mini18n.h>
 
 #include "saves.h"
 #include "ramcache.h"
@@ -158,6 +159,8 @@ save_list_t user_backup = {
 
 static const char* get_menu_help(int id)
 {
+	static char prompt[256];
+
 	switch (id)
 	{
 	case MENU_PS1VMC_SAVES:
@@ -165,28 +168,37 @@ static const char* get_menu_help(int id)
 	case MENU_USB_SAVES:
 	case MENU_MEMCARD_SAVES:
 	case MENU_ONLINE_DB:
-		return "\x10 Select    \x13 Back    \x12 Details    \x11 Refresh";
+		snprintf(prompt, sizeof(prompt), "\x10 %s    \x13 %s    \x12 %s    \x11 %s", _("Select"), _("Back"), _("Details"), _("Refresh"));
+		break;
 
 	case MENU_HEX_EDITOR:
-		return "\x10 Value Up  \x11 Value Down   \x13 Exit";
+		snprintf(prompt, sizeof(prompt), "\x10 %s  \x11 %s   \x13 %s", _("Value Up"), _("Value Down"), _("Exit"));
+		break;
 
 	case MENU_CREDITS:
 	case MENU_PATCH_VIEW:
 	case MENU_SAVE_DETAILS:
-		return "\x13 Back";
+		snprintf(prompt, sizeof(prompt), "\x13 %s", _("Back"));
+		break;
 
 	case MENU_USER_BACKUP:
-		return "\x10 Select    \x13 Back    \x11 Refresh";
+		snprintf(prompt, sizeof(prompt), "\x10 %s    \x13 %s    \x11 %s", _("Select"), _("Back"), _("Refresh"));
+		break;
 
 	case MENU_SETTINGS:
 	case MENU_CODE_OPTIONS:
-		return "\x10 Select    \x13 Back";
+		snprintf(prompt, sizeof(prompt), "\x10 %s    \x13 %s", _("Select"), _("Back"));
+		break;
 
 	case MENU_PATCHES:
-		return "\x10 Select    \x12 View Code    \x13 Back";
+		snprintf(prompt, sizeof(prompt), "\x10 %s    \x12 %s    \x13 %s", _("Select"), _("View Code"), _("Back"));
+		break;
+
+	default:
+		return "";
 	}
 
-	return "";
+	return prompt;
 }
 
 static int initPad(void)
@@ -327,12 +339,12 @@ void update_usb_path(char* path)
 void update_hdd_path(char* path)
 {
 	int sel;
-	const char* memcard_opt[] = {"Memory Card 1", "Memory Card 2", NULL};
+	const char* memcard_opt[] = {_("Memory Card 1"), _("Memory Card 2"), NULL};
 
 	path[0] = 0;
 	if (dir_exists(MC0_PATH) == SUCCESS && dir_exists(MC1_PATH) == SUCCESS)
 	{
-		if ((sel = show_multi_dialog(memcard_opt, "Select Memory Card")) < 0)
+		if ((sel = show_multi_dialog(memcard_opt, _("Select Memory Card"))) < 0)
 			return;
 
 		strcpy(path, sel ? MC1_PATH : MC0_PATH);
@@ -376,6 +388,48 @@ void update_db_path(char* path)
 	strcpy(path, apollo_config.save_db);
 }
 
+// data/langs/lang_xx.po, zipped at build time (see CMakeLists.txt)
+extern const uint8_t _binary_langs_zip_start;
+extern const uint8_t _binary_langs_zip_size;
+
+// Loads the translation for the console's language: lang_xx.po from the app data folder on USB if there's one there
+// (e.g. to try out a translation), or else the one built into the app.
+// mini18n reads it from a file, so the built-in one is written to the cache
+// folder (kept in RAM without USB storage) and deleted once loaded.
+static void initLocalization(void)
+{
+	char path[256];
+	uint8_t* data;
+	size_t size;
+	const char* lang = get_language_code(get_system_language());
+
+	snprintf(path, sizeof(path), APOLLO_DATA_PATH "lang_%s.po", lang);
+	if (file_exists(path) == SUCCESS && mini18n_set_locale(path) == SUCCESS)
+		LOG("Language '%s': loaded %s", lang, path);
+
+	else if ((data = read_zip_buffer_file(&_binary_langs_zip_start, (size_t)(uintptr_t) &_binary_langs_zip_size, strrchr(path, '/') + 1, &size)) != NULL)
+	{
+		strcpy(path, APOLLO_LOCAL_CACHE "lang.po");
+		if (write_buffer(path, data, size) == SUCCESS && mini18n_set_locale(path) == SUCCESS)
+			LOG("Language '%s': loaded the built-in translation", lang);
+		else
+			LOG("Language '%s': can't load the built-in translation", lang);
+
+		unlink_secure(path);
+		free(data);
+	}
+	else
+		LOG("Language '%s': no translation, using English", lang);
+
+	hdd_saves.title = (char*) _("MemCard Saves");
+	usb_saves.title = (char*) _("External Saves");
+	vmc1_saves.title = (char*) _("Virtual MemCard");
+	vmc2_saves.title = (char*) _("Virtual MemCard");
+	online_saves.title = (char*) _("Saves Database");
+	user_backup.title = (char*) _("User Tools");
+	translate_settings();
+}
+
 static void registerSpecialChars(void)
 {
 	// Register save tags
@@ -417,6 +471,7 @@ static void terminate(void)
 	char region[4] = {'A', 'E', 'I', 'C'};
 
 	LOG("Exiting...");
+	mini18n_close();
 
 	sbv_patch_disable_prefix_check();
 
@@ -528,13 +583,14 @@ int main(int argc, char *argv[])
 	// Load application settings
 	load_app_settings(&apollo_config);
 	log_startup();
+	initLocalization();
 
 	// Unpack application data on first run
 	if (file_exists(APOLLO_LOCAL_CACHE "appdata.zip") == SUCCESS)
 	{
 //		clean_directory(APOLLO_DATA_PATH);
 		if (extract_zip(APOLLO_LOCAL_CACHE "appdata.zip", APOLLO_DATA_PATH))
-			show_message("Successfully installed local application data");
+			show_message(_("Successfully installed local application data"));
 
 		unlink_secure(APOLLO_LOCAL_CACHE "appdata.zip");
 	}

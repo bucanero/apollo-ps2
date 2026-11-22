@@ -1,0 +1,965 @@
+# Apollo Save Tool (PS2) - Russian translation
+msgid ""
+msgstr ""
+"Project-Id-Version: Apollo Save Tool\n"
+"Language-Team: github.com/bucanero\n"
+"Language: ru\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-Basepath: ../source\n"
+"X-Poedit-KeywordsList: _;_i18n\n"
+"X-Poedit-SearchPath-0: .\n"
+
+#: dialog.c:60
+msgid "Cancel"
+msgstr "Отмена"
+
+#: dialog.c:60 dialog.c:72
+msgid "OK"
+msgstr "OK"
+
+#: dialog.c:73
+msgid "No"
+msgstr "Нет"
+
+#: dialog.c:73
+msgid "Yes"
+msgstr "Да"
+
+#: exec_cmd.c:52 exec_cmd.c:127 exec_cmd.c:155 exec_cmd.c:199 exec_cmd.c:1119
+#: exec_cmd.c:1142
+msgid "Error! Export folder is not available:"
+msgstr "Ошибка! Папка для экспорта недоступна:"
+
+#: exec_cmd.c:58 exec_cmd.c:84
+msgid "Error downloading save game from:"
+msgstr "Ошибка загрузки сохранения из:"
+
+#: exec_cmd.c:63
+msgid "Save game successfully downloaded to:"
+msgstr "Сохранение успешно загружено в:"
+
+#: exec_cmd.c:65 exec_cmd.c:99
+msgid "Error extracting save game!"
+msgstr "Ошибка извлечения сохранения!"
+
+#: exec_cmd.c:97
+msgid "Save game successfully copied to:"
+msgstr "Сохранение успешно скопировано в:"
+
+#: exec_cmd.c:113
+msgid "Error extracting PSV data from:"
+msgstr "Ошибка извлечения данных PSV из:"
+
+#: exec_cmd.c:119 exec_cmd.c:565
+msgid "Importing save..."
+msgstr "Импорт сохранения..."
+
+#: exec_cmd.c:125
+msgid "Save game successfully imported to:"
+msgstr "Сохранение успешно импортировано в:"
+
+#: exec_cmd.c:159
+msgid "Exporting save game..."
+msgstr "Экспорт сохранения..."
+
+#: exec_cmd.c:182
+msgid "Zip file successfully saved to:"
+msgstr "Zip-архив успешно сохранен в:"
+
+#: exec_cmd.c:193 exec_cmd.c:232
+msgid "Copy operation cancelled!"
+msgstr "Операция копирования отменена!"
+
+#: exec_cmd.c:193 exec_cmd.c:232
+msgid "Same source and destination."
+msgstr "Источник и назначение совпадают."
+
+#: exec_cmd.c:203
+msgid "Copying files..."
+msgstr "Копирование файлов..."
+
+#: exec_cmd.c:213 exec_cmd.c:241 exec_cmd.c:1229
+msgid "Files successfully copied to:"
+msgstr "Файлы успешно скопированы в:"
+
+#: exec_cmd.c:236 exec_cmd.c:1224
+msgid "Copying save game..."
+msgstr "Копирование сохранения..."
+
+#: exec_cmd.c:243 exec_cmd.c:1231
+msgid "Error! Can't copy Save-game folder:"
+msgstr "Ошибка! Не удалось скопировать папку сохранения:"
+
+#: exec_cmd.c:255 exec_cmd.c:309 exec_cmd.c:629
+msgid "Copying all saves..."
+msgstr "Копирование всех сохранений..."
+
+#: exec_cmd.c:297 exec_cmd.c:324
+#, c-format
+msgid "%d/%d Saves copied to Memory Card %d"
+msgstr "%d/%d сохранений скопировано на карту памяти %d"
+
+#: exec_cmd.c:336
+msgid "Exporting all VMC saves..."
+msgstr "Экспорт всех сохранений VMC..."
+
+#: exec_cmd.c:352 exec_cmd.c:1004
+msgid "Saves exported to:"
+msgstr "Сохранения экспортированы в:"
+
+#: exec_cmd.c:388
+msgid "All files extracted to:"
+msgstr "Все файлы извлечены в:"
+
+#: exec_cmd.c:390
+#, c-format
+msgid "Error: %s couldn't be extracted"
+msgstr "Ошибка: %s не может быть извлечен"
+
+#: exec_cmd.c:607
+#, c-format
+msgid "Save successfully imported to %s"
+msgstr "Сохранение успешно импортировано в %s"
+
+#: exec_cmd.c:609
+msgid "Error: save couldn't be imported"
+msgstr "Ошибка: не удалось импортировать сохранение"
+
+#: exec_cmd.c:625
+msgid "Error! Folder is not available:"
+msgstr "Ошибка! Папка недоступна:"
+
+#: exec_cmd.c:658
+msgid "Saves copied to:"
+msgstr "Сохранения скопированы в:"
+
+#: exec_cmd.c:760
+msgid "Applying changes..."
+msgstr "Применение изменений..."
+
+#: exec_cmd.c:896 saves.c:270
+msgid "Add copy protection (lock save)"
+msgstr "Включить защиту от копирования"
+
+#: exec_cmd.c:896 saves.c:268
+msgid "Remove copy protection (unlock save)"
+msgstr "Снять защиту от копирования"
+
+#: exec_cmd.c:906
+#, c-format
+msgid "Error! Copy protection of %s couldn't be changed"
+msgstr "Ошибка! Не удалось изменить защиту %s"
+
+#: exec_cmd.c:912
+msgid "Error! Cheat codes couldn't be applied"
+msgstr "Ошибка! Не удалось применить чит-коды"
+
+#: exec_cmd.c:914
+#, c-format
+msgid "Save %s successfully modified!"
+msgstr "Сохранение %s успешно изменено!"
+
+#: exec_cmd.c:926
+#, c-format
+msgid "Do you want to delete %s?"
+msgstr "Вы хотите удалить %s?"
+
+#: exec_cmd.c:955
+msgid "Save successfully deleted:"
+msgstr "Сохранение успешно удалено:"
+
+#: exec_cmd.c:957
+msgid "Error! Couldn't delete save:"
+msgstr "Ошибка! Не удалось удалить сохранение:"
+
+#: exec_cmd.c:972
+msgid "Exporting all saves..."
+msgstr "Экспорт всех сохранений..."
+
+#: exec_cmd.c:1022
+msgid "Exporting save..."
+msgstr "Экспорт сохранения..."
+
+#: exec_cmd.c:1046 exec_cmd.c:1084 exec_cmd.c:1106
+msgid "Save successfully exported to:"
+msgstr "Сохранение успешно экспортировано в:"
+
+#: exec_cmd.c:1048 exec_cmd.c:1086 exec_cmd.c:1108
+msgid "Error exporting save:"
+msgstr "Ошибка экспорта сохранения:"
+
+#: exec_cmd.c:1067
+msgid "Exporting save ..."
+msgstr "Экспорт сохранения ..."
+
+#: exec_cmd.c:1126
+msgid "Memory card successfully exported to:"
+msgstr "Карта памяти успешно экспортирована в:"
+
+#: exec_cmd.c:1128
+msgid "Error! Failed to export PS1 memory card"
+msgstr "Ошибка! Не удалось экспортировать карту памяти PS1"
+
+#: exec_cmd.c:1156
+msgid "Memory Card dumped to:"
+msgstr "Дамп карты памяти сохранен в:"
+
+#: exec_cmd.c:1156
+msgid "Warning! Pages with ECC errors (saved as read):"
+msgstr "Внимание! Страниц с ошибками ECC (сохранены как есть):"
+
+#: exec_cmd.c:1158
+msgid "Memory Card successfully dumped to:"
+msgstr "Дамп карты памяти успешно сохранен в:"
+
+#: exec_cmd.c:1160
+msgid "Error! Failed to dump"
+msgstr "Ошибка! Не удалось снять дамп"
+
+#: exec_cmd.c:1170
+msgid "Error! Can't write image to"
+msgstr "Ошибка! Не удалось записать образ на"
+
+#: exec_cmd.c:1174
+msgid "ALL data will be replaced by:"
+msgstr "ВСЕ данные будут заменены на:"
+
+#: exec_cmd.c:1174
+msgid "This cannot be undone. Continue?"
+msgstr "Это нельзя отменить. Продолжить?"
+
+#: exec_cmd.c:1179
+#, c-format
+msgid "Memory Card image successfully written to mc%d:"
+msgstr "Образ успешно записан на карту памяти mc%d:"
+
+#: exec_cmd.c:1181
+msgid "Error writing image to"
+msgstr "Ошибка записи образа на"
+
+#: exec_cmd.c:1181
+msgid "The Memory Card contents are now incomplete!"
+msgstr "Содержимое карты памяти теперь неполное!"
+
+#: exec_cmd.c:1188
+msgid "Importing save ..."
+msgstr "Импорт сохранения ..."
+
+#: exec_cmd.c:1217
+msgid "Successfully imported to VMC:"
+msgstr "Успешно импортировано в VMC:"
+
+#: exec_cmd.c:1219
+msgid "Error importing save:"
+msgstr "Ошибка импорта сохранения:"
+
+#: exec_cmd.c:1257 exec_cmd.c:1262
+#, c-format
+msgid "Error! File %s couldn't be exported"
+msgstr "Ошибка! Файл %s не удалось экспортировать"
+
+#: exec_cmd.c:1259
+msgid "File successfully exported to:"
+msgstr "Файл успешно экспортирован в:"
+
+#: exec_cmd.c:1272
+msgid "Error! Can't find save-game file:"
+msgstr "Ошибка! Не найден файл сохранения:"
+
+#: exec_cmd.c:1282 exec_cmd.c:1287
+#, c-format
+msgid "Error! File %s couldn't be imported"
+msgstr "Ошибка! Файл %s не удалось импортировать"
+
+#: exec_cmd.c:1284
+msgid "File successfully imported to:"
+msgstr "Файл успешно импортирован в:"
+
+#: exec_cmd.c:1295
+msgid "Download URL"
+msgstr "URL для загрузки"
+
+#: exec_cmd.c:1301
+msgid "File successfully downloaded to:"
+msgstr "Файл успешно загружен в:"
+
+#: exec_cmd.c:1303
+msgid "Error! File couldn't be downloaded"
+msgstr "Ошибка! Не удалось загрузить файл"
+
+#: exec_cmd.c:1362
+msgid "Save successfully imported:"
+msgstr "Сохранение успешно импортировано:"
+
+#: exec_cmd.c:1364
+msgid "Error! Couldn't import save:"
+msgstr "Ошибка! Не удалось импортировать сохранение:"
+
+#: http.c:160
+msgid "Connecting to the network..."
+msgstr "Подключение к сети..."
+
+#: http.c:310
+msgid "Downloading..."
+msgstr "Загрузка..."
+
+#: main.c:171 main.c:181 main.c:185 main.c:190 main.c:194
+msgid "Back"
+msgstr "Назад"
+
+#: main.c:171 menu_cheats.c:256 menu_main.c:158
+msgid "Details"
+msgstr "Подробности"
+
+#: main.c:171 main.c:185
+msgid "Refresh"
+msgstr "Обновить"
+
+#: main.c:171 main.c:185 main.c:190 main.c:194
+msgid "Select"
+msgstr "Выбрать"
+
+#: main.c:175
+msgid "Exit"
+msgstr "Выход"
+
+#: main.c:175
+msgid "Value Down"
+msgstr "Уменьшить"
+
+#: main.c:175
+msgid "Value Up"
+msgstr "Увеличить"
+
+#: main.c:194
+msgid "View Code"
+msgstr "Просмотр кода"
+
+#: main.c:342
+msgid "Memory Card 1"
+msgstr "Карта памяти 1"
+
+#: main.c:342
+msgid "Memory Card 2"
+msgstr "Карта памяти 2"
+
+#: main.c:347
+msgid "Select Memory Card"
+msgstr "Выберите карту памяти"
+
+#: main.c:424
+msgid "MemCard Saves"
+msgstr "Сохранения на карте"
+
+#: main.c:425
+msgid "External Saves"
+msgstr "Внешние сохранения"
+
+#: main.c:426 main.c:427
+msgid "Virtual MemCard"
+msgstr "Вирт. карта памяти"
+
+#: main.c:428
+msgid "Saves Database"
+msgstr "База сохранений"
+
+#: main.c:429
+msgid "User Tools"
+msgstr "Пользовательские инструменты"
+
+#: main.c:593
+msgid "Successfully installed local application data"
+msgstr "Локальные данные приложения успешно установлены"
+
+#: mc_image.c:228
+msgid "Dumping Memory Card..."
+msgstr "Создание дампа карты памяти..."
+
+#: mc_image.c:282
+msgid "Dumping PS1 Memory Card..."
+msgstr "Создание дампа карты памяти PS1..."
+
+#: mc_image.c:401
+msgid "Erasing Memory Card..."
+msgstr "Очистка карты памяти..."
+
+#: mc_image.c:412
+msgid "Writing Memory Card image..."
+msgstr "Запись образа карты памяти..."
+
+#: mc_image.c:457
+msgid "No Memory Card of the right type in the slot"
+msgstr "В слоте нет карты памяти нужного типа"
+
+#: mc_image.c:458
+msgid "Memory Card is not formatted (or unreadable)"
+msgstr "Карта памяти не отформатирована (или не читается)"
+
+#: mc_image.c:459
+msgid "Unsupported Memory Card geometry"
+msgstr "Неподдерживаемая геометрия карты памяти"
+
+#: mc_image.c:460
+msgid "Cannot read or write the image file"
+msgstr "Не удалось прочитать или записать файл образа"
+
+#: mc_image.c:461
+msgid "File is not a formatted PS2 Memory Card image"
+msgstr "Файл не является образом карты памяти PS2"
+
+#: mc_image.c:462
+msgid "Image size does not match the Memory Card"
+msgstr "Размер образа не совпадает с картой памяти"
+
+#: mc_image.c:463
+msgid "Memory Card read error"
+msgstr "Ошибка чтения карты памяти"
+
+#: mc_image.c:464
+msgid "Memory Card erase error"
+msgstr "Ошибка очистки карты памяти"
+
+#: mc_image.c:465
+msgid "Memory Card write error"
+msgstr "Ошибка записи карты памяти"
+
+#: mc_image.c:466
+msgid "Verification failed (bad block?)"
+msgstr "Ошибка проверки (плохой блок?)"
+
+#: mc_image.c:467
+msgid "Unknown error"
+msgstr "Неизвестная ошибка"
+
+#: menu_about.c:98 menu_about.c:130
+msgid "About"
+msgstr "О программе"
+
+#: menu_cheats.c:112 menu_cheats.c:145 menu_cheats.c:165
+msgid "Options"
+msgstr "Опции"
+
+#: menu_cheats.c:210
+msgid "Target File"
+msgstr "Целевой файл"
+
+#: menu_cheats.c:519
+#, c-format
+msgid "%ld Saves"
+msgstr "Сохранений: %ld"
+
+#: menu_cheats.c:524
+#, c-format
+msgid "%ld Games"
+msgstr "Игр: %ld"
+
+#: menu_cheats.c:528
+msgid "Tools"
+msgstr "Инструменты"
+
+#: menu_hex.c:51 menu_hex.c:71
+msgid "Hex Editor"
+msgstr "Hex-редактор"
+
+#: menu_main.c:79
+msgid "Loading saves..."
+msgstr "Загрузка сохранений..."
+
+#: menu_main.c:93
+msgid "No save-games found"
+msgstr "Сохранения не найдены"
+
+#: menu_main.c:141
+msgid "Error getting details"
+msgstr "Ошибка получения сведений"
+
+#: menu_main.c:157 saves.c:2263 saves.c:2277 saves.c:2293
+msgid "File"
+msgstr "Файл"
+
+#: menu_main.c:157 saves.c:2291 saves.c:2307
+msgid "Game"
+msgstr "Игра"
+
+#: menu_main.c:157 saves.c:2264 saves.c:2292 saves.c:2308 saves.c:2322
+msgid "Title ID"
+msgstr "Title ID"
+
+#: menu_main.c:380 menu_main.c:784
+msgid "Patch view"
+msgstr "Просмотр патча"
+
+#: menu_main.c:520
+msgid "No data found in folder:"
+msgstr "В папке нет данных:"
+
+#: menu_main.c:576
+msgid "Exit the app?"
+msgstr "Выйти из программы?"
+
+#: menu_main.c:717 menu_main.c:725
+#, c-format
+msgid "Save changes to %s?"
+msgstr "Сохранить изменения в %s?"
+
+#: menu_main.c:722
+msgid "Error! Couldn't save changes to:"
+msgstr "Ошибка! Не удалось сохранить изменения в:"
+
+#: menu_main.c:822 menu_main.c:840
+msgid "Unable to load"
+msgstr "Не удалось загрузить"
+
+#: menu_options.c:66 menu_options.c:86
+msgid "Settings"
+msgstr "Настройки"
+
+#: saves.c:264
+msgid "Copy Protection"
+msgstr "Защита от копирования"
+
+#: saves.c:280
+msgid "File Backup"
+msgstr "Резервное копирование файлов"
+
+#: saves.c:285
+msgid "Copy save files"
+msgstr "Копировать файлы сохранения"
+
+#: saves.c:288
+msgid "Copy Save to Mass Storage"
+msgstr "Копировать на накопитель"
+
+#: saves.c:289 saves.c:1113
+msgid "Copy Save to Memory Card"
+msgstr "Копировать на карту памяти"
+
+#: saves.c:292
+msgid "Export save files to Zip"
+msgstr "Экспорт файлов сохранения в Zip"
+
+#: saves.c:294
+msgid "Export Zip to Mass Storage"
+msgstr "Экспорт Zip на накопитель"
+
+#: saves.c:298
+msgid "Export single save files"
+msgstr "Экспорт отдельных файлов"
+
+#: saves.c:303
+msgid "Import single save files"
+msgstr "Импорт отдельных файлов"
+
+#: saves.c:308 saves.c:757
+msgid "Hex Edit save game files"
+msgstr "Редактировать файлы сохранений в Hex-редакторе"
+
+#: saves.c:351 saves.c:379 saves.c:961
+msgid "Save Game Backup"
+msgstr "Резервная копия сохранения"
+
+#: saves.c:354
+msgid "Export save to .MCS format"
+msgstr "Экспорт в формат .MCS"
+
+#: saves.c:356
+msgid "Export .MCS to Storage"
+msgstr "Экспорт .MCS на накопитель"
+
+#: saves.c:360
+msgid "Export save to .PSX format"
+msgstr "Экспорт в формат .PSX"
+
+#: saves.c:362
+msgid "Export .PSX to Storage"
+msgstr "Экспорт .PSX на накопитель"
+
+#: saves.c:366 saves.c:388
+msgid "Export save to .PSV format"
+msgstr "Экспорт в формат .PSV"
+
+#: saves.c:368 saves.c:390
+msgid "Export .PSV to Storage"
+msgstr "Экспорт .PSV на накопитель"
+
+#: saves.c:382
+msgid "Export save to .PSU format"
+msgstr "Экспорт в формат .PSU"
+
+#: saves.c:384
+msgid "Export .PSU to Storage"
+msgstr "Экспорт .PSU на накопитель"
+
+#: saves.c:397
+msgid "Export save to .CBS format"
+msgstr "Экспорт в формат .CBS"
+
+#: saves.c:399
+msgid "Export .CBS to Storage"
+msgstr "Экспорт .CBS на накопитель"
+
+#: saves.c:801 saves.c:874
+msgid "Cheats"
+msgstr "Читы"
+
+#: saves.c:804 saves.c:877
+msgid "View Raw Patch File"
+msgstr "Просмотреть исходный файл патча"
+
+#: saves.c:847
+msgid "Save linked to MemCard ID"
+msgstr "Сохранение привязано к ID карты"
+
+#: saves.c:852 saves.c:952 saves.c:1099
+msgid "Apply Changes"
+msgstr "Применить изменения"
+
+#: saves.c:855 saves.c:955 saves.c:1102 saves.c:1614
+msgid "View Save Details"
+msgstr "Просмотр сведений о сохранении"
+
+#: saves.c:858 saves.c:958 saves.c:1105 saves.c:1622
+msgid "Delete Save Game"
+msgstr "Удалить сохранение"
+
+#: saves.c:964
+msgid "Export save game to .MCS format"
+msgstr "Экспорт сохранения в формат .MCS"
+
+#: saves.c:966
+msgid "Copy .MCS Save to Storage"
+msgstr "Копировать .MCS на накопитель"
+
+#: saves.c:970
+msgid "Export save game to .PSV format"
+msgstr "Экспорт сохранения в формат .PSV"
+
+#: saves.c:972
+msgid "Copy .PSV Save to Storage"
+msgstr "Копировать .PSV на накопитель"
+
+#: saves.c:976
+msgid "Export save game to .PSX format"
+msgstr "Экспорт сохранения в формат .PSX"
+
+#: saves.c:978
+msgid "Copy .PSX Save to Storage"
+msgstr "Копировать .PSX на накопитель"
+
+#: saves.c:1108
+msgid "Save Transfer"
+msgstr "Перенос сохранения"
+
+#: saves.c:1111
+msgid "Copy save game to Memory Card"
+msgstr "Копировать сохранение на карту памяти"
+
+#: saves.c:1199
+msgid "Download to Mass Storage"
+msgstr "Загрузить на накопитель"
+
+#: saves.c:1252 saves.c:1617
+msgid "Import to Memory Card"
+msgstr "Импорт на карту памяти"
+
+#: saves.c:1255 saves.c:1260
+msgid "Copy to Storage"
+msgstr "Копировать на накопитель"
+
+#: saves.c:1280
+msgid "Extract Archives (Zip)"
+msgstr "Распаковать архивы (Zip)"
+
+#: saves.c:1307
+msgid "Local Web Server (full system access)"
+msgstr "Локальный веб-сервер (полный доступ к системе)"
+
+#: saves.c:1342
+msgid "Extract"
+msgstr "Извлечь"
+
+#: saves.c:1619
+msgid "Import to MemCard"
+msgstr "Импорт на карту"
+
+#: saves.c:1825 saves.c:1872 saves.c:2164
+msgid "Bulk Save Management"
+msgstr "Массовое управление сохранениями"
+
+#: saves.c:1833 saves.c:2077 saves.c:2172
+msgid "Copy selected Saves to Memory Card"
+msgstr "Копировать выбранные на карту памяти"
+
+#: saves.c:1835 saves.c:1840 saves.c:2079 saves.c:2083 saves.c:2174
+#: saves.c:2178
+msgid "Copy Saves to MemCard"
+msgstr "Копировать на карту"
+
+#: saves.c:1838 saves.c:2081 saves.c:2176
+msgid "Copy all Saves to Memory Card"
+msgstr "Копировать все на карту памяти"
+
+#: saves.c:1880
+msgid "Copy selected Saves to Backup Storage"
+msgstr "Скопировать выбранные сохранения в резервное хранилище"
+
+#: saves.c:1882 saves.c:1887 saves.c:1895 saves.c:1903
+msgid "Copy Saves to Backup Storage"
+msgstr "Копировать сохранения в резервное хранилище"
+
+#: saves.c:1885
+msgid "Copy all Saves to Backup Storage"
+msgstr "Скопировать все сохранения в резервное хранилище"
+
+#: saves.c:1890
+msgid ".PSU Export selected Saves to Backup Storage"
+msgstr ".PSU: экспорт выбранных в резервное хранилище"
+
+#: saves.c:1898
+msgid ".PSU Export All Saves to Backup Storage"
+msgstr ".PSU: экспорт всех в резервное хранилище"
+
+#: saves.c:1909 saves.c:2190
+msgid "Memory Card Image"
+msgstr "Образ карты памяти"
+
+#: saves.c:1914
+msgid "Dump Memory Card to .MCR image"
+msgstr "Дамп карты памяти в образ .MCR"
+
+#: saves.c:1916
+msgid "Save .MCR image to Storage"
+msgstr "Сохранить образ .MCR на накопитель"
+
+#: saves.c:1921
+msgid "Dump Memory Card to .PS2 image (ECC)"
+msgstr "Дамп карты памяти в образ .PS2 (ECC)"
+
+#: saves.c:1923
+msgid "Save .PS2 image to Storage"
+msgstr "Сохранить образ .PS2 на накопитель"
+
+#: saves.c:1926
+msgid "Dump Memory Card to .VMC image (raw)"
+msgstr "Дамп карты памяти в образ .VMC (raw)"
+
+#: saves.c:1928
+msgid "Save .VMC image to Storage"
+msgstr "Сохранить образ .VMC на накопитель"
+
+#: saves.c:2068
+msgid "Memory Card Management"
+msgstr "Управление картой памяти"
+
+#: saves.c:2086 saves.c:2181
+msgid "Export selected Saves to Storage (.PSV)"
+msgstr "Экспорт выбранных на накопитель (.PSV)"
+
+#: saves.c:2088 saves.c:2092 saves.c:2183 saves.c:2187
+msgid "Export Saves to Storage"
+msgstr "Экспорт на накопитель"
+
+#: saves.c:2090 saves.c:2185
+msgid "Export all Saves to Storage (.PSV)"
+msgstr "Экспорт всех на накопитель (.PSV)"
+
+#: saves.c:2095 saves.c:2276
+msgid "Virtual Memory Card"
+msgstr "Виртуальная карта памяти"
+
+#: saves.c:2098
+msgid "Export Memory Card to .VM1 format"
+msgstr "Экспорт карты памяти в формат .VM1"
+
+#: saves.c:2101
+msgid "Save .VM1 Memory Card to Storage"
+msgstr "Сохранить .VM1 на накопитель"
+
+#: saves.c:2104
+msgid "Export Memory Card to .VMP format"
+msgstr "Экспорт карты памяти в формат .VMP"
+
+#: saves.c:2107
+msgid "Save .VMP Memory Card to Storage"
+msgstr "Сохранить .VMP на накопитель"
+
+#: saves.c:2111 saves.c:2199
+msgid "Import Saves to Virtual Card"
+msgstr "Импортировать сохранения в виртуальную карту"
+
+#: saves.c:2193
+msgid "Write image to Memory Card (overwrites the card)"
+msgstr "Записать образ на карту памяти (перезапись)"
+
+#: saves.c:2195
+msgid "Write image to MemCard"
+msgstr "Записать образ на карту"
+
+#: saves.c:2262
+msgid "Packed PS1 Save"
+msgstr "Упакованное сохранение PS1"
+
+#: saves.c:2262
+msgid "Packed PS2 Save"
+msgstr "Упакованное сохранение PS2"
+
+#: saves.c:2265 saves.c:2278 saves.c:2309
+msgid "Folder"
+msgstr "Папка"
+
+#: saves.c:2290
+msgid "PS1 Save"
+msgstr "Сохранение PS1"
+
+#: saves.c:2306
+msgid "PS2 Save"
+msgstr "Сохранение PS2"
+
+#: saves.c:2310
+msgid "Icon"
+msgstr "Иконка"
+
+#: saves.c:2320
+msgid "Save"
+msgstr "Сохранение"
+
+#: saves.c:2321
+msgid "Title"
+msgstr "Название"
+
+#: saves.c:2323
+msgid "Dir Name"
+msgstr "Папка"
+
+#: settings.c:23
+msgid "Disabled"
+msgstr "Отключено"
+
+#: settings.c:23
+msgid "by Name"
+msgstr "по Имени"
+
+#: settings.c:23
+msgid "by Title ID"
+msgstr "по Title ID"
+
+#: settings.c:23
+msgid "by Type"
+msgstr "по Типу"
+
+#: settings.c:26
+msgid "Background Music"
+msgstr "Фоновая музыка"
+
+#: settings.c:32
+msgid "Menu Animations"
+msgstr "Анимации меню"
+
+#: settings.c:38
+msgid "Sort Saves"
+msgstr "Сортировка сохранений"
+
+#: settings.c:44
+msgid "External Saves Source"
+msgstr "Источник внешних сохранений"
+
+#: settings.c:50
+msgid "Check for Updates"
+msgstr "Проверить обновления"
+
+#: settings.c:64
+msgid "Clear Local Cache"
+msgstr "Очистить локальный кеш"
+
+#: settings.c:70
+msgid "Debug Log"
+msgstr "Отладочный журнал"
+
+#: settings.c:116
+#, c-format
+msgid "RAM cache cleaned (%d files)"
+msgstr "Кеш в ОЗУ очищен (файлов: %d)"
+
+#: settings.c:123
+msgid "Local cache folder cleaned:"
+msgstr "Локальный кеш очищен:"
+
+#: settings.c:132
+msgid "Error! Can't download data update pack!"
+msgstr "Ошибка! Не удалось загрузить пакет обновления данных!"
+
+#: settings.c:137
+#, c-format
+msgid "Successfully updated %d data files!"
+msgstr "Успешно обновлено %d файлов данных!"
+
+#: settings.c:139
+msgid "Error! Can't extract data update pack!"
+msgstr "Ошибка! Не удалось извлечь пакет обновления данных!"
+
+#: settings.c:187
+msgid "(PS2 Network Adapter and DHCP required)"
+msgstr "(нужен сетевой адаптер PS2 и DHCP)"
+
+#: settings.c:187
+msgid "Can't check for updates: no network connection"
+msgstr "Не удалось проверить обновления: нет сети"
+
+#: settings.c:194 settings.c:208
+msgid "Can't check for updates:"
+msgstr "Не удалось проверить обновления:"
+
+#: settings.c:194
+msgid "GitHub couldn't be reached"
+msgstr "GitHub недоступен"
+
+#: settings.c:208
+msgid "unexpected reply from GitHub"
+msgstr "неожиданный ответ от GitHub"
+
+#: settings.c:220
+#, c-format
+msgid "Apollo Save Tool v%s is up to date"
+msgstr "Apollo Save Tool v%s - последняя версия"
+
+#: settings.c:221
+msgid "Latest release:"
+msgstr "Последний выпуск:"
+
+#: settings.c:231
+msgid "Download it from:"
+msgstr "Скачайте ее с:"
+
+#: settings.c:231 settings.c:235
+msgid "New version available:"
+msgstr "Доступна новая версия:"
+
+#: settings.c:235
+msgid "Download update to:"
+msgstr "Загрузить обновление в:"
+
+#: settings.c:238
+msgid "Update downloaded to:"
+msgstr "Обновление загружено в:"
+
+#: settings.c:240
+msgid "Error! Can't download the update"
+msgstr "Ошибка! Не удалось загрузить обновление"
+
+#: settings.c:285
+msgid "Debug Logging Disabled"
+msgstr "Ведение отладочного журнала отключено"
+
+#: settings.c:292
+msgid "Error! Can't create the log file:"
+msgstr "Ошибка! Не удалось создать файл журнала:"
+
+#: settings.c:296
+msgid "Debug Logging Enabled!"
+msgstr "Ведение отладочного журнала включено!"
+
+#: zip_util.c:200
+msgid "Extracting files..."
+msgstr "Извлечение файлов..."

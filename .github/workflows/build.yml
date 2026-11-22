@@ -24,11 +24,20 @@ jobs:
           git clone --depth 1 https://github.com/bucanero/dbglogger
           git clone --depth 1 https://github.com/bucanero/apollo-lib
           git clone --depth 1 https://github.com/bucanero/oosdk_libraries
+          git clone --depth 1 https://github.com/bucanero/mini18n
 
       - name: build dbglogger
         run: |
           cd dbglogger
           make -f Makefile.ps2 install
+
+      - name: build mini18n
+        run: |
+          cd mini18n
+          cmake --toolchain $PS2DEV/ps2sdk/ps2dev.cmake . -DCMAKE_BUILD_TYPE=Release
+          make mini18n-static
+          cp src/mini18n.h $PS2DEV/ps2sdk/ports/include/
+          cp src/libmini18n.a $PS2DEV/ps2sdk/ports/lib/
 
       - name: build polarssl
         run: |

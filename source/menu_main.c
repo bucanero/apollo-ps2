@@ -76,7 +76,7 @@ static int LoadUserSaves(save_list_t* save_list, int update_path)
 	if (update_path && save_list->UpdatePath)
 		save_list->UpdatePath(save_list->path);
 
-	init_loading_screen("Loading saves...");
+	init_loading_screen(_("Loading saves..."));
 
 	save_list->list = save_list->ReadList(save_list->path);
 	if (apollo_config.doSort == SORT_BY_NAME)
@@ -90,7 +90,7 @@ static int LoadUserSaves(save_list_t* save_list, int update_path)
 
 	if (!save_list->list)
 	{
-		show_message("No save-games found");
+		show_message(_("No save-games found"));
 		return 0;
 	}
 
@@ -138,7 +138,7 @@ static code_entry_t* LoadSaveDetails(void)
 	centry->name = strdup(selected_entry->title_id);
 
 	if (!get_save_details(selected_entry, &centry->codes))
-		asprintf(&centry->codes, "Error getting details (%s)", selected_entry->name);
+		asprintf(&centry->codes, "%s (%s)", _("Error getting details"), selected_entry->name);
 
 	LOG("%s", centry->codes);
 	centry->codes = fit_details_text(centry->codes);
@@ -153,9 +153,9 @@ static code_entry_t* LoadOnlineSaveDetails(void)
 	char* text;
 
 	centry->name = strdup(selected_entry->title_id);
-	asprintf(&text, "Game: %s\nTitle ID: %s\nFile: %s\n%s%s\n----- Details -----\n%s\n",
-		selected_entry->name, selected_entry->title_id, selected_centry->file,
-		selected_entry->path, selected_centry->file, selected_centry->name + 2);    // name: icon + ' ' + description
+	asprintf(&text, "%s: %s\n%s: %s\n%s: %s\n%s%s\n----- %s -----\n%s\n",
+		_("Game"), selected_entry->name, _("Title ID"), selected_entry->title_id, _("File"), selected_centry->file,
+		selected_entry->path, selected_centry->file, _("Details"), selected_centry->name + 2);    // name: icon + ' ' + description
 
 	centry->codes = fit_details_text(text);
 	return centry;
@@ -377,7 +377,7 @@ static void SetMenu(int id)
 		case MENU_PATCH_VIEW: //Cheat View Menu
 			menu_old_sel[MENU_PATCH_VIEW] = 0;
 			if (apollo_config.doAni)
-				Draw_CheatsMenu_View_Ani("Patch view");
+				Draw_CheatsMenu_View_Ani(_("Patch view"));
 			break;
 
 		case MENU_SAVE_DETAILS: //Save Detail View Menu
@@ -517,7 +517,7 @@ static void doSaveMenu(save_list_t * save_list)
 
 		if (!selected_entry->codes && !save_list->ReadCodes(selected_entry))
 		{
-			show_message("No data found in folder:\n%s", selected_entry->path);
+			show_message("%s\n%s", _("No data found in folder:"), selected_entry->path);
 			return;
 		}
 
@@ -573,7 +573,7 @@ static void doMainMenu(void)
 		return;
 	}
 
-	else if(ps2PadGetButtonPressed(PAD_CIRCLE) && show_dialog(DIALOG_TYPE_YESNO, "Exit the app?"))
+	else if(ps2PadGetButtonPressed(PAD_CIRCLE) && show_dialog(DIALOG_TYPE_YESNO, _("Exit the app?")))
 		close_app = 1;
 	
 	Draw_MainMenu();
@@ -714,15 +714,15 @@ static void doHexEditor(void)
 		if (selected_entry->flags & SAVE_FLAG_VMC)
 		{
 			// Write the changes straight to the memory card save
-			if (show_dialog(DIALOG_TYPE_YESNO, "Save changes to %s?", strrchr(hex_data.filepath, '/') + 1))
+			if (show_dialog(DIALOG_TYPE_YESNO, _("Save changes to %s?"), strrchr(hex_data.filepath, '/') + 1))
 			{
 				if (vmc_write_save_file(selected_entry, strrchr(hex_data.filepath, '/') + 1, hex_data.data, hex_data.size))
 					selected_entry->flags |= SAVE_FLAG_UPDATED;
 				else
-					show_message("Error! Couldn't save changes to:\n%s", hex_data.filepath);
+					show_message("%s\n%s", _("Error! Couldn't save changes to:"), hex_data.filepath);
 			}
 		}
-		else if (show_dialog(DIALOG_TYPE_YESNO, "Save changes to %s?", strrchr(hex_data.filepath, '/') + 1) &&
+		else if (show_dialog(DIALOG_TYPE_YESNO, _("Save changes to %s?"), strrchr(hex_data.filepath, '/') + 1) &&
 			(write_buffer(hex_data.filepath, hex_data.data, hex_data.size) == SUCCESS))
 		{
 //			selected_centry->options[option_index].value[menu_sel][1] = CMD_IMPORT_DATA_FILE;
@@ -781,7 +781,7 @@ static void doPatchViewMenu(void)
 		return;
 	}
 	
-	Draw_CheatsMenu_View("Patch view");
+	Draw_CheatsMenu_View(_("Patch view"));
 }
 
 static void doCodeOptionsMenu(void)
@@ -819,7 +819,7 @@ static void doCodeOptionsMenu(void)
 					if (hex_data.data && !hex_data.size)
 						free(hex_data.data);
 
-					show_message("Unable to load\n%s", hex_data.filepath);
+					show_message("%s\n%s", _("Unable to load"), hex_data.filepath);
 					SetMenu(last_menu_id[MENU_CODE_OPTIONS]);
 					return;
 				}
@@ -837,7 +837,7 @@ static void doCodeOptionsMenu(void)
 				snprintf(hex_data.filepath, sizeof(hex_data.filepath), "%s%s", selected_entry->path, optval->name);
 				if (read_buffer(hex_data.filepath, &hex_data.data, &hex_data.size) < 0)
 				{
-					show_message("Unable to load\n%s", hex_data.filepath);
+					show_message("%s\n%s", _("Unable to load"), hex_data.filepath);
 					SetMenu(last_menu_id[MENU_CODE_OPTIONS]);
 					return;
 				}

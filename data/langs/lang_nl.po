@@ -1,0 +1,965 @@
+# Apollo Save Tool (PS2) - Dutch translation
+msgid ""
+msgstr ""
+"Project-Id-Version: Apollo Save Tool\n"
+"Language-Team: github.com/bucanero\n"
+"Language: nl\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-Basepath: ../source\n"
+"X-Poedit-KeywordsList: _;_i18n\n"
+"X-Poedit-SearchPath-0: .\n"
+
+#: dialog.c:60
+msgid "Cancel"
+msgstr "Annuleren"
+
+#: dialog.c:60 dialog.c:72
+msgid "OK"
+msgstr "OK"
+
+#: dialog.c:73
+msgid "No"
+msgstr "Nee"
+
+#: dialog.c:73
+msgid "Yes"
+msgstr "Ja"
+
+#: exec_cmd.c:52 exec_cmd.c:127 exec_cmd.c:155 exec_cmd.c:199 exec_cmd.c:1119
+#: exec_cmd.c:1142
+msgid "Error! Export folder is not available:"
+msgstr "Fout! Exportmap is niet beschikbaar:"
+
+#: exec_cmd.c:58 exec_cmd.c:84
+msgid "Error downloading save game from:"
+msgstr "Fout bij downloaden van save vanaf:"
+
+#: exec_cmd.c:63
+msgid "Save game successfully downloaded to:"
+msgstr "Save gedownload naar:"
+
+#: exec_cmd.c:65 exec_cmd.c:99
+msgid "Error extracting save game!"
+msgstr "Fout bij uitpakken van save!"
+
+#: exec_cmd.c:97
+msgid "Save game successfully copied to:"
+msgstr "Save gekopieerd naar:"
+
+#: exec_cmd.c:113
+msgid "Error extracting PSV data from:"
+msgstr "Fout bij uitpakken van PSV-gegevens uit:"
+
+#: exec_cmd.c:119 exec_cmd.c:565
+msgid "Importing save..."
+msgstr "Save importeren..."
+
+#: exec_cmd.c:125
+msgid "Save game successfully imported to:"
+msgstr "Save geïmporteerd naar:"
+
+#: exec_cmd.c:159
+msgid "Exporting save game..."
+msgstr "Save exporteren..."
+
+#: exec_cmd.c:182
+msgid "Zip file successfully saved to:"
+msgstr "Zip-bestand opgeslagen in:"
+
+#: exec_cmd.c:193 exec_cmd.c:232
+msgid "Copy operation cancelled!"
+msgstr "Kopiëren geannuleerd!"
+
+#: exec_cmd.c:193 exec_cmd.c:232
+msgid "Same source and destination."
+msgstr "Bron en doel zijn hetzelfde."
+
+#: exec_cmd.c:203
+msgid "Copying files..."
+msgstr "Bestanden kopiëren..."
+
+#: exec_cmd.c:213 exec_cmd.c:241 exec_cmd.c:1229
+msgid "Files successfully copied to:"
+msgstr "Bestanden gekopieerd naar:"
+
+#: exec_cmd.c:236 exec_cmd.c:1224
+msgid "Copying save game..."
+msgstr "Save kopiëren..."
+
+#: exec_cmd.c:243 exec_cmd.c:1231
+msgid "Error! Can't copy Save-game folder:"
+msgstr "Fout! Kan savemap niet kopiëren:"
+
+#: exec_cmd.c:255 exec_cmd.c:309 exec_cmd.c:629
+msgid "Copying all saves..."
+msgstr "Alle saves kopiëren..."
+
+#: exec_cmd.c:297 exec_cmd.c:324
+#, c-format
+msgid "%d/%d Saves copied to Memory Card %d"
+msgstr "%d/%d saves gekopieerd naar Memory Card %d"
+
+#: exec_cmd.c:336
+msgid "Exporting all VMC saves..."
+msgstr "Alle VMC-saves exporteren..."
+
+#: exec_cmd.c:352 exec_cmd.c:1004
+msgid "Saves exported to:"
+msgstr "Saves geëxporteerd naar:"
+
+#: exec_cmd.c:388
+msgid "All files extracted to:"
+msgstr "Alle bestanden uitgepakt naar:"
+
+#: exec_cmd.c:390
+#, c-format
+msgid "Error: %s couldn't be extracted"
+msgstr "Fout: %s kon niet worden uitgepakt"
+
+#: exec_cmd.c:607
+#, c-format
+msgid "Save successfully imported to %s"
+msgstr "Save geïmporteerd naar %s"
+
+#: exec_cmd.c:609
+msgid "Error: save couldn't be imported"
+msgstr "Fout: save kon niet worden geïmporteerd"
+
+#: exec_cmd.c:625
+msgid "Error! Folder is not available:"
+msgstr "Fout! Map is niet beschikbaar:"
+
+#: exec_cmd.c:658
+msgid "Saves copied to:"
+msgstr "Saves gekopieerd naar:"
+
+#: exec_cmd.c:760
+msgid "Applying changes..."
+msgstr "Wijzigingen toepassen..."
+
+#: exec_cmd.c:896 saves.c:270
+msgid "Add copy protection (lock save)"
+msgstr "Kopieerbeveiliging toevoegen (save vergrendelen)"
+
+#: exec_cmd.c:896 saves.c:268
+msgid "Remove copy protection (unlock save)"
+msgstr "Kopieerbeveiliging verwijderen (save ontgrendelen)"
+
+#: exec_cmd.c:906
+#, c-format
+msgid "Error! Copy protection of %s couldn't be changed"
+msgstr "Fout! Kopieerbeveiliging van %s kon niet worden gewijzigd"
+
+#: exec_cmd.c:912
+msgid "Error! Cheat codes couldn't be applied"
+msgstr "Fout! Cheatcodes konden niet worden toegepast"
+
+#: exec_cmd.c:914
+#, c-format
+msgid "Save %s successfully modified!"
+msgstr "Save %s gewijzigd!"
+
+#: exec_cmd.c:926
+#, c-format
+msgid "Do you want to delete %s?"
+msgstr "Wil je %s verwijderen?"
+
+#: exec_cmd.c:955
+msgid "Save successfully deleted:"
+msgstr "Save verwijderd:"
+
+#: exec_cmd.c:957
+msgid "Error! Couldn't delete save:"
+msgstr "Fout! Kan save niet verwijderen:"
+
+#: exec_cmd.c:972
+msgid "Exporting all saves..."
+msgstr "Alle saves exporteren..."
+
+#: exec_cmd.c:1022
+msgid "Exporting save..."
+msgstr "Save exporteren..."
+
+#: exec_cmd.c:1046 exec_cmd.c:1084 exec_cmd.c:1106
+msgid "Save successfully exported to:"
+msgstr "Save geëxporteerd naar:"
+
+#: exec_cmd.c:1048 exec_cmd.c:1086 exec_cmd.c:1108
+msgid "Error exporting save:"
+msgstr "Fout bij exporteren van save:"
+
+#: exec_cmd.c:1067
+msgid "Exporting save ..."
+msgstr "Save exporteren ..."
+
+#: exec_cmd.c:1126
+msgid "Memory card successfully exported to:"
+msgstr "Memory Card geëxporteerd naar:"
+
+#: exec_cmd.c:1128
+msgid "Error! Failed to export PS1 memory card"
+msgstr "Fout! Exporteren van PS1 Memory Card mislukt"
+
+#: exec_cmd.c:1156
+msgid "Memory Card dumped to:"
+msgstr "Memory Card gedumpt naar:"
+
+#: exec_cmd.c:1156
+msgid "Warning! Pages with ECC errors (saved as read):"
+msgstr "Let op! Pagina's met ECC-fouten (opgeslagen zoals gelezen):"
+
+#: exec_cmd.c:1158
+msgid "Memory Card successfully dumped to:"
+msgstr "Memory Card gedumpt naar:"
+
+#: exec_cmd.c:1160
+msgid "Error! Failed to dump"
+msgstr "Fout! Dumpen mislukt"
+
+#: exec_cmd.c:1170
+msgid "Error! Can't write image to"
+msgstr "Fout! Kan image niet schrijven naar"
+
+#: exec_cmd.c:1174
+msgid "ALL data will be replaced by:"
+msgstr "ALLE gegevens worden vervangen door:"
+
+#: exec_cmd.c:1174
+msgid "This cannot be undone. Continue?"
+msgstr "Dit kan niet ongedaan worden gemaakt. Doorgaan?"
+
+#: exec_cmd.c:1179
+#, c-format
+msgid "Memory Card image successfully written to mc%d:"
+msgstr "Memory Card-image geschreven naar mc%d:"
+
+#: exec_cmd.c:1181
+msgid "Error writing image to"
+msgstr "Fout bij schrijven van image naar"
+
+#: exec_cmd.c:1181
+msgid "The Memory Card contents are now incomplete!"
+msgstr "De inhoud van de Memory Card is nu onvolledig!"
+
+#: exec_cmd.c:1188
+msgid "Importing save ..."
+msgstr "Save importeren ..."
+
+#: exec_cmd.c:1217
+msgid "Successfully imported to VMC:"
+msgstr "Geïmporteerd naar VMC:"
+
+#: exec_cmd.c:1219
+msgid "Error importing save:"
+msgstr "Fout bij importeren van save:"
+
+#: exec_cmd.c:1257 exec_cmd.c:1262
+#, c-format
+msgid "Error! File %s couldn't be exported"
+msgstr "Fout! Bestand %s kon niet worden geëxporteerd"
+
+#: exec_cmd.c:1259
+msgid "File successfully exported to:"
+msgstr "Bestand geëxporteerd naar:"
+
+#: exec_cmd.c:1272
+msgid "Error! Can't find save-game file:"
+msgstr "Fout! Kan savebestand niet vinden:"
+
+#: exec_cmd.c:1282 exec_cmd.c:1287
+#, c-format
+msgid "Error! File %s couldn't be imported"
+msgstr "Fout! Bestand %s kon niet worden geïmporteerd"
+
+#: exec_cmd.c:1284
+msgid "File successfully imported to:"
+msgstr "Bestand geïmporteerd naar:"
+
+#: exec_cmd.c:1295
+msgid "Download URL"
+msgstr "URL downloaden"
+
+#: exec_cmd.c:1301
+msgid "File successfully downloaded to:"
+msgstr "Bestand gedownload naar:"
+
+#: exec_cmd.c:1303
+msgid "Error! File couldn't be downloaded"
+msgstr "Fout! Bestand kon niet worden gedownload"
+
+#: exec_cmd.c:1362
+msgid "Save successfully imported:"
+msgstr "Save geïmporteerd:"
+
+#: exec_cmd.c:1364
+msgid "Error! Couldn't import save:"
+msgstr "Fout! Kan save niet importeren:"
+
+#: http.c:160
+msgid "Connecting to the network..."
+msgstr "Verbinden met het netwerk..."
+
+#: http.c:310
+msgid "Downloading..."
+msgstr "Downloaden..."
+
+#: main.c:171 main.c:181 main.c:185 main.c:190 main.c:194
+msgid "Back"
+msgstr "Terug"
+
+#: main.c:171 menu_cheats.c:256 menu_main.c:158
+msgid "Details"
+msgstr "Details"
+
+#: main.c:171 main.c:185
+msgid "Refresh"
+msgstr "Vernieuwen"
+
+#: main.c:171 main.c:185 main.c:190 main.c:194
+msgid "Select"
+msgstr "Kiezen"
+
+#: main.c:175
+msgid "Exit"
+msgstr "Afsluiten"
+
+#: main.c:175
+msgid "Value Down"
+msgstr "Waarde omlaag"
+
+#: main.c:175
+msgid "Value Up"
+msgstr "Waarde omhoog"
+
+#: main.c:194
+msgid "View Code"
+msgstr "Code tonen"
+
+#: main.c:342
+msgid "Memory Card 1"
+msgstr "Memory Card 1"
+
+#: main.c:342
+msgid "Memory Card 2"
+msgstr "Memory Card 2"
+
+#: main.c:347
+msgid "Select Memory Card"
+msgstr "Kies Memory Card"
+
+#: main.c:424
+msgid "MemCard Saves"
+msgstr "MemCard-saves"
+
+#: main.c:425
+msgid "External Saves"
+msgstr "Externe saves"
+
+#: main.c:426 main.c:427
+msgid "Virtual MemCard"
+msgstr "Virtuele MemCard"
+
+#: main.c:428
+msgid "Saves Database"
+msgstr "Savedatabase"
+
+#: main.c:429
+msgid "User Tools"
+msgstr "Gereedschap"
+
+#: main.c:593
+msgid "Successfully installed local application data"
+msgstr "Lokale applicatiegegevens geïnstalleerd"
+
+#: mc_image.c:228
+msgid "Dumping Memory Card..."
+msgstr "Memory Card dumpen..."
+
+#: mc_image.c:282
+msgid "Dumping PS1 Memory Card..."
+msgstr "PS1 Memory Card dumpen..."
+
+#: mc_image.c:401
+msgid "Erasing Memory Card..."
+msgstr "Memory Card wissen..."
+
+#: mc_image.c:412
+msgid "Writing Memory Card image..."
+msgstr "Memory Card-image schrijven..."
+
+#: mc_image.c:457
+msgid "No Memory Card of the right type in the slot"
+msgstr "Geen Memory Card van het juiste type in de sleuf"
+
+#: mc_image.c:458
+msgid "Memory Card is not formatted (or unreadable)"
+msgstr "Memory Card is niet geformatteerd (of onleesbaar)"
+
+#: mc_image.c:459
+msgid "Unsupported Memory Card geometry"
+msgstr "Niet-ondersteunde Memory Card-indeling"
+
+#: mc_image.c:460
+msgid "Cannot read or write the image file"
+msgstr "Kan het imagebestand niet lezen of schrijven"
+
+#: mc_image.c:461
+msgid "File is not a formatted PS2 Memory Card image"
+msgstr "Bestand is geen geformatteerde PS2 Memory Card-image"
+
+#: mc_image.c:462
+msgid "Image size does not match the Memory Card"
+msgstr "Imagegrootte komt niet overeen met de Memory Card"
+
+#: mc_image.c:463
+msgid "Memory Card read error"
+msgstr "Leesfout Memory Card"
+
+#: mc_image.c:464
+msgid "Memory Card erase error"
+msgstr "Wisfout Memory Card"
+
+#: mc_image.c:465
+msgid "Memory Card write error"
+msgstr "Schrijffout Memory Card"
+
+#: mc_image.c:466
+msgid "Verification failed (bad block?)"
+msgstr "Verificatie mislukt (slecht blok?)"
+
+#: mc_image.c:467
+msgid "Unknown error"
+msgstr "Onbekende fout"
+
+#: menu_about.c:98 menu_about.c:130
+msgid "About"
+msgstr "Over"
+
+#: menu_cheats.c:112 menu_cheats.c:145 menu_cheats.c:165
+msgid "Options"
+msgstr "Opties"
+
+#: menu_cheats.c:210
+msgid "Target File"
+msgstr "Doelbestand"
+
+#: menu_cheats.c:519
+#, c-format
+msgid "%ld Saves"
+msgstr "%ld saves"
+
+#: menu_cheats.c:524
+#, c-format
+msgid "%ld Games"
+msgstr "%ld games"
+
+#: menu_cheats.c:528
+msgid "Tools"
+msgstr "Gereedschap"
+
+#: menu_hex.c:51 menu_hex.c:71
+msgid "Hex Editor"
+msgstr "Hex-editor"
+
+#: menu_main.c:79
+msgid "Loading saves..."
+msgstr "Saves laden..."
+
+#: menu_main.c:93
+msgid "No save-games found"
+msgstr "Geen saves gevonden"
+
+#: menu_main.c:141
+msgid "Error getting details"
+msgstr "Fout bij ophalen van details"
+
+#: menu_main.c:157 saves.c:2263 saves.c:2277 saves.c:2293
+msgid "File"
+msgstr "Bestand"
+
+#: menu_main.c:157 saves.c:2291 saves.c:2307
+msgid "Game"
+msgstr "Spel"
+
+#: menu_main.c:157 saves.c:2264 saves.c:2292 saves.c:2308 saves.c:2322
+msgid "Title ID"
+msgstr "Title ID"
+
+#: menu_main.c:380 menu_main.c:784
+msgid "Patch view"
+msgstr "Patchweergave"
+
+#: menu_main.c:520
+msgid "No data found in folder:"
+msgstr "Geen gegevens gevonden in map:"
+
+#: menu_main.c:576
+msgid "Exit the app?"
+msgstr "App afsluiten?"
+
+#: menu_main.c:717 menu_main.c:725
+#, c-format
+msgid "Save changes to %s?"
+msgstr "Wijzigingen in %s opslaan?"
+
+#: menu_main.c:722
+msgid "Error! Couldn't save changes to:"
+msgstr "Fout! Kan wijzigingen niet opslaan in:"
+
+#: menu_main.c:822 menu_main.c:840
+msgid "Unable to load"
+msgstr "Kan niet laden"
+
+#: menu_options.c:66 menu_options.c:86
+msgid "Settings"
+msgstr "Instellingen"
+
+#: saves.c:264
+msgid "Copy Protection"
+msgstr "Kopieerbeveiliging"
+
+#: saves.c:280
+msgid "File Backup"
+msgstr "Bestandsback-up"
+
+#: saves.c:285
+msgid "Copy save files"
+msgstr "Savebestanden kopiëren"
+
+#: saves.c:288
+msgid "Copy Save to Mass Storage"
+msgstr "Save kopiëren naar massaopslag"
+
+#: saves.c:289 saves.c:1113
+msgid "Copy Save to Memory Card"
+msgstr "Save kopiëren naar Memory Card"
+
+#: saves.c:292
+msgid "Export save files to Zip"
+msgstr "Savebestanden exporteren naar Zip"
+
+#: saves.c:294
+msgid "Export Zip to Mass Storage"
+msgstr "Zip exporteren naar massaopslag"
+
+#: saves.c:298
+msgid "Export single save files"
+msgstr "Losse savebestanden exporteren"
+
+#: saves.c:303
+msgid "Import single save files"
+msgstr "Losse savebestanden importeren"
+
+#: saves.c:308 saves.c:757
+msgid "Hex Edit save game files"
+msgstr "Savebestanden hex-bewerken"
+
+#: saves.c:351 saves.c:379 saves.c:961
+msgid "Save Game Backup"
+msgstr "Save-back-up"
+
+#: saves.c:354
+msgid "Export save to .MCS format"
+msgstr "Save exporteren naar .MCS-formaat"
+
+#: saves.c:356
+msgid "Export .MCS to Storage"
+msgstr ".MCS exporteren naar opslag"
+
+#: saves.c:360
+msgid "Export save to .PSX format"
+msgstr "Save exporteren naar .PSX-formaat"
+
+#: saves.c:362
+msgid "Export .PSX to Storage"
+msgstr ".PSX exporteren naar opslag"
+
+#: saves.c:366 saves.c:388
+msgid "Export save to .PSV format"
+msgstr "Save exporteren naar .PSV-formaat"
+
+#: saves.c:368 saves.c:390
+msgid "Export .PSV to Storage"
+msgstr ".PSV exporteren naar opslag"
+
+#: saves.c:382
+msgid "Export save to .PSU format"
+msgstr "Save exporteren naar .PSU-formaat"
+
+#: saves.c:384
+msgid "Export .PSU to Storage"
+msgstr ".PSU exporteren naar opslag"
+
+#: saves.c:397
+msgid "Export save to .CBS format"
+msgstr "Save exporteren naar .CBS-formaat"
+
+#: saves.c:399
+msgid "Export .CBS to Storage"
+msgstr ".CBS exporteren naar opslag"
+
+#: saves.c:801 saves.c:874
+msgid "Cheats"
+msgstr "Cheats"
+
+#: saves.c:804 saves.c:877
+msgid "View Raw Patch File"
+msgstr "Ruw patchbestand tonen"
+
+#: saves.c:847
+msgid "Save linked to MemCard ID"
+msgstr "Save gekoppeld aan MemCard-ID"
+
+#: saves.c:852 saves.c:952 saves.c:1099
+msgid "Apply Changes"
+msgstr "Wijzigingen toepassen"
+
+#: saves.c:855 saves.c:955 saves.c:1102 saves.c:1614
+msgid "View Save Details"
+msgstr "Savedetails tonen"
+
+#: saves.c:858 saves.c:958 saves.c:1105 saves.c:1622
+msgid "Delete Save Game"
+msgstr "Save verwijderen"
+
+#: saves.c:964
+msgid "Export save game to .MCS format"
+msgstr "Save exporteren naar .MCS-formaat"
+
+#: saves.c:966
+msgid "Copy .MCS Save to Storage"
+msgstr ".MCS-save kopiëren naar opslag"
+
+#: saves.c:970
+msgid "Export save game to .PSV format"
+msgstr "Save exporteren naar .PSV-formaat"
+
+#: saves.c:972
+msgid "Copy .PSV Save to Storage"
+msgstr ".PSV-save kopiëren naar opslag"
+
+#: saves.c:976
+msgid "Export save game to .PSX format"
+msgstr "Save exporteren naar .PSX-formaat"
+
+#: saves.c:978
+msgid "Copy .PSX Save to Storage"
+msgstr ".PSX-save kopiëren naar opslag"
+
+#: saves.c:1108
+msgid "Save Transfer"
+msgstr "Save overzetten"
+
+#: saves.c:1111
+msgid "Copy save game to Memory Card"
+msgstr "Save kopiëren naar Memory Card"
+
+#: saves.c:1199
+msgid "Download to Mass Storage"
+msgstr "Downloaden naar massaopslag"
+
+#: saves.c:1252 saves.c:1617
+msgid "Import to Memory Card"
+msgstr "Importeren naar Memory Card"
+
+#: saves.c:1255 saves.c:1260
+msgid "Copy to Storage"
+msgstr "Kopiëren naar opslag"
+
+#: saves.c:1280
+msgid "Extract Archives (Zip)"
+msgstr "Archieven uitpakken (Zip)"
+
+#: saves.c:1307
+msgid "Local Web Server (full system access)"
+msgstr "Lokale webserver (volledige systeemtoegang)"
+
+#: saves.c:1342
+msgid "Extract"
+msgstr "Uitpakken"
+
+#: saves.c:1619
+msgid "Import to MemCard"
+msgstr "Importeren naar MemCard"
+
+#: saves.c:1825 saves.c:1872 saves.c:2164
+msgid "Bulk Save Management"
+msgstr "Saves in bulk beheren"
+
+#: saves.c:1833 saves.c:2077 saves.c:2172
+msgid "Copy selected Saves to Memory Card"
+msgstr "Geselecteerde saves kopiëren naar Memory Card"
+
+#: saves.c:1835 saves.c:1840 saves.c:2079 saves.c:2083 saves.c:2174
+#: saves.c:2178
+msgid "Copy Saves to MemCard"
+msgstr "Saves kopiëren naar MemCard"
+
+#: saves.c:1838 saves.c:2081 saves.c:2176
+msgid "Copy all Saves to Memory Card"
+msgstr "Alle saves kopiëren naar Memory Card"
+
+#: saves.c:1880
+msgid "Copy selected Saves to Backup Storage"
+msgstr "Geselecteerde saves kopiëren naar back-upopslag"
+
+#: saves.c:1882 saves.c:1887 saves.c:1895 saves.c:1903
+msgid "Copy Saves to Backup Storage"
+msgstr "Saves kopiëren naar back-upopslag"
+
+#: saves.c:1885
+msgid "Copy all Saves to Backup Storage"
+msgstr "Alle saves kopiëren naar back-upopslag"
+
+#: saves.c:1890
+msgid ".PSU Export selected Saves to Backup Storage"
+msgstr ".PSU: geselecteerde saves exporteren naar back-upopslag"
+
+#: saves.c:1898
+msgid ".PSU Export All Saves to Backup Storage"
+msgstr ".PSU: alle saves exporteren naar back-upopslag"
+
+#: saves.c:1909 saves.c:2190
+msgid "Memory Card Image"
+msgstr "Memory Card-image"
+
+#: saves.c:1914
+msgid "Dump Memory Card to .MCR image"
+msgstr "Memory Card dumpen naar .MCR-image"
+
+#: saves.c:1916
+msgid "Save .MCR image to Storage"
+msgstr ".MCR-image opslaan in opslag"
+
+#: saves.c:1921
+msgid "Dump Memory Card to .PS2 image (ECC)"
+msgstr "Memory Card dumpen naar .PS2-image (ECC)"
+
+#: saves.c:1923
+msgid "Save .PS2 image to Storage"
+msgstr ".PS2-image opslaan in opslag"
+
+#: saves.c:1926
+msgid "Dump Memory Card to .VMC image (raw)"
+msgstr "Memory Card dumpen naar .VMC-image (raw)"
+
+#: saves.c:1928
+msgid "Save .VMC image to Storage"
+msgstr ".VMC-image opslaan in opslag"
+
+#: saves.c:2068
+msgid "Memory Card Management"
+msgstr "Memory Card-beheer"
+
+#: saves.c:2086 saves.c:2181
+msgid "Export selected Saves to Storage (.PSV)"
+msgstr "Geselecteerde saves exporteren naar opslag (.PSV)"
+
+#: saves.c:2088 saves.c:2092 saves.c:2183 saves.c:2187
+msgid "Export Saves to Storage"
+msgstr "Saves exporteren naar opslag"
+
+#: saves.c:2090 saves.c:2185
+msgid "Export all Saves to Storage (.PSV)"
+msgstr "Alle saves exporteren naar opslag (.PSV)"
+
+#: saves.c:2095 saves.c:2276
+msgid "Virtual Memory Card"
+msgstr "Virtuele Memory Card"
+
+#: saves.c:2098
+msgid "Export Memory Card to .VM1 format"
+msgstr "Memory Card exporteren naar .VM1-formaat"
+
+#: saves.c:2101
+msgid "Save .VM1 Memory Card to Storage"
+msgstr ".VM1 Memory Card opslaan in opslag"
+
+#: saves.c:2104
+msgid "Export Memory Card to .VMP format"
+msgstr "Memory Card exporteren naar .VMP-formaat"
+
+#: saves.c:2107
+msgid "Save .VMP Memory Card to Storage"
+msgstr ".VMP Memory Card opslaan in opslag"
+
+#: saves.c:2111 saves.c:2199
+msgid "Import Saves to Virtual Card"
+msgstr "Saves importeren naar virtuele kaart"
+
+#: saves.c:2193
+msgid "Write image to Memory Card (overwrites the card)"
+msgstr "Image schrijven naar Memory Card (overschrijft de kaart)"
+
+#: saves.c:2195
+msgid "Write image to MemCard"
+msgstr "Image schrijven naar MemCard"
+
+#: saves.c:2262
+msgid "Packed PS1 Save"
+msgstr "Verpakte PS1-save"
+
+#: saves.c:2262
+msgid "Packed PS2 Save"
+msgstr "Verpakte PS2-save"
+
+#: saves.c:2265 saves.c:2278 saves.c:2309
+msgid "Folder"
+msgstr "Map"
+
+#: saves.c:2290
+msgid "PS1 Save"
+msgstr "PS1-save"
+
+#: saves.c:2306
+msgid "PS2 Save"
+msgstr "PS2-save"
+
+#: saves.c:2310
+msgid "Icon"
+msgstr "Pictogram"
+
+#: saves.c:2320
+msgid "Save"
+msgstr "Save"
+
+#: saves.c:2321
+msgid "Title"
+msgstr "Titel"
+
+#: saves.c:2323
+msgid "Dir Name"
+msgstr "Mapnaam"
+
+#: settings.c:23
+msgid "Disabled"
+msgstr "Uit"
+
+#: settings.c:23
+msgid "by Name"
+msgstr "op naam"
+
+#: settings.c:23
+msgid "by Title ID"
+msgstr "op Title ID"
+
+#: settings.c:23
+msgid "by Type"
+msgstr "op type"
+
+#: settings.c:26
+msgid "Background Music"
+msgstr "Achtergrondmuziek"
+
+#: settings.c:32
+msgid "Menu Animations"
+msgstr "Menuanimaties"
+
+#: settings.c:38
+msgid "Sort Saves"
+msgstr "Saves sorteren"
+
+#: settings.c:44
+msgid "External Saves Source"
+msgstr "Bron externe saves"
+
+#: settings.c:50
+msgid "Check for Updates"
+msgstr "Zoeken naar updates"
+
+#: settings.c:64
+msgid "Clear Local Cache"
+msgstr "Lokale cache wissen"
+
+#: settings.c:70
+msgid "Debug Log"
+msgstr "Debuglog"
+
+#: settings.c:116
+#, c-format
+msgid "RAM cache cleaned (%d files)"
+msgstr "RAM-cache gewist (%d bestanden)"
+
+#: settings.c:123
+msgid "Local cache folder cleaned:"
+msgstr "Lokale cachemap gewist:"
+
+#: settings.c:132
+msgid "Error! Can't download data update pack!"
+msgstr "Fout! Kan data-updatepakket niet downloaden!"
+
+#: settings.c:137
+#, c-format
+msgid "Successfully updated %d data files!"
+msgstr "%d gegevensbestanden bijgewerkt!"
+
+#: settings.c:139
+msgid "Error! Can't extract data update pack!"
+msgstr "Fout! Kan data-updatepakket niet uitpakken!"
+
+#: settings.c:187
+msgid "(PS2 Network Adapter and DHCP required)"
+msgstr "(PS2 Network Adapter en DHCP vereist)"
+
+#: settings.c:187
+msgid "Can't check for updates: no network connection"
+msgstr "Kan niet zoeken naar updates: geen netwerkverbinding"
+
+#: settings.c:194 settings.c:208
+msgid "Can't check for updates:"
+msgstr "Kan niet zoeken naar updates:"
+
+#: settings.c:194
+msgid "GitHub couldn't be reached"
+msgstr "GitHub is niet bereikbaar"
+
+#: settings.c:208
+msgid "unexpected reply from GitHub"
+msgstr "onverwacht antwoord van GitHub"
+
+#: settings.c:220
+#, c-format
+msgid "Apollo Save Tool v%s is up to date"
+msgstr "Apollo Save Tool v%s is up-to-date"
+
+#: settings.c:221
+msgid "Latest release:"
+msgstr "Nieuwste versie:"
+
+#: settings.c:231
+msgid "Download it from:"
+msgstr "Download via:"
+
+#: settings.c:231 settings.c:235
+msgid "New version available:"
+msgstr "Nieuwe versie beschikbaar:"
+
+#: settings.c:235
+msgid "Download update to:"
+msgstr "Update downloaden naar:"
+
+#: settings.c:238
+msgid "Update downloaded to:"
+msgstr "Update gedownload naar:"
+
+#: settings.c:240
+msgid "Error! Can't download the update"
+msgstr "Fout! Kan de update niet downloaden"
+
+#: settings.c:285
+msgid "Debug Logging Disabled"
+msgstr "Debuglog uitgeschakeld"
+
+#: settings.c:292
+msgid "Error! Can't create the log file:"
+msgstr "Fout! Kan logbestand niet aanmaken:"
+
+#: settings.c:296
+msgid "Debug Logging Enabled!"
+msgstr "Debuglog ingeschakeld!"
+
+#: zip_util.c:200
+msgid "Extracting files..."
+msgstr "Bestanden uitpakken..."

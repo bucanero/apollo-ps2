@@ -18,6 +18,7 @@ This homebrew app allows you to download, unlock, patch, and manage save-game fi
 * **Standalone:** no computer required, everything happens on the PS2.
 * **Automatic settings:** auto-detection of User settings.
 * **Works without USB storage:** save patches are built into the app, and temporary files are kept in RAM when no USB drive is available.
+* **Multi-language:** English, Japanese, French, Spanish, German, Italian, Dutch, Portuguese and Russian, following the console's language.
 
 ## Save Management
 
@@ -127,6 +128,12 @@ Japanese save titles are drawn with the Japanese font in the PS2 BIOS (`rom0:KRO
 
 For full coverage (rarer kanji, symbols like `①`) and smoother text, copy an OpenType or TrueType font with Japanese characters, such as [Noto Sans JP](https://fonts.google.com/noto/specimen/Noto+Sans+JP), to `mass:/APOLLO/DATA/FONT.OTF` (USB drive). It's only read from USB: from a disc, each new character would need a slow disc seek.
 
+### Languages
+
+Apollo uses the language set in the console's System Configuration, and English for languages it doesn't have.
+
+The translations are built into the app (`data/langs/lang_xx.po`). A `lang_xx.po` file in `mass:/APOLLO/DATA/` (USB drive) is used instead of the built-in one, to try out a new or updated translation without rebuilding Apollo. To add a language or fix a translation, start from [`docs/translate.po`](docs/translate.po), the template with all the text in the app. Korean and Chinese aren't supported yet: they need a font with their characters.
+
 ### PS2
 
 | PS2 | Folder |
@@ -199,6 +206,7 @@ You need to have installed:
 - [PolarSSL](https://github.com/bucanero/oosdk_libraries/tree/master/polarssl-1.3.9) library
 - [libZip](https://github.com/ps2dev/ps2sdk-ports) library
 - [dbglogger](https://github.com/bucanero/dbglogger) library
+- [mini18n](https://github.com/bucanero/mini18n) library
 
 The [GitHub Actions workflow](.github/workflows/build.yml) builds everything from scratch, and can be used as a reference.
 

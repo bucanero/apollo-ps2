@@ -7,6 +7,9 @@
 #include <sys/stat.h>
 #include <dirent.h>
 #include <zlib.h>
+#include <kernel.h>
+#include <osd_config.h>
+#include <rom0_info.h>
 
 #include "types.h"
 #include "common.h"
@@ -265,3 +268,48 @@ int sys_reboot()
     return_to_user_prog(int);
 }
 */
+
+//----------------------------------------
+//SYSTEM LANGUAGE
+//----------------------------------------
+
+// The language set in the console's System Configuration (kept by the kernel
+// since OSDSYS loaded it at boot), as a LANGUAGE_xxx value
+int get_system_language(void)
+{
+	ConfigParam config;
+	Config2Param config2;
+	int lang = configGetLanguage();
+
+	// Consoles with the extra languages (Russian, Korean, Chinese) always
+	// report English in ConfigParam; with OSD config version 2 the real one
+	// is in Config2Param. Early kernels don't have GetOsdConfigParam2 (it
+	// crashes there), and they never have version 2.
+	if (lang == LANGUAGE_ENGLISH && !IsT10K())
+	{
+		GetOsdConfigParam(&config);
+		if (config.version == 2)
+		{
+			GetOsdConfigParam2(&config2, sizeof(config2), 0);
+			lang = config2.language;
+		}
+	}
+
+	LOG("System language: %d", lang);
+	return lang;
+}
+
+// The code used by the lang_xx.po files for a LANGUAGE_xxx value
+const char* get_language_code(int lang)
+{
+	static const char* const codes[] = {
+		"ja", "en", "fr", "es", "de", "it", "nl", "pt",	// LANGUAGE_JAPANESE .. LANGUAGE_PORTUGUESE
+		"ru",											// LANGUAGE_RUSSIAN
+	};
+
+	// Korean and Chinese need a font with their characters: not supported yet
+	if (lang < 0 || lang >= (int)(sizeof(codes) / sizeof(codes[0])))
+		return "en";
+
+	return codes[lang];
+}

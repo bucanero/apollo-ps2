@@ -1,0 +1,965 @@
+# Apollo Save Tool (PS2) - Spanish translation
+msgid ""
+msgstr ""
+"Project-Id-Version: Apollo Save Tool\n"
+"Language-Team: github.com/bucanero\n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-Basepath: ../source\n"
+"X-Poedit-KeywordsList: _;_i18n\n"
+"X-Poedit-SearchPath-0: .\n"
+
+#: dialog.c:60
+msgid "Cancel"
+msgstr "Cancelar"
+
+#: dialog.c:60 dialog.c:72
+msgid "OK"
+msgstr "Aceptar"
+
+#: dialog.c:73
+msgid "No"
+msgstr "No"
+
+#: dialog.c:73
+msgid "Yes"
+msgstr "Sí"
+
+#: exec_cmd.c:52 exec_cmd.c:127 exec_cmd.c:155 exec_cmd.c:199 exec_cmd.c:1119
+#: exec_cmd.c:1142
+msgid "Error! Export folder is not available:"
+msgstr "¡Error! La carpeta de exportación no está disponible:"
+
+#: exec_cmd.c:58 exec_cmd.c:84
+msgid "Error downloading save game from:"
+msgstr "Error descargando partida guardada desde:"
+
+#: exec_cmd.c:63
+msgid "Save game successfully downloaded to:"
+msgstr "Partida guardada descargada exitosamente a:"
+
+#: exec_cmd.c:65 exec_cmd.c:99
+msgid "Error extracting save game!"
+msgstr "¡Error extrayendo partida guardada!"
+
+#: exec_cmd.c:97
+msgid "Save game successfully copied to:"
+msgstr "Partida guardada copiada exitosamente a:"
+
+#: exec_cmd.c:113
+msgid "Error extracting PSV data from:"
+msgstr "Error extrayendo datos PSV desde:"
+
+#: exec_cmd.c:119 exec_cmd.c:565
+msgid "Importing save..."
+msgstr "Importando partida..."
+
+#: exec_cmd.c:125
+msgid "Save game successfully imported to:"
+msgstr "Partida guardada importada exitosamente a:"
+
+#: exec_cmd.c:159
+msgid "Exporting save game..."
+msgstr "Exportando partida guardada..."
+
+#: exec_cmd.c:182
+msgid "Zip file successfully saved to:"
+msgstr "Archivo Zip guardado exitosamente en:"
+
+#: exec_cmd.c:193 exec_cmd.c:232
+msgid "Copy operation cancelled!"
+msgstr "¡Operación de copia cancelada!"
+
+#: exec_cmd.c:193 exec_cmd.c:232
+msgid "Same source and destination."
+msgstr "Origen y destino iguales."
+
+#: exec_cmd.c:203
+msgid "Copying files..."
+msgstr "Copiando archivos..."
+
+#: exec_cmd.c:213 exec_cmd.c:241 exec_cmd.c:1229
+msgid "Files successfully copied to:"
+msgstr "Archivos copiados exitosamente a:"
+
+#: exec_cmd.c:236 exec_cmd.c:1224
+msgid "Copying save game..."
+msgstr "Copiando partida guardada..."
+
+#: exec_cmd.c:243 exec_cmd.c:1231
+msgid "Error! Can't copy Save-game folder:"
+msgstr "¡Error! No se pudo copiar carpeta de partida:"
+
+#: exec_cmd.c:255 exec_cmd.c:309 exec_cmd.c:629
+msgid "Copying all saves..."
+msgstr "Copiando todas las partidas..."
+
+#: exec_cmd.c:297 exec_cmd.c:324
+#, c-format
+msgid "%d/%d Saves copied to Memory Card %d"
+msgstr "%d/%d partidas copiadas a Memory Card %d"
+
+#: exec_cmd.c:336
+msgid "Exporting all VMC saves..."
+msgstr "Exportando todas las partidas de VMC..."
+
+#: exec_cmd.c:352 exec_cmd.c:1004
+msgid "Saves exported to:"
+msgstr "Partidas exportadas a:"
+
+#: exec_cmd.c:388
+msgid "All files extracted to:"
+msgstr "Todos los archivos extraídos a:"
+
+#: exec_cmd.c:390
+#, c-format
+msgid "Error: %s couldn't be extracted"
+msgstr "Error: %s no pudo ser extraído"
+
+#: exec_cmd.c:607
+#, c-format
+msgid "Save successfully imported to %s"
+msgstr "Partida importada exitosamente a %s"
+
+#: exec_cmd.c:609
+msgid "Error: save couldn't be imported"
+msgstr "Error: no se pudo importar la partida"
+
+#: exec_cmd.c:625
+msgid "Error! Folder is not available:"
+msgstr "¡Error! La carpeta no está disponible:"
+
+#: exec_cmd.c:658
+msgid "Saves copied to:"
+msgstr "Partidas copiadas a:"
+
+#: exec_cmd.c:760
+msgid "Applying changes..."
+msgstr "Aplicando cambios..."
+
+#: exec_cmd.c:896 saves.c:270
+msgid "Add copy protection (lock save)"
+msgstr "Añadir protección contra copia (bloquear)"
+
+#: exec_cmd.c:896 saves.c:268
+msgid "Remove copy protection (unlock save)"
+msgstr "Quitar protección contra copia (desbloquear)"
+
+#: exec_cmd.c:906
+#, c-format
+msgid "Error! Copy protection of %s couldn't be changed"
+msgstr "¡Error! No se pudo cambiar la protección contra copia de %s"
+
+#: exec_cmd.c:912
+msgid "Error! Cheat codes couldn't be applied"
+msgstr "¡Error! No se pudieron aplicar los códigos de trucos"
+
+#: exec_cmd.c:914
+#, c-format
+msgid "Save %s successfully modified!"
+msgstr "¡Partida %s modificada exitosamente!"
+
+#: exec_cmd.c:926
+#, c-format
+msgid "Do you want to delete %s?"
+msgstr "¿Desea eliminar %s?"
+
+#: exec_cmd.c:955
+msgid "Save successfully deleted:"
+msgstr "Partida eliminada exitosamente:"
+
+#: exec_cmd.c:957
+msgid "Error! Couldn't delete save:"
+msgstr "¡Error! No se pudo eliminar partida:"
+
+#: exec_cmd.c:972
+msgid "Exporting all saves..."
+msgstr "Exportando todas las partidas..."
+
+#: exec_cmd.c:1022
+msgid "Exporting save..."
+msgstr "Exportando partida..."
+
+#: exec_cmd.c:1046 exec_cmd.c:1084 exec_cmd.c:1106
+msgid "Save successfully exported to:"
+msgstr "Partida exportada exitosamente a:"
+
+#: exec_cmd.c:1048 exec_cmd.c:1086 exec_cmd.c:1108
+msgid "Error exporting save:"
+msgstr "Error exportando partida:"
+
+#: exec_cmd.c:1067
+msgid "Exporting save ..."
+msgstr "Exportando partida ..."
+
+#: exec_cmd.c:1126
+msgid "Memory card successfully exported to:"
+msgstr "Memory Card exportada exitosamente a:"
+
+#: exec_cmd.c:1128
+msgid "Error! Failed to export PS1 memory card"
+msgstr "¡Error! No se pudo exportar la Memory Card de PS1"
+
+#: exec_cmd.c:1156
+msgid "Memory Card dumped to:"
+msgstr "Memory Card volcada a:"
+
+#: exec_cmd.c:1156
+msgid "Warning! Pages with ECC errors (saved as read):"
+msgstr "¡Aviso! Páginas con errores ECC (guardadas tal cual):"
+
+#: exec_cmd.c:1158
+msgid "Memory Card successfully dumped to:"
+msgstr "Memory Card volcada exitosamente a:"
+
+#: exec_cmd.c:1160
+msgid "Error! Failed to dump"
+msgstr "¡Error! Falló el volcado"
+
+#: exec_cmd.c:1170
+msgid "Error! Can't write image to"
+msgstr "¡Error! No se puede escribir la imagen en"
+
+#: exec_cmd.c:1174
+msgid "ALL data will be replaced by:"
+msgstr "TODOS los datos serán reemplazados por:"
+
+#: exec_cmd.c:1174
+msgid "This cannot be undone. Continue?"
+msgstr "No se puede deshacer. ¿Continuar?"
+
+#: exec_cmd.c:1179
+#, c-format
+msgid "Memory Card image successfully written to mc%d:"
+msgstr "Imagen de Memory Card escrita exitosamente en mc%d:"
+
+#: exec_cmd.c:1181
+msgid "Error writing image to"
+msgstr "Error escribiendo la imagen en"
+
+#: exec_cmd.c:1181
+msgid "The Memory Card contents are now incomplete!"
+msgstr "¡El contenido de la Memory Card ha quedado incompleto!"
+
+#: exec_cmd.c:1188
+msgid "Importing save ..."
+msgstr "Importando partida ..."
+
+#: exec_cmd.c:1217
+msgid "Successfully imported to VMC:"
+msgstr "Importada exitosamente a VMC:"
+
+#: exec_cmd.c:1219
+msgid "Error importing save:"
+msgstr "Error importando partida:"
+
+#: exec_cmd.c:1257 exec_cmd.c:1262
+#, c-format
+msgid "Error! File %s couldn't be exported"
+msgstr "¡Error! El archivo %s no pudo ser exportado"
+
+#: exec_cmd.c:1259
+msgid "File successfully exported to:"
+msgstr "Archivo exportado exitosamente a:"
+
+#: exec_cmd.c:1272
+msgid "Error! Can't find save-game file:"
+msgstr "¡Error! No se encuentra el archivo de partida:"
+
+#: exec_cmd.c:1282 exec_cmd.c:1287
+#, c-format
+msgid "Error! File %s couldn't be imported"
+msgstr "¡Error! El archivo %s no pudo ser importado"
+
+#: exec_cmd.c:1284
+msgid "File successfully imported to:"
+msgstr "Archivo importado exitosamente a:"
+
+#: exec_cmd.c:1295
+msgid "Download URL"
+msgstr "URL de Descarga"
+
+#: exec_cmd.c:1301
+msgid "File successfully downloaded to:"
+msgstr "Archivo descargado exitosamente a:"
+
+#: exec_cmd.c:1303
+msgid "Error! File couldn't be downloaded"
+msgstr "¡Error! No se pudo descargar el archivo"
+
+#: exec_cmd.c:1362
+msgid "Save successfully imported:"
+msgstr "Partida importada exitosamente:"
+
+#: exec_cmd.c:1364
+msgid "Error! Couldn't import save:"
+msgstr "¡Error! No se pudo importar partida:"
+
+#: http.c:160
+msgid "Connecting to the network..."
+msgstr "Conectando a la red..."
+
+#: http.c:310
+msgid "Downloading..."
+msgstr "Descargando..."
+
+#: main.c:171 main.c:181 main.c:185 main.c:190 main.c:194
+msgid "Back"
+msgstr "Atrás"
+
+#: main.c:171 menu_cheats.c:256 menu_main.c:158
+msgid "Details"
+msgstr "Detalles"
+
+#: main.c:171 main.c:185
+msgid "Refresh"
+msgstr "Actualizar"
+
+#: main.c:171 main.c:185 main.c:190 main.c:194
+msgid "Select"
+msgstr "Seleccionar"
+
+#: main.c:175
+msgid "Exit"
+msgstr "Salir"
+
+#: main.c:175
+msgid "Value Down"
+msgstr "Valor Abajo"
+
+#: main.c:175
+msgid "Value Up"
+msgstr "Valor Arriba"
+
+#: main.c:194
+msgid "View Code"
+msgstr "Ver Código"
+
+#: main.c:342
+msgid "Memory Card 1"
+msgstr "Memory Card 1"
+
+#: main.c:342
+msgid "Memory Card 2"
+msgstr "Memory Card 2"
+
+#: main.c:347
+msgid "Select Memory Card"
+msgstr "Seleccionar Memory Card"
+
+#: main.c:424
+msgid "MemCard Saves"
+msgstr "Partidas de MemCard"
+
+#: main.c:425
+msgid "External Saves"
+msgstr "Partidas Externas"
+
+#: main.c:426 main.c:427
+msgid "Virtual MemCard"
+msgstr "MemCard Virtual"
+
+#: main.c:428
+msgid "Saves Database"
+msgstr "Base de Datos de Partidas"
+
+#: main.c:429
+msgid "User Tools"
+msgstr "Herramientas de Usuario"
+
+#: main.c:593
+msgid "Successfully installed local application data"
+msgstr "Datos de aplicación local instalados exitosamente"
+
+#: mc_image.c:228
+msgid "Dumping Memory Card..."
+msgstr "Volcando Memory Card..."
+
+#: mc_image.c:282
+msgid "Dumping PS1 Memory Card..."
+msgstr "Volcando Memory Card de PS1..."
+
+#: mc_image.c:401
+msgid "Erasing Memory Card..."
+msgstr "Borrando Memory Card..."
+
+#: mc_image.c:412
+msgid "Writing Memory Card image..."
+msgstr "Escribiendo imagen de Memory Card..."
+
+#: mc_image.c:457
+msgid "No Memory Card of the right type in the slot"
+msgstr "No hay una Memory Card del tipo correcto en la ranura"
+
+#: mc_image.c:458
+msgid "Memory Card is not formatted (or unreadable)"
+msgstr "La Memory Card no está formateada (o no se puede leer)"
+
+#: mc_image.c:459
+msgid "Unsupported Memory Card geometry"
+msgstr "Geometría de Memory Card no compatible"
+
+#: mc_image.c:460
+msgid "Cannot read or write the image file"
+msgstr "No se puede leer ni escribir el archivo de imagen"
+
+#: mc_image.c:461
+msgid "File is not a formatted PS2 Memory Card image"
+msgstr "El archivo no es una imagen formateada de Memory Card de PS2"
+
+#: mc_image.c:462
+msgid "Image size does not match the Memory Card"
+msgstr "El tamaño de la imagen no coincide con la Memory Card"
+
+#: mc_image.c:463
+msgid "Memory Card read error"
+msgstr "Error de lectura de Memory Card"
+
+#: mc_image.c:464
+msgid "Memory Card erase error"
+msgstr "Error de borrado de Memory Card"
+
+#: mc_image.c:465
+msgid "Memory Card write error"
+msgstr "Error de escritura de Memory Card"
+
+#: mc_image.c:466
+msgid "Verification failed (bad block?)"
+msgstr "Falló la verificación (¿bloque dañado?)"
+
+#: mc_image.c:467
+msgid "Unknown error"
+msgstr "Error desconocido"
+
+#: menu_about.c:98 menu_about.c:130
+msgid "About"
+msgstr "Acerca de"
+
+#: menu_cheats.c:112 menu_cheats.c:145 menu_cheats.c:165
+msgid "Options"
+msgstr "Opciones"
+
+#: menu_cheats.c:210
+msgid "Target File"
+msgstr "Archivo de Destino"
+
+#: menu_cheats.c:519
+#, c-format
+msgid "%ld Saves"
+msgstr "%ld Partidas"
+
+#: menu_cheats.c:524
+#, c-format
+msgid "%ld Games"
+msgstr "%ld Juegos"
+
+#: menu_cheats.c:528
+msgid "Tools"
+msgstr "Herramientas"
+
+#: menu_hex.c:51 menu_hex.c:71
+msgid "Hex Editor"
+msgstr "Editor Hexadecimal"
+
+#: menu_main.c:79
+msgid "Loading saves..."
+msgstr "Cargando partidas..."
+
+#: menu_main.c:93
+msgid "No save-games found"
+msgstr "No se encontraron partidas guardadas"
+
+#: menu_main.c:141
+msgid "Error getting details"
+msgstr "Error obteniendo detalles"
+
+#: menu_main.c:157 saves.c:2263 saves.c:2277 saves.c:2293
+msgid "File"
+msgstr "Archivo"
+
+#: menu_main.c:157 saves.c:2291 saves.c:2307
+msgid "Game"
+msgstr "Juego"
+
+#: menu_main.c:157 saves.c:2264 saves.c:2292 saves.c:2308 saves.c:2322
+msgid "Title ID"
+msgstr "Title ID"
+
+#: menu_main.c:380 menu_main.c:784
+msgid "Patch view"
+msgstr "Vista de parches"
+
+#: menu_main.c:520
+msgid "No data found in folder:"
+msgstr "No se encontraron datos en la carpeta:"
+
+#: menu_main.c:576
+msgid "Exit the app?"
+msgstr "¿Salir de la aplicación?"
+
+#: menu_main.c:717 menu_main.c:725
+#, c-format
+msgid "Save changes to %s?"
+msgstr "¿Guardar cambios en %s?"
+
+#: menu_main.c:722
+msgid "Error! Couldn't save changes to:"
+msgstr "¡Error! No se pudieron guardar los cambios en:"
+
+#: menu_main.c:822 menu_main.c:840
+msgid "Unable to load"
+msgstr "No se pudo cargar"
+
+#: menu_options.c:66 menu_options.c:86
+msgid "Settings"
+msgstr "Configuración"
+
+#: saves.c:264
+msgid "Copy Protection"
+msgstr "Protección contra Copia"
+
+#: saves.c:280
+msgid "File Backup"
+msgstr "Respaldo de Archivos"
+
+#: saves.c:285
+msgid "Copy save files"
+msgstr "Copiar archivos de partida"
+
+#: saves.c:288
+msgid "Copy Save to Mass Storage"
+msgstr "Copiar Partida a Almacenamiento Masivo"
+
+#: saves.c:289 saves.c:1113
+msgid "Copy Save to Memory Card"
+msgstr "Copiar Partida a Memory Card"
+
+#: saves.c:292
+msgid "Export save files to Zip"
+msgstr "Exportar archivos de partida a Zip"
+
+#: saves.c:294
+msgid "Export Zip to Mass Storage"
+msgstr "Exportar Zip a Almacenamiento Masivo"
+
+#: saves.c:298
+msgid "Export single save files"
+msgstr "Exportar archivos de partida individuales"
+
+#: saves.c:303
+msgid "Import single save files"
+msgstr "Importar archivos de partida individuales"
+
+#: saves.c:308 saves.c:757
+msgid "Hex Edit save game files"
+msgstr "Editar hexadecimalmente archivos de partida"
+
+#: saves.c:351 saves.c:379 saves.c:961
+msgid "Save Game Backup"
+msgstr "Respaldo de Partida"
+
+#: saves.c:354
+msgid "Export save to .MCS format"
+msgstr "Exportar partida a formato .MCS"
+
+#: saves.c:356
+msgid "Export .MCS to Storage"
+msgstr "Exportar .MCS a Almacenamiento"
+
+#: saves.c:360
+msgid "Export save to .PSX format"
+msgstr "Exportar partida a formato .PSX"
+
+#: saves.c:362
+msgid "Export .PSX to Storage"
+msgstr "Exportar .PSX a Almacenamiento"
+
+#: saves.c:366 saves.c:388
+msgid "Export save to .PSV format"
+msgstr "Exportar partida a formato .PSV"
+
+#: saves.c:368 saves.c:390
+msgid "Export .PSV to Storage"
+msgstr "Exportar .PSV a Almacenamiento"
+
+#: saves.c:382
+msgid "Export save to .PSU format"
+msgstr "Exportar partida a formato .PSU"
+
+#: saves.c:384
+msgid "Export .PSU to Storage"
+msgstr "Exportar .PSU a Almacenamiento"
+
+#: saves.c:397
+msgid "Export save to .CBS format"
+msgstr "Exportar partida a formato .CBS"
+
+#: saves.c:399
+msgid "Export .CBS to Storage"
+msgstr "Exportar .CBS a Almacenamiento"
+
+#: saves.c:801 saves.c:874
+msgid "Cheats"
+msgstr "Trucos"
+
+#: saves.c:804 saves.c:877
+msgid "View Raw Patch File"
+msgstr "Ver Archivo de Parche en Bruto"
+
+#: saves.c:847
+msgid "Save linked to MemCard ID"
+msgstr "Partida vinculada al ID de la MemCard"
+
+#: saves.c:852 saves.c:952 saves.c:1099
+msgid "Apply Changes"
+msgstr "Aplicar Cambios"
+
+#: saves.c:855 saves.c:955 saves.c:1102 saves.c:1614
+msgid "View Save Details"
+msgstr "Ver Detalles de Partida"
+
+#: saves.c:858 saves.c:958 saves.c:1105 saves.c:1622
+msgid "Delete Save Game"
+msgstr "Eliminar Partida Guardada"
+
+#: saves.c:964
+msgid "Export save game to .MCS format"
+msgstr "Exportar partida guardada a formato .MCS"
+
+#: saves.c:966
+msgid "Copy .MCS Save to Storage"
+msgstr "Copiar Partida .MCS a Almacenamiento"
+
+#: saves.c:970
+msgid "Export save game to .PSV format"
+msgstr "Exportar partida guardada a formato .PSV"
+
+#: saves.c:972
+msgid "Copy .PSV Save to Storage"
+msgstr "Copiar Partida .PSV a Almacenamiento"
+
+#: saves.c:976
+msgid "Export save game to .PSX format"
+msgstr "Exportar partida guardada a formato .PSX"
+
+#: saves.c:978
+msgid "Copy .PSX Save to Storage"
+msgstr "Copiar Partida .PSX a Almacenamiento"
+
+#: saves.c:1108
+msgid "Save Transfer"
+msgstr "Transferir Partida"
+
+#: saves.c:1111
+msgid "Copy save game to Memory Card"
+msgstr "Copiar partida guardada a Memory Card"
+
+#: saves.c:1199
+msgid "Download to Mass Storage"
+msgstr "Descargar a Almacenamiento Masivo"
+
+#: saves.c:1252 saves.c:1617
+msgid "Import to Memory Card"
+msgstr "Importar a Memory Card"
+
+#: saves.c:1255 saves.c:1260
+msgid "Copy to Storage"
+msgstr "Copiar a Almacenamiento"
+
+#: saves.c:1280
+msgid "Extract Archives (Zip)"
+msgstr "Extraer Archivos (Zip)"
+
+#: saves.c:1307
+msgid "Local Web Server (full system access)"
+msgstr "Servidor Web Local (acceso completo al sistema)"
+
+#: saves.c:1342
+msgid "Extract"
+msgstr "Extraer"
+
+#: saves.c:1619
+msgid "Import to MemCard"
+msgstr "Importar a MemCard"
+
+#: saves.c:1825 saves.c:1872 saves.c:2164
+msgid "Bulk Save Management"
+msgstr "Gestión Masiva de Partidas"
+
+#: saves.c:1833 saves.c:2077 saves.c:2172
+msgid "Copy selected Saves to Memory Card"
+msgstr "Copiar Partidas Seleccionadas a Memory Card"
+
+#: saves.c:1835 saves.c:1840 saves.c:2079 saves.c:2083 saves.c:2174
+#: saves.c:2178
+msgid "Copy Saves to MemCard"
+msgstr "Copiar Partidas a MemCard"
+
+#: saves.c:1838 saves.c:2081 saves.c:2176
+msgid "Copy all Saves to Memory Card"
+msgstr "Copiar Todas las Partidas a Memory Card"
+
+#: saves.c:1880
+msgid "Copy selected Saves to Backup Storage"
+msgstr "Copiar Partidas Seleccionadas a Almacenamiento de Respaldo"
+
+#: saves.c:1882 saves.c:1887 saves.c:1895 saves.c:1903
+msgid "Copy Saves to Backup Storage"
+msgstr "Copiar Partidas a Almacenamiento de Respaldo"
+
+#: saves.c:1885
+msgid "Copy all Saves to Backup Storage"
+msgstr "Copiar Todas las Partidas a Almacenamiento de Respaldo"
+
+#: saves.c:1890
+msgid ".PSU Export selected Saves to Backup Storage"
+msgstr ".PSU Exportar Partidas Seleccionadas a Almacenamiento de Respaldo"
+
+#: saves.c:1898
+msgid ".PSU Export All Saves to Backup Storage"
+msgstr ".PSU Exportar Todas las Partidas a Almacenamiento de Respaldo"
+
+#: saves.c:1909 saves.c:2190
+msgid "Memory Card Image"
+msgstr "Imagen de Memory Card"
+
+#: saves.c:1914
+msgid "Dump Memory Card to .MCR image"
+msgstr "Volcar Memory Card a imagen .MCR"
+
+#: saves.c:1916
+msgid "Save .MCR image to Storage"
+msgstr "Guardar imagen .MCR en Almacenamiento"
+
+#: saves.c:1921
+msgid "Dump Memory Card to .PS2 image (ECC)"
+msgstr "Volcar Memory Card a imagen .PS2 (ECC)"
+
+#: saves.c:1923
+msgid "Save .PS2 image to Storage"
+msgstr "Guardar imagen .PS2 en Almacenamiento"
+
+#: saves.c:1926
+msgid "Dump Memory Card to .VMC image (raw)"
+msgstr "Volcar Memory Card a imagen .VMC (raw)"
+
+#: saves.c:1928
+msgid "Save .VMC image to Storage"
+msgstr "Guardar imagen .VMC en Almacenamiento"
+
+#: saves.c:2068
+msgid "Memory Card Management"
+msgstr "Gestión de Memory Card"
+
+#: saves.c:2086 saves.c:2181
+msgid "Export selected Saves to Storage (.PSV)"
+msgstr "Exportar Partidas Seleccionadas a Almacenamiento (.PSV)"
+
+#: saves.c:2088 saves.c:2092 saves.c:2183 saves.c:2187
+msgid "Export Saves to Storage"
+msgstr "Exportar Partidas a Almacenamiento"
+
+#: saves.c:2090 saves.c:2185
+msgid "Export all Saves to Storage (.PSV)"
+msgstr "Exportar Todas las Partidas a Almacenamiento (.PSV)"
+
+#: saves.c:2095 saves.c:2276
+msgid "Virtual Memory Card"
+msgstr "Memory Card Virtual"
+
+#: saves.c:2098
+msgid "Export Memory Card to .VM1 format"
+msgstr "Exportar Memory Card a formato .VM1"
+
+#: saves.c:2101
+msgid "Save .VM1 Memory Card to Storage"
+msgstr "Guardar Memory Card .VM1 en Almacenamiento"
+
+#: saves.c:2104
+msgid "Export Memory Card to .VMP format"
+msgstr "Exportar Memory Card a formato .VMP"
+
+#: saves.c:2107
+msgid "Save .VMP Memory Card to Storage"
+msgstr "Guardar Memory Card .VMP en Almacenamiento"
+
+#: saves.c:2111 saves.c:2199
+msgid "Import Saves to Virtual Card"
+msgstr "Importar Partidas a Memory Card Virtual"
+
+#: saves.c:2193
+msgid "Write image to Memory Card (overwrites the card)"
+msgstr "Escribir imagen en Memory Card (sobrescribe la tarjeta)"
+
+#: saves.c:2195
+msgid "Write image to MemCard"
+msgstr "Escribir imagen en MemCard"
+
+#: saves.c:2262
+msgid "Packed PS1 Save"
+msgstr "Partida PS1 Empaquetada"
+
+#: saves.c:2262
+msgid "Packed PS2 Save"
+msgstr "Partida PS2 Empaquetada"
+
+#: saves.c:2265 saves.c:2278 saves.c:2309
+msgid "Folder"
+msgstr "Carpeta"
+
+#: saves.c:2290
+msgid "PS1 Save"
+msgstr "Partida PS1"
+
+#: saves.c:2306
+msgid "PS2 Save"
+msgstr "Partida PS2"
+
+#: saves.c:2310
+msgid "Icon"
+msgstr "Icono"
+
+#: saves.c:2320
+msgid "Save"
+msgstr "Partida"
+
+#: saves.c:2321
+msgid "Title"
+msgstr "Título"
+
+#: saves.c:2323
+msgid "Dir Name"
+msgstr "Directorio"
+
+#: settings.c:23
+msgid "Disabled"
+msgstr "Deshabilitado"
+
+#: settings.c:23
+msgid "by Name"
+msgstr "por Nombre"
+
+#: settings.c:23
+msgid "by Title ID"
+msgstr "por ID de Título"
+
+#: settings.c:23
+msgid "by Type"
+msgstr "por Tipo"
+
+#: settings.c:26
+msgid "Background Music"
+msgstr "Música de Fondo"
+
+#: settings.c:32
+msgid "Menu Animations"
+msgstr "Animaciones de Menú"
+
+#: settings.c:38
+msgid "Sort Saves"
+msgstr "Ordenar Partidas"
+
+#: settings.c:44
+msgid "External Saves Source"
+msgstr "Origen de Partidas Externas"
+
+#: settings.c:50
+msgid "Check for Updates"
+msgstr "Buscar Actualizaciones"
+
+#: settings.c:64
+msgid "Clear Local Cache"
+msgstr "Limpiar Caché Local"
+
+#: settings.c:70
+msgid "Debug Log"
+msgstr "Registro de Depuración"
+
+#: settings.c:116
+#, c-format
+msgid "RAM cache cleaned (%d files)"
+msgstr "Caché RAM limpiada (%d archivos)"
+
+#: settings.c:123
+msgid "Local cache folder cleaned:"
+msgstr "Carpeta de caché local limpiada:"
+
+#: settings.c:132
+msgid "Error! Can't download data update pack!"
+msgstr "¡Error! No se puede descargar la actualización!"
+
+#: settings.c:137
+#, c-format
+msgid "Successfully updated %d data files!"
+msgstr "¡Actualizados exitosamente %d archivos!"
+
+#: settings.c:139
+msgid "Error! Can't extract data update pack!"
+msgstr "¡Error! No se puede extraer la actualización!"
+
+#: settings.c:187
+msgid "(PS2 Network Adapter and DHCP required)"
+msgstr "(Requiere Network Adaptor de PS2 y DHCP)"
+
+#: settings.c:187
+msgid "Can't check for updates: no network connection"
+msgstr "No se pueden buscar actualizaciones: sin conexión de red"
+
+#: settings.c:194 settings.c:208
+msgid "Can't check for updates:"
+msgstr "No se pueden buscar actualizaciones:"
+
+#: settings.c:194
+msgid "GitHub couldn't be reached"
+msgstr "No se pudo contactar con GitHub"
+
+#: settings.c:208
+msgid "unexpected reply from GitHub"
+msgstr "respuesta inesperada de GitHub"
+
+#: settings.c:220
+#, c-format
+msgid "Apollo Save Tool v%s is up to date"
+msgstr "Apollo Save Tool v%s está actualizado"
+
+#: settings.c:221
+msgid "Latest release:"
+msgstr "Última versión:"
+
+#: settings.c:231
+msgid "Download it from:"
+msgstr "Descárgala desde:"
+
+#: settings.c:231 settings.c:235
+msgid "New version available:"
+msgstr "Nueva versión disponible:"
+
+#: settings.c:235
+msgid "Download update to:"
+msgstr "Descargar actualización a:"
+
+#: settings.c:238
+msgid "Update downloaded to:"
+msgstr "Actualización descargada a:"
+
+#: settings.c:240
+msgid "Error! Can't download the update"
+msgstr "¡Error! No se puede descargar la actualización"
+
+#: settings.c:285
+msgid "Debug Logging Disabled"
+msgstr "Registro de Depuración Desactivado"
+
+#: settings.c:292
+msgid "Error! Can't create the log file:"
+msgstr "¡Error! No se puede crear el archivo de registro:"
+
+#: settings.c:296
+msgid "Debug Logging Enabled!"
+msgstr "¡Registro de Depuración Activado!"
+
+#: zip_util.c:200
+msgid "Extracting files..."
+msgstr "Extrayendo archivos..."

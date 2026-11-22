@@ -8,6 +8,10 @@ All notable changes to the `apollo-ps2` project will be documented in this file.
 
 ### Added
 
+* Localization: English, Japanese, French, Spanish, German, Italian, Dutch, Portuguese and Russian
+  - Follows the console's language (System Configuration)
+  - Translations are built into the app; a `lang_xx.po` file in `mass:/APOLLO/DATA/` overrides the built-in one
+  - Translation template: `docs/translate.po`
 * Network support
   - Online Database: browse and download saves over the PS2 Network Adapter (or a Slim PS2), on a network with DHCP
   - The network is only started when a download is needed

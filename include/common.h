@@ -29,4 +29,7 @@ int clean_directory(const char* inputdir);
 int sys_shutdown();
 int sys_reboot();
 
+int get_system_language(void);
+const char* get_language_code(int lang);
+
 #endif

@@ -1,0 +1,965 @@
+# Apollo Save Tool (PS2) - Japanese translation
+msgid ""
+msgstr ""
+"Project-Id-Version: Apollo Save Tool\n"
+"Language-Team: github.com/bucanero\n"
+"Language: ja\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-Basepath: ../source\n"
+"X-Poedit-KeywordsList: _;_i18n\n"
+"X-Poedit-SearchPath-0: .\n"
+
+#: dialog.c:60
+msgid "Cancel"
+msgstr "キャンセル"
+
+#: dialog.c:60 dialog.c:72
+msgid "OK"
+msgstr "OK"
+
+#: dialog.c:73
+msgid "No"
+msgstr "いいえ"
+
+#: dialog.c:73
+msgid "Yes"
+msgstr "はい"
+
+#: exec_cmd.c:52 exec_cmd.c:127 exec_cmd.c:155 exec_cmd.c:199 exec_cmd.c:1119
+#: exec_cmd.c:1142
+msgid "Error! Export folder is not available:"
+msgstr "エラー!エクスポートフォルダが利用できません:"
+
+#: exec_cmd.c:58 exec_cmd.c:84
+msgid "Error downloading save game from:"
+msgstr "セーブデータのダウンロード中にエラーが発生しました:"
+
+#: exec_cmd.c:63
+msgid "Save game successfully downloaded to:"
+msgstr "セーブデータが正常にダウンロードされました:"
+
+#: exec_cmd.c:65 exec_cmd.c:99
+msgid "Error extracting save game!"
+msgstr "セーブデータの抽出に失敗しました!"
+
+#: exec_cmd.c:97
+msgid "Save game successfully copied to:"
+msgstr "セーブデータのコピーに成功しました:"
+
+#: exec_cmd.c:113
+msgid "Error extracting PSV data from:"
+msgstr "PSVデータの抽出に失敗しました:"
+
+#: exec_cmd.c:119 exec_cmd.c:565
+msgid "Importing save..."
+msgstr "セーブデータをインポート中..."
+
+#: exec_cmd.c:125
+msgid "Save game successfully imported to:"
+msgstr "セーブデータのインポートに成功しました:"
+
+#: exec_cmd.c:159
+msgid "Exporting save game..."
+msgstr "セーブデータをエクスポート中..."
+
+#: exec_cmd.c:182
+msgid "Zip file successfully saved to:"
+msgstr "Zipファイルが正常に保存されました:"
+
+#: exec_cmd.c:193 exec_cmd.c:232
+msgid "Copy operation cancelled!"
+msgstr "コピー操作がキャンセルされました!"
+
+#: exec_cmd.c:193 exec_cmd.c:232
+msgid "Same source and destination."
+msgstr "送信元と宛先が同じです。"
+
+#: exec_cmd.c:203
+msgid "Copying files..."
+msgstr "ファイルをコピー中..."
+
+#: exec_cmd.c:213 exec_cmd.c:241 exec_cmd.c:1229
+msgid "Files successfully copied to:"
+msgstr "ファイルが正常にコピーされました:"
+
+#: exec_cmd.c:236 exec_cmd.c:1224
+msgid "Copying save game..."
+msgstr "セーブデータをコピー中..."
+
+#: exec_cmd.c:243 exec_cmd.c:1231
+msgid "Error! Can't copy Save-game folder:"
+msgstr "エラー!セーブデータフォルダをコピーできません："
+
+#: exec_cmd.c:255 exec_cmd.c:309 exec_cmd.c:629
+msgid "Copying all saves..."
+msgstr "すべてのセーブデータをコピー中..."
+
+#: exec_cmd.c:297 exec_cmd.c:324
+#, c-format
+msgid "%d/%d Saves copied to Memory Card %d"
+msgstr "%d/%d個のセーブデータをメモリカード%dにコピーしました"
+
+#: exec_cmd.c:336
+msgid "Exporting all VMC saves..."
+msgstr "VMCのセーブデータをすべてエクスポート中..."
+
+#: exec_cmd.c:352 exec_cmd.c:1004
+msgid "Saves exported to:"
+msgstr "エクスポートされた保存先:"
+
+#: exec_cmd.c:388
+msgid "All files extracted to:"
+msgstr "すべてのファイルは以下に抽出されました:"
+
+#: exec_cmd.c:390
+#, c-format
+msgid "Error: %s couldn't be extracted"
+msgstr "エラー:%sを抽出できませんでした"
+
+#: exec_cmd.c:607
+#, c-format
+msgid "Save successfully imported to %s"
+msgstr "%sへのインポートに成功しました"
+
+#: exec_cmd.c:609
+msgid "Error: save couldn't be imported"
+msgstr "エラー:セーブデータをインポートできませんでした"
+
+#: exec_cmd.c:625
+msgid "Error! Folder is not available:"
+msgstr "エラー!フォルダが利用できません:"
+
+#: exec_cmd.c:658
+msgid "Saves copied to:"
+msgstr "セーブデータのコピー先:"
+
+#: exec_cmd.c:760
+msgid "Applying changes..."
+msgstr "変更を適用中..."
+
+#: exec_cmd.c:896 saves.c:270
+msgid "Add copy protection (lock save)"
+msgstr "コピー保護を追加（ロック）"
+
+#: exec_cmd.c:896 saves.c:268
+msgid "Remove copy protection (unlock save)"
+msgstr "コピー保護を解除（アンロック）"
+
+#: exec_cmd.c:906
+#, c-format
+msgid "Error! Copy protection of %s couldn't be changed"
+msgstr "エラー!%sのコピー保護を変更できませんでした"
+
+#: exec_cmd.c:912
+msgid "Error! Cheat codes couldn't be applied"
+msgstr "エラー!チートコードを適用できませんでした"
+
+#: exec_cmd.c:914
+#, c-format
+msgid "Save %s successfully modified!"
+msgstr "%sの変更に成功しました!"
+
+#: exec_cmd.c:926
+#, c-format
+msgid "Do you want to delete %s?"
+msgstr "%sを削除しますか?"
+
+#: exec_cmd.c:955
+msgid "Save successfully deleted:"
+msgstr "削除が正常に完了しました:"
+
+#: exec_cmd.c:957
+msgid "Error! Couldn't delete save:"
+msgstr "エラー!セーブデータを削除できませんでした:"
+
+#: exec_cmd.c:972
+msgid "Exporting all saves..."
+msgstr "すべてのセーブデータをエクスポート中..."
+
+#: exec_cmd.c:1022
+msgid "Exporting save..."
+msgstr "セーブデータをエクスポート中..."
+
+#: exec_cmd.c:1046 exec_cmd.c:1084 exec_cmd.c:1106
+msgid "Save successfully exported to:"
+msgstr "正常にエクスポートされました:"
+
+#: exec_cmd.c:1048 exec_cmd.c:1086 exec_cmd.c:1108
+msgid "Error exporting save:"
+msgstr "セーブデータのエクスポート中にエラーが発生しました:"
+
+#: exec_cmd.c:1067
+msgid "Exporting save ..."
+msgstr "セーブデータをエクスポート中..."
+
+#: exec_cmd.c:1126
+msgid "Memory card successfully exported to:"
+msgstr "メモリカードが正常にエクスポートされました:"
+
+#: exec_cmd.c:1128
+msgid "Error! Failed to export PS1 memory card"
+msgstr "エラー!PS1メモリカードのエクスポートに失敗しました"
+
+#: exec_cmd.c:1156
+msgid "Memory Card dumped to:"
+msgstr "メモリカードのダンプ先:"
+
+#: exec_cmd.c:1156
+msgid "Warning! Pages with ECC errors (saved as read):"
+msgstr "警告!ECCエラーのあるページ（読み取ったまま保存）:"
+
+#: exec_cmd.c:1158
+msgid "Memory Card successfully dumped to:"
+msgstr "メモリカードのダンプに成功しました:"
+
+#: exec_cmd.c:1160
+msgid "Error! Failed to dump"
+msgstr "エラー!ダンプに失敗しました"
+
+#: exec_cmd.c:1170
+msgid "Error! Can't write image to"
+msgstr "エラー!イメージを書き込めません"
+
+#: exec_cmd.c:1174
+msgid "ALL data will be replaced by:"
+msgstr "すべてのデータが次の内容で置き換えられます:"
+
+#: exec_cmd.c:1174
+msgid "This cannot be undone. Continue?"
+msgstr "元に戻せません。続行しますか?"
+
+#: exec_cmd.c:1179
+#, c-format
+msgid "Memory Card image successfully written to mc%d:"
+msgstr "メモリカードイメージをmc%d:に書き込みました"
+
+#: exec_cmd.c:1181
+msgid "Error writing image to"
+msgstr "イメージ書き込みエラー"
+
+#: exec_cmd.c:1181
+msgid "The Memory Card contents are now incomplete!"
+msgstr "メモリカードの内容が不完全な状態です!"
+
+#: exec_cmd.c:1188
+msgid "Importing save ..."
+msgstr "セーブデータをインポート中..."
+
+#: exec_cmd.c:1217
+msgid "Successfully imported to VMC:"
+msgstr "VMCへのインポートに成功しました:"
+
+#: exec_cmd.c:1219
+msgid "Error importing save:"
+msgstr "セーブデータのインポート中にエラーが発生しました:"
+
+#: exec_cmd.c:1257 exec_cmd.c:1262
+#, c-format
+msgid "Error! File %s couldn't be exported"
+msgstr "エラー!ファイル %s をエクスポートできませんでした"
+
+#: exec_cmd.c:1259
+msgid "File successfully exported to:"
+msgstr "ファイルは正常にエクスポートされました："
+
+#: exec_cmd.c:1272
+msgid "Error! Can't find save-game file:"
+msgstr "エラー!セーブデータファイルが見つかりません:"
+
+#: exec_cmd.c:1282 exec_cmd.c:1287
+#, c-format
+msgid "Error! File %s couldn't be imported"
+msgstr "エラー!ファイル %s をインポートできませんでした"
+
+#: exec_cmd.c:1284
+msgid "File successfully imported to:"
+msgstr "ファイルのインポートに成功しました:"
+
+#: exec_cmd.c:1295
+msgid "Download URL"
+msgstr "ダウンロードURL"
+
+#: exec_cmd.c:1301
+msgid "File successfully downloaded to:"
+msgstr "ファイルのダウンロードに成功しました:"
+
+#: exec_cmd.c:1303
+msgid "Error! File couldn't be downloaded"
+msgstr "エラー!ファイルをダウンロードできませんでした"
+
+#: exec_cmd.c:1362
+msgid "Save successfully imported:"
+msgstr "インポートに成功しました:"
+
+#: exec_cmd.c:1364
+msgid "Error! Couldn't import save:"
+msgstr "エラー!セーブデータのインポートに失敗しました:"
+
+#: http.c:160
+msgid "Connecting to the network..."
+msgstr "ネットワークに接続中..."
+
+#: http.c:310
+msgid "Downloading..."
+msgstr "ダウンロード中..."
+
+#: main.c:171 main.c:181 main.c:185 main.c:190 main.c:194
+msgid "Back"
+msgstr "戻る"
+
+#: main.c:171 menu_cheats.c:256 menu_main.c:158
+msgid "Details"
+msgstr "詳細"
+
+#: main.c:171 main.c:185
+msgid "Refresh"
+msgstr "リフレッシュ"
+
+#: main.c:171 main.c:185 main.c:190 main.c:194
+msgid "Select"
+msgstr "選択する"
+
+#: main.c:175
+msgid "Exit"
+msgstr "終了"
+
+#: main.c:175
+msgid "Value Down"
+msgstr "バリューダウン"
+
+#: main.c:175
+msgid "Value Up"
+msgstr "バリューアップ"
+
+#: main.c:194
+msgid "View Code"
+msgstr "コードを表示する"
+
+#: main.c:342
+msgid "Memory Card 1"
+msgstr "メモリカード1"
+
+#: main.c:342
+msgid "Memory Card 2"
+msgstr "メモリカード2"
+
+#: main.c:347
+msgid "Select Memory Card"
+msgstr "メモリカードを選択"
+
+#: main.c:424
+msgid "MemCard Saves"
+msgstr "メモリカードのセーブ"
+
+#: main.c:425
+msgid "External Saves"
+msgstr "外部セーブ"
+
+#: main.c:426 main.c:427
+msgid "Virtual MemCard"
+msgstr "仮想メモリカード"
+
+#: main.c:428
+msgid "Saves Database"
+msgstr "セーブデータベース"
+
+#: main.c:429
+msgid "User Tools"
+msgstr "ユーザーツール"
+
+#: main.c:593
+msgid "Successfully installed local application data"
+msgstr "ローカルアプリケーションデータのインストールに成功しました"
+
+#: mc_image.c:228
+msgid "Dumping Memory Card..."
+msgstr "メモリカードをダンプ中..."
+
+#: mc_image.c:282
+msgid "Dumping PS1 Memory Card..."
+msgstr "PS1メモリカードをダンプ中..."
+
+#: mc_image.c:401
+msgid "Erasing Memory Card..."
+msgstr "メモリカードを消去中..."
+
+#: mc_image.c:412
+msgid "Writing Memory Card image..."
+msgstr "メモリカードイメージを書き込み中..."
+
+#: mc_image.c:457
+msgid "No Memory Card of the right type in the slot"
+msgstr "スロットに対応するメモリカードがありません"
+
+#: mc_image.c:458
+msgid "Memory Card is not formatted (or unreadable)"
+msgstr "メモリカードが未フォーマット（または読み取り不可）です"
+
+#: mc_image.c:459
+msgid "Unsupported Memory Card geometry"
+msgstr "未対応のメモリカード構成です"
+
+#: mc_image.c:460
+msgid "Cannot read or write the image file"
+msgstr "イメージファイルを読み書きできません"
+
+#: mc_image.c:461
+msgid "File is not a formatted PS2 Memory Card image"
+msgstr "フォーマット済みのPS2メモリカードイメージではありません"
+
+#: mc_image.c:462
+msgid "Image size does not match the Memory Card"
+msgstr "イメージのサイズがメモリカードと一致しません"
+
+#: mc_image.c:463
+msgid "Memory Card read error"
+msgstr "メモリカードの読み取りエラー"
+
+#: mc_image.c:464
+msgid "Memory Card erase error"
+msgstr "メモリカードの消去エラー"
+
+#: mc_image.c:465
+msgid "Memory Card write error"
+msgstr "メモリカードの書き込みエラー"
+
+#: mc_image.c:466
+msgid "Verification failed (bad block?)"
+msgstr "ベリファイに失敗しました（不良ブロック?）"
+
+#: mc_image.c:467
+msgid "Unknown error"
+msgstr "不明なエラー"
+
+#: menu_about.c:98 menu_about.c:130
+msgid "About"
+msgstr "概要"
+
+#: menu_cheats.c:112 menu_cheats.c:145 menu_cheats.c:165
+msgid "Options"
+msgstr "オプション"
+
+#: menu_cheats.c:210
+msgid "Target File"
+msgstr "対象ファイル"
+
+#: menu_cheats.c:519
+#, c-format
+msgid "%ld Saves"
+msgstr "%ld個のセーブ"
+
+#: menu_cheats.c:524
+#, c-format
+msgid "%ld Games"
+msgstr "%ld本のゲーム"
+
+#: menu_cheats.c:528
+msgid "Tools"
+msgstr "ツール"
+
+#: menu_hex.c:51 menu_hex.c:71
+msgid "Hex Editor"
+msgstr "Hexエディタ"
+
+#: menu_main.c:79
+msgid "Loading saves..."
+msgstr "セーブデータを読み込み中..."
+
+#: menu_main.c:93
+msgid "No save-games found"
+msgstr "セーブデータが見つかりませんでした"
+
+#: menu_main.c:141
+msgid "Error getting details"
+msgstr "詳細の取得に失敗しました"
+
+#: menu_main.c:157 saves.c:2263 saves.c:2277 saves.c:2293
+msgid "File"
+msgstr "ファイル"
+
+#: menu_main.c:157 saves.c:2291 saves.c:2307
+msgid "Game"
+msgstr "ゲーム"
+
+#: menu_main.c:157 saves.c:2264 saves.c:2292 saves.c:2308 saves.c:2322
+msgid "Title ID"
+msgstr "タイトルID"
+
+#: menu_main.c:380 menu_main.c:784
+msgid "Patch view"
+msgstr "パッチ表示"
+
+#: menu_main.c:520
+msgid "No data found in folder:"
+msgstr "フォルダ内にデータが見つかりません:"
+
+#: menu_main.c:576
+msgid "Exit the app?"
+msgstr "アプリを終了しますか?"
+
+#: menu_main.c:717 menu_main.c:725
+#, c-format
+msgid "Save changes to %s?"
+msgstr "変更を%sに保存しますか?"
+
+#: menu_main.c:722
+msgid "Error! Couldn't save changes to:"
+msgstr "エラー!変更を保存できませんでした:"
+
+#: menu_main.c:822 menu_main.c:840
+msgid "Unable to load"
+msgstr "読み込めません"
+
+#: menu_options.c:66 menu_options.c:86
+msgid "Settings"
+msgstr "設定"
+
+#: saves.c:264
+msgid "Copy Protection"
+msgstr "コピー保護"
+
+#: saves.c:280
+msgid "File Backup"
+msgstr "ファイルのバックアップ"
+
+#: saves.c:285
+msgid "Copy save files"
+msgstr "セーブファイルをコピー"
+
+#: saves.c:288
+msgid "Copy Save to Mass Storage"
+msgstr "セーブデータをストレージにコピー"
+
+#: saves.c:289 saves.c:1113
+msgid "Copy Save to Memory Card"
+msgstr "セーブデータをメモリカードにコピー"
+
+#: saves.c:292
+msgid "Export save files to Zip"
+msgstr "セーブファイルをZipにエクスポート"
+
+#: saves.c:294
+msgid "Export Zip to Mass Storage"
+msgstr "Zipをストレージにエクスポート"
+
+#: saves.c:298
+msgid "Export single save files"
+msgstr "個別のセーブファイルをエクスポート"
+
+#: saves.c:303
+msgid "Import single save files"
+msgstr "個別のセーブファイルをインポート"
+
+#: saves.c:308 saves.c:757
+msgid "Hex Edit save game files"
+msgstr "セーブデータをHEXで編集"
+
+#: saves.c:351 saves.c:379 saves.c:961
+msgid "Save Game Backup"
+msgstr "セーブデータのバックアップ"
+
+#: saves.c:354
+msgid "Export save to .MCS format"
+msgstr "セーブデータを.MCS形式でエクスポート"
+
+#: saves.c:356
+msgid "Export .MCS to Storage"
+msgstr ".MCSをストレージにエクスポート"
+
+#: saves.c:360
+msgid "Export save to .PSX format"
+msgstr "セーブデータを.PSX形式でエクスポート"
+
+#: saves.c:362
+msgid "Export .PSX to Storage"
+msgstr ".PSXをストレージにエクスポート"
+
+#: saves.c:366 saves.c:388
+msgid "Export save to .PSV format"
+msgstr "セーブデータを.PSV形式でエクスポート"
+
+#: saves.c:368 saves.c:390
+msgid "Export .PSV to Storage"
+msgstr ".PSVをストレージにエクスポート"
+
+#: saves.c:382
+msgid "Export save to .PSU format"
+msgstr "セーブデータを.PSU形式でエクスポート"
+
+#: saves.c:384
+msgid "Export .PSU to Storage"
+msgstr ".PSUをストレージにエクスポート"
+
+#: saves.c:397
+msgid "Export save to .CBS format"
+msgstr "セーブデータを.CBS形式でエクスポート"
+
+#: saves.c:399
+msgid "Export .CBS to Storage"
+msgstr ".CBSをストレージにエクスポート"
+
+#: saves.c:801 saves.c:874
+msgid "Cheats"
+msgstr "チート"
+
+#: saves.c:804 saves.c:877
+msgid "View Raw Patch File"
+msgstr "Rawパッチファイルを表示"
+
+#: saves.c:847
+msgid "Save linked to MemCard ID"
+msgstr "メモリカードIDに紐付けられたセーブ"
+
+#: saves.c:852 saves.c:952 saves.c:1099
+msgid "Apply Changes"
+msgstr "変更を適用"
+
+#: saves.c:855 saves.c:955 saves.c:1102 saves.c:1614
+msgid "View Save Details"
+msgstr "セーブデータの詳細を表示"
+
+#: saves.c:858 saves.c:958 saves.c:1105 saves.c:1622
+msgid "Delete Save Game"
+msgstr "セーブデータを削除"
+
+#: saves.c:964
+msgid "Export save game to .MCS format"
+msgstr "セーブデータを.MCS形式でエクスポート"
+
+#: saves.c:966
+msgid "Copy .MCS Save to Storage"
+msgstr ".MCSセーブをストレージにコピー"
+
+#: saves.c:970
+msgid "Export save game to .PSV format"
+msgstr "セーブデータを.PSV形式でエクスポート"
+
+#: saves.c:972
+msgid "Copy .PSV Save to Storage"
+msgstr ".PSVセーブをストレージにコピー"
+
+#: saves.c:976
+msgid "Export save game to .PSX format"
+msgstr "セーブデータを.PSX形式でエクスポート"
+
+#: saves.c:978
+msgid "Copy .PSX Save to Storage"
+msgstr ".PSXセーブをストレージにコピー"
+
+#: saves.c:1108
+msgid "Save Transfer"
+msgstr "セーブデータの転送"
+
+#: saves.c:1111
+msgid "Copy save game to Memory Card"
+msgstr "セーブデータをメモリカードにコピー"
+
+#: saves.c:1199
+msgid "Download to Mass Storage"
+msgstr "ストレージにダウンロード"
+
+#: saves.c:1252 saves.c:1617
+msgid "Import to Memory Card"
+msgstr "メモリカードにインポート"
+
+#: saves.c:1255 saves.c:1260
+msgid "Copy to Storage"
+msgstr "ストレージにコピー"
+
+#: saves.c:1280
+msgid "Extract Archives (Zip)"
+msgstr "アーカイブを展開（Zip）"
+
+#: saves.c:1307
+msgid "Local Web Server (full system access)"
+msgstr "ローカルWebサーバー（フルシステムアクセス）"
+
+#: saves.c:1342
+msgid "Extract"
+msgstr "抽出"
+
+#: saves.c:1619
+msgid "Import to MemCard"
+msgstr "メモリカードにインポート"
+
+#: saves.c:1825 saves.c:1872 saves.c:2164
+msgid "Bulk Save Management"
+msgstr "一括保存管理"
+
+#: saves.c:1833 saves.c:2077 saves.c:2172
+msgid "Copy selected Saves to Memory Card"
+msgstr "選択したセーブデータをメモリカードにコピー"
+
+#: saves.c:1835 saves.c:1840 saves.c:2079 saves.c:2083 saves.c:2174
+#: saves.c:2178
+msgid "Copy Saves to MemCard"
+msgstr "セーブデータをメモリカードにコピー"
+
+#: saves.c:1838 saves.c:2081 saves.c:2176
+msgid "Copy all Saves to Memory Card"
+msgstr "すべてのセーブデータをメモリカードにコピー"
+
+#: saves.c:1880
+msgid "Copy selected Saves to Backup Storage"
+msgstr "選択したセーブデータをストレージにコピー"
+
+#: saves.c:1882 saves.c:1887 saves.c:1895 saves.c:1903
+msgid "Copy Saves to Backup Storage"
+msgstr "セーブデータをストレージにコピー"
+
+#: saves.c:1885
+msgid "Copy all Saves to Backup Storage"
+msgstr "すべてのセーブデータをストレージにコピーする"
+
+#: saves.c:1890
+msgid ".PSU Export selected Saves to Backup Storage"
+msgstr "選択したセーブデータを.PSUでストレージにエクスポート"
+
+#: saves.c:1898
+msgid ".PSU Export All Saves to Backup Storage"
+msgstr "すべてのセーブデータを.PSUでストレージにエクスポート"
+
+#: saves.c:1909 saves.c:2190
+msgid "Memory Card Image"
+msgstr "メモリカードイメージ"
+
+#: saves.c:1914
+msgid "Dump Memory Card to .MCR image"
+msgstr "メモリカードを.MCRイメージにダンプ"
+
+#: saves.c:1916
+msgid "Save .MCR image to Storage"
+msgstr ".MCRイメージをストレージに保存"
+
+#: saves.c:1921
+msgid "Dump Memory Card to .PS2 image (ECC)"
+msgstr "メモリカードを.PS2イメージにダンプ（ECC）"
+
+#: saves.c:1923
+msgid "Save .PS2 image to Storage"
+msgstr ".PS2イメージをストレージに保存"
+
+#: saves.c:1926
+msgid "Dump Memory Card to .VMC image (raw)"
+msgstr "メモリカードを.VMCイメージにダンプ（RAW）"
+
+#: saves.c:1928
+msgid "Save .VMC image to Storage"
+msgstr ".VMCイメージをストレージに保存"
+
+#: saves.c:2068
+msgid "Memory Card Management"
+msgstr "メモリカード管理"
+
+#: saves.c:2086 saves.c:2181
+msgid "Export selected Saves to Storage (.PSV)"
+msgstr "選択したセーブデータをストレージにエクスポート（.PSV）"
+
+#: saves.c:2088 saves.c:2092 saves.c:2183 saves.c:2187
+msgid "Export Saves to Storage"
+msgstr "セーブデータをストレージにエクスポート"
+
+#: saves.c:2090 saves.c:2185
+msgid "Export all Saves to Storage (.PSV)"
+msgstr "すべてのセーブデータをストレージにエクスポート（.PSV）"
+
+#: saves.c:2095 saves.c:2276
+msgid "Virtual Memory Card"
+msgstr "仮想メモリカード"
+
+#: saves.c:2098
+msgid "Export Memory Card to .VM1 format"
+msgstr "メモリカードを.VM1形式でエクスポート"
+
+#: saves.c:2101
+msgid "Save .VM1 Memory Card to Storage"
+msgstr ".VM1メモリカードをストレージに保存"
+
+#: saves.c:2104
+msgid "Export Memory Card to .VMP format"
+msgstr "メモリカードを.VMP形式でエクスポート"
+
+#: saves.c:2107
+msgid "Save .VMP Memory Card to Storage"
+msgstr ".VMPメモリカードをストレージに保存"
+
+#: saves.c:2111 saves.c:2199
+msgid "Import Saves to Virtual Card"
+msgstr "セーブデータを仮想カードにインポート"
+
+#: saves.c:2193
+msgid "Write image to Memory Card (overwrites the card)"
+msgstr "イメージをメモリカードに書き込み（上書き）"
+
+#: saves.c:2195
+msgid "Write image to MemCard"
+msgstr "イメージをメモリカードに書き込み"
+
+#: saves.c:2262
+msgid "Packed PS1 Save"
+msgstr "PS1セーブ（パック）"
+
+#: saves.c:2262
+msgid "Packed PS2 Save"
+msgstr "PS2セーブ（パック）"
+
+#: saves.c:2265 saves.c:2278 saves.c:2309
+msgid "Folder"
+msgstr "フォルダ"
+
+#: saves.c:2290
+msgid "PS1 Save"
+msgstr "PS1セーブ"
+
+#: saves.c:2306
+msgid "PS2 Save"
+msgstr "PS2セーブ"
+
+#: saves.c:2310
+msgid "Icon"
+msgstr "アイコン"
+
+#: saves.c:2320
+msgid "Save"
+msgstr "セーブ"
+
+#: saves.c:2321
+msgid "Title"
+msgstr "タイトル"
+
+#: saves.c:2323
+msgid "Dir Name"
+msgstr "フォルダ名"
+
+#: settings.c:23
+msgid "Disabled"
+msgstr "無効"
+
+#: settings.c:23
+msgid "by Name"
+msgstr "名前"
+
+#: settings.c:23
+msgid "by Title ID"
+msgstr "タイトルID"
+
+#: settings.c:23
+msgid "by Type"
+msgstr "タイプ"
+
+#: settings.c:26
+msgid "Background Music"
+msgstr "BGM"
+
+#: settings.c:32
+msgid "Menu Animations"
+msgstr "メニューアニメーション"
+
+#: settings.c:38
+msgid "Sort Saves"
+msgstr "セーブデータを並び替える"
+
+#: settings.c:44
+msgid "External Saves Source"
+msgstr "外部セーブデータソース"
+
+#: settings.c:50
+msgid "Check for Updates"
+msgstr "アップデートを確認"
+
+#: settings.c:64
+msgid "Clear Local Cache"
+msgstr "ローカルキャッシュを消去"
+
+#: settings.c:70
+msgid "Debug Log"
+msgstr "デバッグログ"
+
+#: settings.c:116
+#, c-format
+msgid "RAM cache cleaned (%d files)"
+msgstr "RAMキャッシュを消去しました（%d個のファイル）"
+
+#: settings.c:123
+msgid "Local cache folder cleaned:"
+msgstr "ローカルキャッシュフォルダをクリーンアップしました:"
+
+#: settings.c:132
+msgid "Error! Can't download data update pack!"
+msgstr "エラー!アップデータをダウンロードできません!"
+
+#: settings.c:137
+#, c-format
+msgid "Successfully updated %d data files!"
+msgstr "%d個のアップデートに成功しました!"
+
+#: settings.c:139
+msgid "Error! Can't extract data update pack!"
+msgstr "エラー!アップデータを抽出できません!"
+
+#: settings.c:187
+msgid "(PS2 Network Adapter and DHCP required)"
+msgstr "（PS2ネットワークアダプタとDHCPが必要です）"
+
+#: settings.c:187
+msgid "Can't check for updates: no network connection"
+msgstr "アップデートを確認できません:ネットワーク未接続"
+
+#: settings.c:194 settings.c:208
+msgid "Can't check for updates:"
+msgstr "アップデートを確認できません:"
+
+#: settings.c:194
+msgid "GitHub couldn't be reached"
+msgstr "GitHubに接続できませんでした"
+
+#: settings.c:208
+msgid "unexpected reply from GitHub"
+msgstr "GitHubから予期しない応答がありました"
+
+#: settings.c:220
+#, c-format
+msgid "Apollo Save Tool v%s is up to date"
+msgstr "Apollo Save Tool v%sは最新です"
+
+#: settings.c:221
+msgid "Latest release:"
+msgstr "最新リリース:"
+
+#: settings.c:231
+msgid "Download it from:"
+msgstr "ダウンロード先:"
+
+#: settings.c:231 settings.c:235
+msgid "New version available:"
+msgstr "新しいバージョンがあります:"
+
+#: settings.c:235
+msgid "Download update to:"
+msgstr "アップデートの保存先:"
+
+#: settings.c:238
+msgid "Update downloaded to:"
+msgstr "アップデートがダウンロードされました:"
+
+#: settings.c:240
+msgid "Error! Can't download the update"
+msgstr "エラー!アップデートをダウンロードできません"
+
+#: settings.c:285
+msgid "Debug Logging Disabled"
+msgstr "デバッグログ無効"
+
+#: settings.c:292
+msgid "Error! Can't create the log file:"
+msgstr "エラー!ログファイルを作成できません:"
+
+#: settings.c:296
+msgid "Debug Logging Enabled!"
+msgstr "デバッグログ有効!"
+
+#: zip_util.c:200
+msgid "Extracting files..."
+msgstr "ファイルを展開中..."

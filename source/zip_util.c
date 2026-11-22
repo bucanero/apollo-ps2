@@ -197,7 +197,7 @@ int extract_zip(const char* zip_file, const char* dest_path)
 		return 0;
 	}
 
-	init_progress_bar("Extracting files...");
+	init_progress_bar(_("Extracting files..."));
 	LOG("Extracting %s to <%s>...", zip_file, dest_path);
 
 	for (int i = 0; i < files; i++) {
@@ -289,7 +289,7 @@ int extract_7zip(const char* fpath, const char* dest_path)
 	int ret;
 
 	LOG("Extracting 7-Zip (%s) to <%s>...", fpath, dest_path);
-	init_progress_bar("Extracting files...");
+	init_progress_bar(_("Extracting files..."));
 
 	// Extract 7-Zip archive contents
 	ret = Extract7zFileEx(fpath, dest_path, &callback_7z, 0x10000);
@@ -318,7 +318,7 @@ int extract_rar(const char* rarFilePath, const char* dstPath)
 	}
 
 	LOG("UnRAR Extract %s to '%s'...", rarFilePath, dstPath);
-	init_progress_bar("Extracting files...");
+	init_progress_bar(_("Extracting files..."));
 
 	while (RARReadHeaderEx(hArcData, &rarHeaderData) == ERAR_SUCCESS)
 	{
@@ -339,3 +339,47 @@ int extract_rar(const char* rarFilePath, const char* dstPath)
 	return (err == ERAR_SUCCESS);
 }
 */
+
+/*
+ * Reads one file from a zip archive in memory (e.g. embedded in the ELF), as
+ * a 0-terminated buffer to free. Returns NULL if it isn't there.
+ */
+uint8_t* read_zip_buffer_file(const void* zip_data, size_t zip_size, const char* name, size_t* out_size)
+{
+	zip_source_t* src;
+	zip_t* archive;
+	zip_file_t* zf;
+	zip_stat_t st;
+	uint8_t* data = NULL;
+
+	// read in place (freep = 0)
+	if ((src = zip_source_buffer_create(zip_data, zip_size, 0, NULL)) == NULL)
+		return NULL;
+
+	if ((archive = zip_open_from_source(src, ZIP_RDONLY, NULL)) == NULL)
+	{
+		zip_source_free(src);
+		return NULL;
+	}
+
+	if (zip_stat(archive, name, ZIP_FL_NOCASE, &st) == 0 && (zf = zip_fopen_index(archive, st.index, 0)) != NULL)
+	{
+		data = malloc(st.size + 1);
+		if (data && zip_fread(zf, data, st.size) == (zip_int64_t) st.size)
+		{
+			data[st.size] = 0;
+			if (out_size)
+				*out_size = st.size;
+		}
+		else
+		{
+			free(data);
+			data = NULL;
+		}
+		zip_fclose(zf);
+	}
+
+	// closing the archive frees the source too
+	zip_close(archive);
+	return data;
+}

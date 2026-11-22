@@ -1,0 +1,965 @@
+# Apollo Save Tool (PS2) - German translation
+msgid ""
+msgstr ""
+"Project-Id-Version: Apollo Save Tool\n"
+"Language-Team: github.com/bucanero\n"
+"Language: de\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-Basepath: ../source\n"
+"X-Poedit-KeywordsList: _;_i18n\n"
+"X-Poedit-SearchPath-0: .\n"
+
+#: dialog.c:60
+msgid "Cancel"
+msgstr "Abbrechen"
+
+#: dialog.c:60 dialog.c:72
+msgid "OK"
+msgstr "OK"
+
+#: dialog.c:73
+msgid "No"
+msgstr "Nein"
+
+#: dialog.c:73
+msgid "Yes"
+msgstr "Ja"
+
+#: exec_cmd.c:52 exec_cmd.c:127 exec_cmd.c:155 exec_cmd.c:199 exec_cmd.c:1119
+#: exec_cmd.c:1142
+msgid "Error! Export folder is not available:"
+msgstr "Fehler! Export-Ordner ist nicht verfügbar:"
+
+#: exec_cmd.c:58 exec_cmd.c:84
+msgid "Error downloading save game from:"
+msgstr "Fehler beim Herunterladen des Spielstands von:"
+
+#: exec_cmd.c:63
+msgid "Save game successfully downloaded to:"
+msgstr "Spielstand erfolgreich heruntergeladen nach:"
+
+#: exec_cmd.c:65 exec_cmd.c:99
+msgid "Error extracting save game!"
+msgstr "Fehler beim Extrahieren des Spielstands!"
+
+#: exec_cmd.c:97
+msgid "Save game successfully copied to:"
+msgstr "Spielstand erfolgreich kopiert nach:"
+
+#: exec_cmd.c:113
+msgid "Error extracting PSV data from:"
+msgstr "Fehler beim Extrahieren der PSV-Daten aus:"
+
+#: exec_cmd.c:119 exec_cmd.c:565
+msgid "Importing save..."
+msgstr "Spielstand wird importiert..."
+
+#: exec_cmd.c:125
+msgid "Save game successfully imported to:"
+msgstr "Spielstand erfolgreich importiert nach:"
+
+#: exec_cmd.c:159
+msgid "Exporting save game..."
+msgstr "Spielstand wird exportiert..."
+
+#: exec_cmd.c:182
+msgid "Zip file successfully saved to:"
+msgstr "Zip-Datei erfolgreich gespeichert unter:"
+
+#: exec_cmd.c:193 exec_cmd.c:232
+msgid "Copy operation cancelled!"
+msgstr "Kopiervorgang abgebrochen!"
+
+#: exec_cmd.c:193 exec_cmd.c:232
+msgid "Same source and destination."
+msgstr "Quelle und Ziel sind identisch."
+
+#: exec_cmd.c:203
+msgid "Copying files..."
+msgstr "Dateien werden kopiert..."
+
+#: exec_cmd.c:213 exec_cmd.c:241 exec_cmd.c:1229
+msgid "Files successfully copied to:"
+msgstr "Dateien erfolgreich kopiert nach:"
+
+#: exec_cmd.c:236 exec_cmd.c:1224
+msgid "Copying save game..."
+msgstr "Spielstand wird kopiert..."
+
+#: exec_cmd.c:243 exec_cmd.c:1231
+msgid "Error! Can't copy Save-game folder:"
+msgstr "Fehler! Spielstand-Ordner kann nicht kopiert werden:"
+
+#: exec_cmd.c:255 exec_cmd.c:309 exec_cmd.c:629
+msgid "Copying all saves..."
+msgstr "Alle Spielstände werden kopiert..."
+
+#: exec_cmd.c:297 exec_cmd.c:324
+#, c-format
+msgid "%d/%d Saves copied to Memory Card %d"
+msgstr "%d/%d Spielstände auf Memory Card %d kopiert"
+
+#: exec_cmd.c:336
+msgid "Exporting all VMC saves..."
+msgstr "Alle VMC-Spielstände werden exportiert..."
+
+#: exec_cmd.c:352 exec_cmd.c:1004
+msgid "Saves exported to:"
+msgstr "Spielstände exportiert nach:"
+
+#: exec_cmd.c:388
+msgid "All files extracted to:"
+msgstr "Alle Dateien extrahiert nach:"
+
+#: exec_cmd.c:390
+#, c-format
+msgid "Error: %s couldn't be extracted"
+msgstr "Fehler: %s konnte nicht extrahiert werden"
+
+#: exec_cmd.c:607
+#, c-format
+msgid "Save successfully imported to %s"
+msgstr "Spielstand erfolgreich nach %s importiert"
+
+#: exec_cmd.c:609
+msgid "Error: save couldn't be imported"
+msgstr "Fehler: Spielstand konnte nicht importiert werden"
+
+#: exec_cmd.c:625
+msgid "Error! Folder is not available:"
+msgstr "Fehler! Ordner nicht verfügbar:"
+
+#: exec_cmd.c:658
+msgid "Saves copied to:"
+msgstr "Spielstände kopiert nach:"
+
+#: exec_cmd.c:760
+msgid "Applying changes..."
+msgstr "Änderungen werden angewendet..."
+
+#: exec_cmd.c:896 saves.c:270
+msgid "Add copy protection (lock save)"
+msgstr "Kopierschutz hinzufügen (sperren)"
+
+#: exec_cmd.c:896 saves.c:268
+msgid "Remove copy protection (unlock save)"
+msgstr "Kopierschutz entfernen (entsperren)"
+
+#: exec_cmd.c:906
+#, c-format
+msgid "Error! Copy protection of %s couldn't be changed"
+msgstr "Fehler! Kopierschutz von %s konnte nicht geändert werden"
+
+#: exec_cmd.c:912
+msgid "Error! Cheat codes couldn't be applied"
+msgstr "Fehler! Cheat-Codes konnten nicht angewendet werden"
+
+#: exec_cmd.c:914
+#, c-format
+msgid "Save %s successfully modified!"
+msgstr "Spielstand %s erfolgreich geändert!"
+
+#: exec_cmd.c:926
+#, c-format
+msgid "Do you want to delete %s?"
+msgstr "Möchten Sie %s löschen?"
+
+#: exec_cmd.c:955
+msgid "Save successfully deleted:"
+msgstr "Spielstand erfolgreich gelöscht:"
+
+#: exec_cmd.c:957
+msgid "Error! Couldn't delete save:"
+msgstr "Fehler! Spielstand konnte nicht gelöscht werden:"
+
+#: exec_cmd.c:972
+msgid "Exporting all saves..."
+msgstr "Alle Spielstände werden exportiert..."
+
+#: exec_cmd.c:1022
+msgid "Exporting save..."
+msgstr "Spielstand wird exportiert..."
+
+#: exec_cmd.c:1046 exec_cmd.c:1084 exec_cmd.c:1106
+msgid "Save successfully exported to:"
+msgstr "Spielstand erfolgreich exportiert nach:"
+
+#: exec_cmd.c:1048 exec_cmd.c:1086 exec_cmd.c:1108
+msgid "Error exporting save:"
+msgstr "Fehler beim Exportieren des Spielstands:"
+
+#: exec_cmd.c:1067
+msgid "Exporting save ..."
+msgstr "Spielstand wird exportiert ..."
+
+#: exec_cmd.c:1126
+msgid "Memory card successfully exported to:"
+msgstr "Memory Card erfolgreich exportiert nach:"
+
+#: exec_cmd.c:1128
+msgid "Error! Failed to export PS1 memory card"
+msgstr "Fehler! Export der PS1-Memory Card fehlgeschlagen"
+
+#: exec_cmd.c:1156
+msgid "Memory Card dumped to:"
+msgstr "Memory Card gesichert nach:"
+
+#: exec_cmd.c:1156
+msgid "Warning! Pages with ECC errors (saved as read):"
+msgstr "Achtung! Seiten mit ECC-Fehlern (wie gelesen gesichert):"
+
+#: exec_cmd.c:1158
+msgid "Memory Card successfully dumped to:"
+msgstr "Memory Card erfolgreich gesichert nach:"
+
+#: exec_cmd.c:1160
+msgid "Error! Failed to dump"
+msgstr "Fehler beim Auslesen von"
+
+#: exec_cmd.c:1170
+msgid "Error! Can't write image to"
+msgstr "Fehler! Image kann nicht geschrieben werden auf"
+
+#: exec_cmd.c:1174
+msgid "ALL data will be replaced by:"
+msgstr "ALLE Daten werden ersetzt durch:"
+
+#: exec_cmd.c:1174
+msgid "This cannot be undone. Continue?"
+msgstr "Dies kann nicht rückgängig gemacht werden. Fortfahren?"
+
+#: exec_cmd.c:1179
+#, c-format
+msgid "Memory Card image successfully written to mc%d:"
+msgstr "Memory-Card-Image erfolgreich auf mc%d: geschrieben"
+
+#: exec_cmd.c:1181
+msgid "Error writing image to"
+msgstr "Fehler beim Schreiben des Images auf"
+
+#: exec_cmd.c:1181
+msgid "The Memory Card contents are now incomplete!"
+msgstr "Der Inhalt der Memory Card ist jetzt unvollständig!"
+
+#: exec_cmd.c:1188
+msgid "Importing save ..."
+msgstr "Spielstand wird importiert ..."
+
+#: exec_cmd.c:1217
+msgid "Successfully imported to VMC:"
+msgstr "Erfolgreich in VMC importiert:"
+
+#: exec_cmd.c:1219
+msgid "Error importing save:"
+msgstr "Fehler beim Importieren des Spielstands:"
+
+#: exec_cmd.c:1257 exec_cmd.c:1262
+#, c-format
+msgid "Error! File %s couldn't be exported"
+msgstr "Fehler! Datei %s konnte nicht exportiert werden"
+
+#: exec_cmd.c:1259
+msgid "File successfully exported to:"
+msgstr "Datei erfolgreich exportiert nach:"
+
+#: exec_cmd.c:1272
+msgid "Error! Can't find save-game file:"
+msgstr "Fehler! Spielstand-Datei nicht gefunden:"
+
+#: exec_cmd.c:1282 exec_cmd.c:1287
+#, c-format
+msgid "Error! File %s couldn't be imported"
+msgstr "Fehler! Datei %s konnte nicht importiert werden"
+
+#: exec_cmd.c:1284
+msgid "File successfully imported to:"
+msgstr "Datei erfolgreich importiert nach:"
+
+#: exec_cmd.c:1295
+msgid "Download URL"
+msgstr "Download-URL"
+
+#: exec_cmd.c:1301
+msgid "File successfully downloaded to:"
+msgstr "Datei erfolgreich heruntergeladen nach:"
+
+#: exec_cmd.c:1303
+msgid "Error! File couldn't be downloaded"
+msgstr "Fehler! Datei konnte nicht heruntergeladen werden"
+
+#: exec_cmd.c:1362
+msgid "Save successfully imported:"
+msgstr "Spielstand erfolgreich importiert:"
+
+#: exec_cmd.c:1364
+msgid "Error! Couldn't import save:"
+msgstr "Fehler! Spielstand konnte nicht importiert werden:"
+
+#: http.c:160
+msgid "Connecting to the network..."
+msgstr "Verbindung zum Netzwerk wird hergestellt..."
+
+#: http.c:310
+msgid "Downloading..."
+msgstr "Wird heruntergeladen..."
+
+#: main.c:171 main.c:181 main.c:185 main.c:190 main.c:194
+msgid "Back"
+msgstr "Zurück"
+
+#: main.c:171 menu_cheats.c:256 menu_main.c:158
+msgid "Details"
+msgstr "Details"
+
+#: main.c:171 main.c:185
+msgid "Refresh"
+msgstr "Aktualisieren"
+
+#: main.c:171 main.c:185 main.c:190 main.c:194
+msgid "Select"
+msgstr "Auswählen"
+
+#: main.c:175
+msgid "Exit"
+msgstr "Beenden"
+
+#: main.c:175
+msgid "Value Down"
+msgstr "Wert verringern"
+
+#: main.c:175
+msgid "Value Up"
+msgstr "Wert erhöhen"
+
+#: main.c:194
+msgid "View Code"
+msgstr "Code anzeigen"
+
+#: main.c:342
+msgid "Memory Card 1"
+msgstr "Memory Card 1"
+
+#: main.c:342
+msgid "Memory Card 2"
+msgstr "Memory Card 2"
+
+#: main.c:347
+msgid "Select Memory Card"
+msgstr "Memory Card auswählen"
+
+#: main.c:424
+msgid "MemCard Saves"
+msgstr "MemCard-Spielstände"
+
+#: main.c:425
+msgid "External Saves"
+msgstr "Externe Spielstände"
+
+#: main.c:426 main.c:427
+msgid "Virtual MemCard"
+msgstr "Virtuelle MemCard"
+
+#: main.c:428
+msgid "Saves Database"
+msgstr "Spielstand-Datenbank"
+
+#: main.c:429
+msgid "User Tools"
+msgstr "Benutzer-Tools"
+
+#: main.c:593
+msgid "Successfully installed local application data"
+msgstr "Lokale Anwendungsdaten erfolgreich installiert"
+
+#: mc_image.c:228
+msgid "Dumping Memory Card..."
+msgstr "Memory Card wird gesichert..."
+
+#: mc_image.c:282
+msgid "Dumping PS1 Memory Card..."
+msgstr "PS1-Memory Card wird gesichert..."
+
+#: mc_image.c:401
+msgid "Erasing Memory Card..."
+msgstr "Memory Card wird gelöscht..."
+
+#: mc_image.c:412
+msgid "Writing Memory Card image..."
+msgstr "Memory-Card-Image wird geschrieben..."
+
+#: mc_image.c:457
+msgid "No Memory Card of the right type in the slot"
+msgstr "Keine Memory Card des richtigen Typs im Steckplatz"
+
+#: mc_image.c:458
+msgid "Memory Card is not formatted (or unreadable)"
+msgstr "Memory Card ist nicht formatiert (oder unlesbar)"
+
+#: mc_image.c:459
+msgid "Unsupported Memory Card geometry"
+msgstr "Nicht unterstützte Memory-Card-Geometrie"
+
+#: mc_image.c:460
+msgid "Cannot read or write the image file"
+msgstr "Image-Datei kann nicht gelesen/geschrieben werden"
+
+#: mc_image.c:461
+msgid "File is not a formatted PS2 Memory Card image"
+msgstr "Datei ist kein formatiertes PS2-Memory-Card-Image"
+
+#: mc_image.c:462
+msgid "Image size does not match the Memory Card"
+msgstr "Image-Größe passt nicht zur Memory Card"
+
+#: mc_image.c:463
+msgid "Memory Card read error"
+msgstr "Lesefehler der Memory Card"
+
+#: mc_image.c:464
+msgid "Memory Card erase error"
+msgstr "Löschfehler der Memory Card"
+
+#: mc_image.c:465
+msgid "Memory Card write error"
+msgstr "Schreibfehler der Memory Card"
+
+#: mc_image.c:466
+msgid "Verification failed (bad block?)"
+msgstr "Überprüfung fehlgeschlagen (defekter Block?)"
+
+#: mc_image.c:467
+msgid "Unknown error"
+msgstr "Unbekannter Fehler"
+
+#: menu_about.c:98 menu_about.c:130
+msgid "About"
+msgstr "Über"
+
+#: menu_cheats.c:112 menu_cheats.c:145 menu_cheats.c:165
+msgid "Options"
+msgstr "Optionen"
+
+#: menu_cheats.c:210
+msgid "Target File"
+msgstr "Zieldatei"
+
+#: menu_cheats.c:519
+#, c-format
+msgid "%ld Saves"
+msgstr "%ld Spielstände"
+
+#: menu_cheats.c:524
+#, c-format
+msgid "%ld Games"
+msgstr "%ld Spiele"
+
+#: menu_cheats.c:528
+msgid "Tools"
+msgstr "Werkzeuge"
+
+#: menu_hex.c:51 menu_hex.c:71
+msgid "Hex Editor"
+msgstr "Hex-Editor"
+
+#: menu_main.c:79
+msgid "Loading saves..."
+msgstr "Spielstände werden geladen..."
+
+#: menu_main.c:93
+msgid "No save-games found"
+msgstr "Keine Spielstände gefunden"
+
+#: menu_main.c:141
+msgid "Error getting details"
+msgstr "Fehler beim Abrufen der Details"
+
+#: menu_main.c:157 saves.c:2263 saves.c:2277 saves.c:2293
+msgid "File"
+msgstr "Datei"
+
+#: menu_main.c:157 saves.c:2291 saves.c:2307
+msgid "Game"
+msgstr "Spiel"
+
+#: menu_main.c:157 saves.c:2264 saves.c:2292 saves.c:2308 saves.c:2322
+msgid "Title ID"
+msgstr "Titel-ID"
+
+#: menu_main.c:380 menu_main.c:784
+msgid "Patch view"
+msgstr "Patch-Ansicht"
+
+#: menu_main.c:520
+msgid "No data found in folder:"
+msgstr "Keine Daten im Ordner gefunden:"
+
+#: menu_main.c:576
+msgid "Exit the app?"
+msgstr "App beenden?"
+
+#: menu_main.c:717 menu_main.c:725
+#, c-format
+msgid "Save changes to %s?"
+msgstr "Änderungen in %s speichern?"
+
+#: menu_main.c:722
+msgid "Error! Couldn't save changes to:"
+msgstr "Fehler! Änderungen nicht gespeichert in:"
+
+#: menu_main.c:822 menu_main.c:840
+msgid "Unable to load"
+msgstr "Laden nicht möglich"
+
+#: menu_options.c:66 menu_options.c:86
+msgid "Settings"
+msgstr "Einstellungen"
+
+#: saves.c:264
+msgid "Copy Protection"
+msgstr "Kopierschutz"
+
+#: saves.c:280
+msgid "File Backup"
+msgstr "Dateisicherung"
+
+#: saves.c:285
+msgid "Copy save files"
+msgstr "Spielstand-Dateien kopieren"
+
+#: saves.c:288
+msgid "Copy Save to Mass Storage"
+msgstr "Spielstand auf Massenspeicher kopieren"
+
+#: saves.c:289 saves.c:1113
+msgid "Copy Save to Memory Card"
+msgstr "Spielstand auf Memory Card kopieren"
+
+#: saves.c:292
+msgid "Export save files to Zip"
+msgstr "Spielstand-Dateien als Zip exportieren"
+
+#: saves.c:294
+msgid "Export Zip to Mass Storage"
+msgstr "Zip auf Massenspeicher exportieren"
+
+#: saves.c:298
+msgid "Export single save files"
+msgstr "Einzelne Spielstand-Dateien exportieren"
+
+#: saves.c:303
+msgid "Import single save files"
+msgstr "Einzelne Spielstand-Dateien importieren"
+
+#: saves.c:308 saves.c:757
+msgid "Hex Edit save game files"
+msgstr "Spielstand-Dateien hexadezimal bearbeiten"
+
+#: saves.c:351 saves.c:379 saves.c:961
+msgid "Save Game Backup"
+msgstr "Spielstand-Sicherung"
+
+#: saves.c:354
+msgid "Export save to .MCS format"
+msgstr "Spielstand ins .MCS-Format exportieren"
+
+#: saves.c:356
+msgid "Export .MCS to Storage"
+msgstr ".MCS auf Speicher exportieren"
+
+#: saves.c:360
+msgid "Export save to .PSX format"
+msgstr "Spielstand ins .PSX-Format exportieren"
+
+#: saves.c:362
+msgid "Export .PSX to Storage"
+msgstr ".PSX auf Speicher exportieren"
+
+#: saves.c:366 saves.c:388
+msgid "Export save to .PSV format"
+msgstr "Spielstand ins .PSV-Format exportieren"
+
+#: saves.c:368 saves.c:390
+msgid "Export .PSV to Storage"
+msgstr ".PSV auf Speicher exportieren"
+
+#: saves.c:382
+msgid "Export save to .PSU format"
+msgstr "Spielstand ins .PSU-Format exportieren"
+
+#: saves.c:384
+msgid "Export .PSU to Storage"
+msgstr ".PSU auf Speicher exportieren"
+
+#: saves.c:397
+msgid "Export save to .CBS format"
+msgstr "Spielstand ins .CBS-Format exportieren"
+
+#: saves.c:399
+msgid "Export .CBS to Storage"
+msgstr ".CBS auf Speicher exportieren"
+
+#: saves.c:801 saves.c:874
+msgid "Cheats"
+msgstr "Cheats"
+
+#: saves.c:804 saves.c:877
+msgid "View Raw Patch File"
+msgstr "Rohe Patch-Datei anzeigen"
+
+#: saves.c:847
+msgid "Save linked to MemCard ID"
+msgstr "Spielstand an MemCard-ID gebunden"
+
+#: saves.c:852 saves.c:952 saves.c:1099
+msgid "Apply Changes"
+msgstr "Änderungen anwenden"
+
+#: saves.c:855 saves.c:955 saves.c:1102 saves.c:1614
+msgid "View Save Details"
+msgstr "Spielstand-Details anzeigen"
+
+#: saves.c:858 saves.c:958 saves.c:1105 saves.c:1622
+msgid "Delete Save Game"
+msgstr "Spielstand löschen"
+
+#: saves.c:964
+msgid "Export save game to .MCS format"
+msgstr "Spielstand ins .MCS-Format exportieren"
+
+#: saves.c:966
+msgid "Copy .MCS Save to Storage"
+msgstr ".MCS-Spielstand auf Speicher kopieren"
+
+#: saves.c:970
+msgid "Export save game to .PSV format"
+msgstr "Spielstand ins .PSV-Format exportieren"
+
+#: saves.c:972
+msgid "Copy .PSV Save to Storage"
+msgstr ".PSV-Spielstand auf Speicher kopieren"
+
+#: saves.c:976
+msgid "Export save game to .PSX format"
+msgstr "Spielstand ins .PSX-Format exportieren"
+
+#: saves.c:978
+msgid "Copy .PSX Save to Storage"
+msgstr ".PSX-Spielstand auf Speicher kopieren"
+
+#: saves.c:1108
+msgid "Save Transfer"
+msgstr "Spielstand-Übertragung"
+
+#: saves.c:1111
+msgid "Copy save game to Memory Card"
+msgstr "Spielstand auf Memory Card kopieren"
+
+#: saves.c:1199
+msgid "Download to Mass Storage"
+msgstr "Auf Massenspeicher herunterladen"
+
+#: saves.c:1252 saves.c:1617
+msgid "Import to Memory Card"
+msgstr "Auf Memory Card importieren"
+
+#: saves.c:1255 saves.c:1260
+msgid "Copy to Storage"
+msgstr "Auf Speicher kopieren"
+
+#: saves.c:1280
+msgid "Extract Archives (Zip)"
+msgstr "Archive extrahieren (Zip)"
+
+#: saves.c:1307
+msgid "Local Web Server (full system access)"
+msgstr "Lokaler Webserver (voller Systemzugriff)"
+
+#: saves.c:1342
+msgid "Extract"
+msgstr "Extrahieren"
+
+#: saves.c:1619
+msgid "Import to MemCard"
+msgstr "Auf MemCard importieren"
+
+#: saves.c:1825 saves.c:1872 saves.c:2164
+msgid "Bulk Save Management"
+msgstr "Massenverwaltung von Spielständen"
+
+#: saves.c:1833 saves.c:2077 saves.c:2172
+msgid "Copy selected Saves to Memory Card"
+msgstr "Ausgewählte Spielstände auf Memory Card kopieren"
+
+#: saves.c:1835 saves.c:1840 saves.c:2079 saves.c:2083 saves.c:2174
+#: saves.c:2178
+msgid "Copy Saves to MemCard"
+msgstr "Spielstände auf MemCard kopieren"
+
+#: saves.c:1838 saves.c:2081 saves.c:2176
+msgid "Copy all Saves to Memory Card"
+msgstr "Alle Spielstände auf Memory Card kopieren"
+
+#: saves.c:1880
+msgid "Copy selected Saves to Backup Storage"
+msgstr "Ausgewählte Spielstände in den Sicherungsspeicher kopieren"
+
+#: saves.c:1882 saves.c:1887 saves.c:1895 saves.c:1903
+msgid "Copy Saves to Backup Storage"
+msgstr "Spielstände in den Sicherungsspeicher kopieren"
+
+#: saves.c:1885
+msgid "Copy all Saves to Backup Storage"
+msgstr "Alle Spielstände in den Sicherungsspeicher kopieren"
+
+#: saves.c:1890
+msgid ".PSU Export selected Saves to Backup Storage"
+msgstr ".PSU-Export: Ausgewählte in den Sicherungsspeicher"
+
+#: saves.c:1898
+msgid ".PSU Export All Saves to Backup Storage"
+msgstr ".PSU-Export: Alle in den Sicherungsspeicher"
+
+#: saves.c:1909 saves.c:2190
+msgid "Memory Card Image"
+msgstr "Memory-Card-Image"
+
+#: saves.c:1914
+msgid "Dump Memory Card to .MCR image"
+msgstr "Memory Card als .MCR-Image sichern"
+
+#: saves.c:1916
+msgid "Save .MCR image to Storage"
+msgstr ".MCR-Image auf Speicher sichern"
+
+#: saves.c:1921
+msgid "Dump Memory Card to .PS2 image (ECC)"
+msgstr "Memory Card als .PS2-Image sichern (ECC)"
+
+#: saves.c:1923
+msgid "Save .PS2 image to Storage"
+msgstr ".PS2-Image auf Speicher sichern"
+
+#: saves.c:1926
+msgid "Dump Memory Card to .VMC image (raw)"
+msgstr "Memory Card als .VMC-Image sichern (roh)"
+
+#: saves.c:1928
+msgid "Save .VMC image to Storage"
+msgstr ".VMC-Image auf Speicher sichern"
+
+#: saves.c:2068
+msgid "Memory Card Management"
+msgstr "Memory-Card-Verwaltung"
+
+#: saves.c:2086 saves.c:2181
+msgid "Export selected Saves to Storage (.PSV)"
+msgstr "Ausgewählte Spielstände exportieren (.PSV)"
+
+#: saves.c:2088 saves.c:2092 saves.c:2183 saves.c:2187
+msgid "Export Saves to Storage"
+msgstr "Spielstände auf Speicher exportieren"
+
+#: saves.c:2090 saves.c:2185
+msgid "Export all Saves to Storage (.PSV)"
+msgstr "Alle Spielstände exportieren (.PSV)"
+
+#: saves.c:2095 saves.c:2276
+msgid "Virtual Memory Card"
+msgstr "Virtuelle Memory Card"
+
+#: saves.c:2098
+msgid "Export Memory Card to .VM1 format"
+msgstr "Memory Card ins .VM1-Format exportieren"
+
+#: saves.c:2101
+msgid "Save .VM1 Memory Card to Storage"
+msgstr ".VM1-Memory Card auf Speicher sichern"
+
+#: saves.c:2104
+msgid "Export Memory Card to .VMP format"
+msgstr "Memory Card ins .VMP-Format exportieren"
+
+#: saves.c:2107
+msgid "Save .VMP Memory Card to Storage"
+msgstr ".VMP-Memory Card auf Speicher sichern"
+
+#: saves.c:2111 saves.c:2199
+msgid "Import Saves to Virtual Card"
+msgstr "Spielstände auf die virtuelle Karte importieren"
+
+#: saves.c:2193
+msgid "Write image to Memory Card (overwrites the card)"
+msgstr "Image auf Memory Card schreiben (überschreibt sie)"
+
+#: saves.c:2195
+msgid "Write image to MemCard"
+msgstr "Image auf MemCard schreiben"
+
+#: saves.c:2262
+msgid "Packed PS1 Save"
+msgstr "Gepackter PS1-Spielstand"
+
+#: saves.c:2262
+msgid "Packed PS2 Save"
+msgstr "Gepackter PS2-Spielstand"
+
+#: saves.c:2265 saves.c:2278 saves.c:2309
+msgid "Folder"
+msgstr "Ordner"
+
+#: saves.c:2290
+msgid "PS1 Save"
+msgstr "PS1-Spielstand"
+
+#: saves.c:2306
+msgid "PS2 Save"
+msgstr "PS2-Spielstand"
+
+#: saves.c:2310
+msgid "Icon"
+msgstr "Symbol"
+
+#: saves.c:2320
+msgid "Save"
+msgstr "Spielstand"
+
+#: saves.c:2321
+msgid "Title"
+msgstr "Titel"
+
+#: saves.c:2323
+msgid "Dir Name"
+msgstr "Ordnername"
+
+#: settings.c:23
+msgid "Disabled"
+msgstr "Deaktiviert"
+
+#: settings.c:23
+msgid "by Name"
+msgstr "nach Name"
+
+#: settings.c:23
+msgid "by Title ID"
+msgstr "nach Titel-ID"
+
+#: settings.c:23
+msgid "by Type"
+msgstr "nach Typ"
+
+#: settings.c:26
+msgid "Background Music"
+msgstr "Hintergrundmusik"
+
+#: settings.c:32
+msgid "Menu Animations"
+msgstr "Menüanimationen"
+
+#: settings.c:38
+msgid "Sort Saves"
+msgstr "Spielstände sortieren"
+
+#: settings.c:44
+msgid "External Saves Source"
+msgstr "Quelle externer Spielstände"
+
+#: settings.c:50
+msgid "Check for Updates"
+msgstr "Nach Updates suchen"
+
+#: settings.c:64
+msgid "Clear Local Cache"
+msgstr "Lokalen Cache leeren"
+
+#: settings.c:70
+msgid "Debug Log"
+msgstr "Debug-Log"
+
+#: settings.c:116
+#, c-format
+msgid "RAM cache cleaned (%d files)"
+msgstr "RAM-Cache geleert (%d Dateien)"
+
+#: settings.c:123
+msgid "Local cache folder cleaned:"
+msgstr "Lokaler Cache-Ordner geleert:"
+
+#: settings.c:132
+msgid "Error! Can't download data update pack!"
+msgstr "Fehler! Datenupdate-Paket kann nicht heruntergeladen werden!"
+
+#: settings.c:137
+#, c-format
+msgid "Successfully updated %d data files!"
+msgstr "%d Datendateien erfolgreich aktualisiert!"
+
+#: settings.c:139
+msgid "Error! Can't extract data update pack!"
+msgstr "Fehler! Datenupdate-Paket kann nicht entpackt werden!"
+
+#: settings.c:187
+msgid "(PS2 Network Adapter and DHCP required)"
+msgstr "(PS2-Netzwerkadapter und DHCP erforderlich)"
+
+#: settings.c:187
+msgid "Can't check for updates: no network connection"
+msgstr "Update-Suche nicht möglich: keine Netzwerkverbindung"
+
+#: settings.c:194 settings.c:208
+msgid "Can't check for updates:"
+msgstr "Update-Suche nicht möglich:"
+
+#: settings.c:194
+msgid "GitHub couldn't be reached"
+msgstr "GitHub nicht erreichbar"
+
+#: settings.c:208
+msgid "unexpected reply from GitHub"
+msgstr "unerwartete Antwort von GitHub"
+
+#: settings.c:220
+#, c-format
+msgid "Apollo Save Tool v%s is up to date"
+msgstr "Apollo Save Tool v%s ist aktuell"
+
+#: settings.c:221
+msgid "Latest release:"
+msgstr "Neueste Version:"
+
+#: settings.c:231
+msgid "Download it from:"
+msgstr "Download unter:"
+
+#: settings.c:231 settings.c:235
+msgid "New version available:"
+msgstr "Neue Version verfügbar:"
+
+#: settings.c:235
+msgid "Download update to:"
+msgstr "Update herunterladen nach:"
+
+#: settings.c:238
+msgid "Update downloaded to:"
+msgstr "Update heruntergeladen nach:"
+
+#: settings.c:240
+msgid "Error! Can't download the update"
+msgstr "Fehler! Update kann nicht heruntergeladen werden"
+
+#: settings.c:285
+msgid "Debug Logging Disabled"
+msgstr "Debug-Protokollierung deaktiviert"
+
+#: settings.c:292
+msgid "Error! Can't create the log file:"
+msgstr "Fehler! Log-Datei kann nicht erstellt werden:"
+
+#: settings.c:296
+msgid "Debug Logging Enabled!"
+msgstr "Debug-Protokollierung aktiviert!"
+
+#: zip_util.c:200
+msgid "Extracting files..."
+msgstr "Dateien werden extrahiert..."

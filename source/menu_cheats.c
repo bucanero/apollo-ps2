@@ -109,7 +109,7 @@ void Draw_CheatsMenu_Options_Ani_Exit(void)
 		Draw_CheatsMenu_Selection(menu_old_sel[5], (rgbVal << 24) | (rgbVal << 16) | (rgbVal << 8) | 0xFF);
 
 		DrawTexture(&menu_textures[edit_shadow_png_index], left - (menu_textures[edit_shadow_png_index].width * 1) + 1, 0, 0, menu_textures[edit_shadow_png_index].width, SCREEN_HEIGHT, icon_a);
-		DrawHeader(cat_cheats_png_index, left, selected_centry->name, "Options", APP_FONT_TITLE_COLOR | icon_a, 0xffffffff, 1);
+		DrawHeader(cat_cheats_png_index, left, selected_centry->name, _("Options"), APP_FONT_TITLE_COLOR | icon_a, 0xffffffff, 1);
 
 		//DrawOptions(selected_centry->options[option_index], game_a, 18, menu_old_sel[7]);
 		//DrawScrollBar2(menu_old_sel[7], selected_centry->options[option_index].size, 18, 700, game_a);
@@ -142,7 +142,7 @@ void Draw_CheatsMenu_Options_Ani(void)
 		Draw_CheatsMenu_Selection(menu_sel, (rgbVal << 24) | (rgbVal << 16) | (rgbVal << 8) | 0xFF);
 
 		DrawTexture(&menu_textures[edit_shadow_png_index], left - (menu_textures[edit_shadow_png_index].width * 1) + 1, 0, 0, menu_textures[edit_shadow_png_index].width, SCREEN_HEIGHT, icon_a);
-		DrawHeader(cat_cheats_png_index, left, selected_centry->name, "Options", APP_FONT_TITLE_COLOR | icon_a, 0xffffffff, 1);
+		DrawHeader(cat_cheats_png_index, left, selected_centry->name, _("Options"), APP_FONT_TITLE_COLOR | icon_a, 0xffffffff, 1);
         
 		u8 game_a = (u8)(icon_a < 0x8F ? 0 : icon_a);
 		DrawOptions(&selected_centry->options[option_index], game_a, APP_LINE_OFFSET, menu_old_sel[7]);
@@ -162,7 +162,7 @@ void Draw_CheatsMenu_Options(void)
 	Draw_CheatsMenu_Selection(menu_old_sel[5], 0xD0D0D0FF);
 
 	DrawTexture(&menu_textures[edit_shadow_png_index], MENU_SPLIT_OFF - (menu_textures[edit_shadow_png_index].width * 1) + 1, 0, 0, menu_textures[edit_shadow_png_index].width, SCREEN_HEIGHT, 0x000000FF);
-	DrawHeader(cat_cheats_png_index, MENU_SPLIT_OFF, selected_centry->name, "Options", APP_FONT_TITLE_COLOR | 0xFF, 0xffffffff, 1);
+	DrawHeader(cat_cheats_png_index, MENU_SPLIT_OFF, selected_centry->name, _("Options"), APP_FONT_TITLE_COLOR | 0xFF, 0xffffffff, 1);
 
 	DrawOptions(&selected_centry->options[option_index], 0xFF, APP_LINE_OFFSET, menu_sel);
 	DrawScrollBar(menu_sel, list_count(selected_centry->options[option_index].opts), APP_LINE_OFFSET, SCREEN_WIDTH - 30, 0xFF);
@@ -207,7 +207,7 @@ int DrawCodes(code_entry_t* code, u8 alpha, int y_inc, int xOff, int selIndex)
     SetFontSize(APP_FONT_SIZE_SELECTION);
 
     if (code->file && (code->type == PATCH_BSD || code->type == PATCH_GAMEGENIE || code->type == PATCH_PYTHON))
-        DrawFormatString(xOff + MENU_ICON_OFF + 20, SCREEN_HEIGHT - 50, "Target File: %s", code->file);
+        DrawFormatString(xOff + MENU_ICON_OFF + 20, SCREEN_HEIGHT - 50, "%s: %s", _("Target File"), code->file);
 
     for (c = startDrawX; c < max; c++)
     {
@@ -253,7 +253,7 @@ void Draw_CheatsMenu_View_Ani_Exit(void)
 		Draw_CheatsMenu_Selection(menu_old_sel[5], (rgbVal << 24) | (rgbVal << 16) | (rgbVal << 8) | 0xFF);
 
 		DrawTexture(&menu_textures[edit_shadow_png_index], left - (menu_textures[edit_shadow_png_index].width * 1) + 1, 0, 0, menu_textures[edit_shadow_png_index].width, SCREEN_HEIGHT, icon_a);
-		DrawHeader(cat_cheats_png_index, left, "Details", selected_centry->name, APP_FONT_TITLE_COLOR | icon_a, 0xffffffff, 1);
+		DrawHeader(cat_cheats_png_index, left, _("Details"), selected_centry->name, APP_FONT_TITLE_COLOR | icon_a, 0xffffffff, 1);
 
 		SDL_RenderPresent(renderer);
 
@@ -516,16 +516,16 @@ static void get_subtitle(int type, size_t count, char* sub)
     {
         case cat_usb_png_index:
         case cat_hdd_png_index:
-            sprintf(sub, "%ld Saves", count -1);
+            sprintf(sub, _("%ld Saves"), count -1);
             break;
 
         case cat_db_png_index:
         case cat_warning_png_index:
-            sprintf(sub, "%ld Games", count);
+            sprintf(sub, _("%ld Games"), count);
             break;
 
         case cat_bup_png_index:
-            sprintf(sub, "Tools");
+            strcpy(sub, _("Tools"));
             break;
 
         default:

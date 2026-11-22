@@ -16,54 +16,58 @@
 
 char *strcasestr(const char *, const char *);
 static const char* ext_src[MAX_USB_DEVICES+1] = {USB_PATH, HOST_PATH, DISC_PATH, NULL};
-static const char* sort_opt[] = {"Disabled", "by Name", "by Title ID", "by Type", NULL};
+// Marks text for translation (docs/translate.po) where _() can't be used
+// (static data): translate_settings() translates it at start-up
+#define _i18n(str)		(str)
+
+static const char* sort_opt[] = {_i18n("Disabled"), _i18n("by Name"), _i18n("by Title ID"), _i18n("by Type"), NULL};
 
 menu_option_t menu_options[] = {
-	{ .name = "\nBackground Music", 
+	{ .name = _i18n("Background Music"), 
 		.options = NULL, 
 		.type = APP_OPTION_BOOL, 
 		.value = &apollo_config.music, 
 		.callback = music_callback 
 	},
-	{ .name = "Menu Animations", 
+	{ .name = _i18n("Menu Animations"), 
 		.options = NULL, 
 		.type = APP_OPTION_BOOL, 
 		.value = &apollo_config.doAni, 
 		.callback = ani_callback 
 	},
-	{ .name = "Sort Saves", 
+	{ .name = _i18n("Sort Saves"), 
 		.options = (char**) sort_opt,
 		.type = APP_OPTION_LIST,
 		.value = &apollo_config.doSort, 
 		.callback = sort_callback 
 	},
-	{ .name = "External Saves Source",
+	{ .name = _i18n("External Saves Source"),
 		.options = (char**) ext_src,
 		.type = APP_OPTION_LIST,
 		.value = &apollo_config.storage,
 		.callback = owner_callback
 	},
-	{ .name = "Check for Updates", 
+	{ .name = _i18n("Check for Updates"), 
 		.options = NULL, 
 		.type = APP_OPTION_CALL, 
 		.value = NULL, 
 		.callback = update_callback 
 	},
 /*
-	{ .name = "Update Application Data", 
+	{ .name = _i18n("Update Application Data"), 
 		.options = NULL, 
 		.type = APP_OPTION_CALL, 
 		.value = NULL, 
 		.callback = upd_appdata_callback 
 	},
 */
-	{ .name = "Clear Local Cache", 
+	{ .name = _i18n("Clear Local Cache"), 
 		.options = NULL, 
 		.type = APP_OPTION_CALL, 
 		.value = NULL, 
 		.callback = clearcache_callback 
 	},
-	{ .name = "Debug Log",
+	{ .name = _i18n("Debug Log"),
 		.options = NULL,
 		.type = APP_OPTION_BOOL,
 		.value = &apollo_config.dbglog,
@@ -71,6 +75,17 @@ menu_option_t menu_options[] = {
 	},
 	{ .name = NULL }
 };
+
+// The menu text above, in the language loaded at start-up
+void translate_settings(void)
+{
+	for (int i = 0; menu_options[i].name; i++)
+		menu_options[i].name = (char*) _(menu_options[i].name);
+
+	for (int i = 0; sort_opt[i]; i++)
+		sort_opt[i] = _(sort_opt[i]);
+
+}
 
 
 void music_callback(int sel)
@@ -98,14 +113,14 @@ void clearcache_callback(int sel)
 	if (ramcache_enabled())
 	{
 		LOG("Cleaning RAM cache...");
-		show_message("RAM cache cleaned (%d files)", ramcache_clear());
+		show_message(_("RAM cache cleaned (%d files)"), ramcache_clear());
 		return;
 	}
 
 	LOG("Cleaning folder '%s'...", APOLLO_LOCAL_CACHE);
 	clean_directory(APOLLO_LOCAL_CACHE);
 
-	show_message("Local cache folder cleaned:\n" APOLLO_LOCAL_CACHE);
+	show_message("%s\n" APOLLO_LOCAL_CACHE, _("Local cache folder cleaned:"));
 }
 
 void upd_appdata_callback(int sel)
@@ -114,14 +129,14 @@ void upd_appdata_callback(int sel)
 
 	if (!http_download(ONLINE_PATCH_URL, "apollo-ps2-update.zip", APOLLO_LOCAL_CACHE "appdata.zip", 1))
 	{
-		show_message("Error! Can't download data update pack!");
+		show_message(_("Error! Can't download data update pack!"));
 		return;
 	}
 
 	if ((i = extract_zip(APOLLO_LOCAL_CACHE "appdata.zip", APOLLO_DATA_PATH)) > 0)
-		show_message("Successfully updated %d data files!", i);
+		show_message(_("Successfully updated %d data files!"), i);
 	else
-		show_message("Error! Can't extract data update pack!");
+		show_message(_("Error! Can't extract data update pack!"));
 
 	unlink_secure(APOLLO_LOCAL_CACHE "appdata.zip");
 }
@@ -169,14 +184,14 @@ void update_callback(int sel)
 	if (!network_up())
 	{
 		LOG("no network");
-		show_message("Can't check for updates: no network connection\n\n(PS2 Network Adapter and DHCP required)");
+		show_message("%s\n\n%s", _("Can't check for updates: no network connection"), _("(PS2 Network Adapter and DHCP required)"));
 		return;
 	}
 
 	if (!http_download(APOLLO_UPDATE_URL, NULL, APOLLO_LOCAL_CACHE "ver.check", 0))
 	{
 		LOG("http request to %s failed", APOLLO_UPDATE_URL);
-		show_message("Can't check for updates:\nGitHub couldn't be reached");
+		show_message("%s\n%s", _("Can't check for updates:"), _("GitHub couldn't be reached"));
 		return;
 	}
 
@@ -190,7 +205,7 @@ void update_callback(int sel)
 	if ((latest = strstr(buffer, find)) == NULL || (end = strchr(latest + sizeof(find) - 1, '"')) == NULL)
 	{
 		LOG("no release name found");
-		show_message("Can't check for updates:\nunexpected reply from GitHub");
+		show_message("%s\n%s", _("Can't check for updates:"), _("unexpected reply from GitHub"));
 		goto end_update;
 	}
 
@@ -200,7 +215,10 @@ void update_callback(int sel)
 
 	if (version_number(latest) <= version_number(APOLLO_VERSION))
 	{
-		show_message("Apollo Save Tool v%s is up to date\n\n(latest release: v%s)", APOLLO_VERSION, latest);
+		char msg[128];
+
+		snprintf(msg, sizeof(msg), _("Apollo Save Tool v%s is up to date"), APOLLO_VERSION);
+		show_message("%s\n\n%s v%s", msg, _("Latest release:"), latest);
 		goto end_update;
 	}
 
@@ -210,16 +228,16 @@ void update_callback(int sel)
 	// No USB drive (files are kept in RAM) or no zip: just say where to get it
 	if (!url || ramcache_enabled())
 	{
-		show_message("New version available: v%s\n\nDownload it from:\ngithub.com/bucanero/apollo-ps2/releases", latest);
+		show_message("%s v%s\n\n%s\ngithub.com/bucanero/apollo-ps2/releases", _("New version available:"), latest, _("Download it from:"));
 		goto end_update;
 	}
 
-	if (show_dialog(DIALOG_TYPE_YESNO, "New version available: v%s\n\nDownload apollo-ps2.zip to\n%s ?", latest, APOLLO_APP_PATH))
+	if (show_dialog(DIALOG_TYPE_YESNO, "%s v%s\n\n%s\n" APOLLO_APP_PATH "apollo-ps2.zip", _("New version available:"), latest, _("Download update to:")))
 	{
 		if (http_download(url, NULL, APOLLO_APP_PATH "apollo-ps2.zip", 1))
-			show_message("Update downloaded to:\n" APOLLO_APP_PATH "apollo-ps2.zip");
+			show_message("%s\n" APOLLO_APP_PATH "apollo-ps2.zip", _("Update downloaded to:"));
 		else
-			show_message("Error! Can't download the update");
+			show_message(_("Error! Can't download the update"));
 	}
 
 end_update:
@@ -264,18 +282,18 @@ void log_callback(int sel)
 	{
 		LOG("Debug log disabled");
 		log_default();
-		show_message("Debug Logging Disabled");
+		show_message(_("Debug Logging Disabled"));
 		return;
 	}
 
 	if (!log_to_file(1))
 	{
 		apollo_config.dbglog = 0;
-		show_message("Error! Can't create the log file:\n" APOLLO_LOG_FILE);
+		show_message("%s\n" APOLLO_LOG_FILE, _("Error! Can't create the log file:"));
 		return;
 	}
 
-	show_message("Debug Logging Enabled!\n\n" APOLLO_LOG_FILE);
+	show_message("%s\n\n" APOLLO_LOG_FILE, _("Debug Logging Enabled!"));
 }
 
 // At start-up, when enabled: keeps adding to the log file, so the log of a

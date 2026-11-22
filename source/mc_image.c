@@ -225,7 +225,7 @@ int mc_dump_ps2_image(int port, const char* path, int ecc, uint32_t* ecc_errors)
 	if ((fp = fopen(path, "wb")) == NULL)
 		return MC_IMG_ERR_FILE;
 
-	init_progress_bar("Dumping Memory Card...");
+	init_progress_bar(_("Dumping Memory Card..."));
 	for (block = 0; block < card.total_pages / MC_BLOCK_PAGES; block++)
 	{
 		if ((ret = read_card(port, block * MC_BLOCK_PAGES, MC_BLOCK_PAGES, MC_PAGE_SIZE, block_buf, ecc_errors)) != MC_IMG_OK)
@@ -279,7 +279,7 @@ int mc_dump_ps1_image(int port, const char* path)
 	if ((fp = fopen(path, "wb")) == NULL)
 		return MC_IMG_ERR_FILE;
 
-	init_progress_bar("Dumping PS1 Memory Card...");
+	init_progress_bar(_("Dumping PS1 Memory Card..."));
 	for (uint32_t frame = 0; frame < PS1_FRAMES; frame += step)
 	{
 		if ((ret = read_card(port, frame, step, PS1_FRAME_SIZE, block_buf, NULL)) != MC_IMG_OK)
@@ -398,7 +398,7 @@ int mc_restore_ps2_image(int port, const char* path)
 		return MC_IMG_ERR_FILE;
 
 	LOG("Restoring %s (%u pages, ecc=%d) to mc%d:", path, info.total_pages, info.ecc, port);
-	init_progress_bar("Erasing Memory Card...");
+	init_progress_bar(_("Erasing Memory Card..."));
 	ret = mc_invalidate_card(port);
 	end_progress_bar();
 	if (ret < 0)
@@ -409,7 +409,7 @@ int mc_restore_ps2_image(int port, const char* path)
 	}
 
 	ret = MC_IMG_OK;
-	init_progress_bar("Writing Memory Card image...");
+	init_progress_bar(_("Writing Memory Card image..."));
 	for (block = 0; block < info.total_pages / MC_BLOCK_PAGES; block++)
 	{
 		for (i = 0; i < MC_BLOCK_PAGES; i++)
@@ -454,16 +454,16 @@ const char* mc_image_error(int err)
 	switch (err)
 	{
 	case MC_IMG_OK:              return "OK";
-	case MC_IMG_ERR_NOCARD:      return "No Memory Card of the right type in the slot";
-	case MC_IMG_ERR_UNFORMATTED: return "Memory Card is not formatted (or unreadable)";
-	case MC_IMG_ERR_UNSUPPORTED: return "Unsupported Memory Card geometry";
-	case MC_IMG_ERR_FILE:        return "Cannot read or write the image file";
-	case MC_IMG_ERR_BADIMAGE:    return "File is not a formatted PS2 Memory Card image";
-	case MC_IMG_ERR_SIZE:        return "Image size does not match the Memory Card";
-	case MC_IMG_ERR_READ:        return "Memory Card read error";
-	case MC_IMG_ERR_ERASE:       return "Memory Card erase error";
-	case MC_IMG_ERR_WRITE:       return "Memory Card write error";
-	case MC_IMG_ERR_VERIFY:      return "Verification failed (bad block?)";
-	default:                     return "Unknown error";
+	case MC_IMG_ERR_NOCARD:      return _("No Memory Card of the right type in the slot");
+	case MC_IMG_ERR_UNFORMATTED: return _("Memory Card is not formatted (or unreadable)");
+	case MC_IMG_ERR_UNSUPPORTED: return _("Unsupported Memory Card geometry");
+	case MC_IMG_ERR_FILE:        return _("Cannot read or write the image file");
+	case MC_IMG_ERR_BADIMAGE:    return _("File is not a formatted PS2 Memory Card image");
+	case MC_IMG_ERR_SIZE:        return _("Image size does not match the Memory Card");
+	case MC_IMG_ERR_READ:        return _("Memory Card read error");
+	case MC_IMG_ERR_ERASE:       return _("Memory Card erase error");
+	case MC_IMG_ERR_WRITE:       return _("Memory Card write error");
+	case MC_IMG_ERR_VERIFY:      return _("Verification failed (bad block?)");
+	default:                     return _("Unknown error");
 	}
 }

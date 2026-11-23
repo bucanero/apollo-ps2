@@ -119,7 +119,7 @@ Python patch codes import their modules (`.py` files from the `python` folder of
 
 ### Saves database
 
-The **Saves DB** menu uses the first database it finds: `cdfs:/APOLLO/` (Apollo disc), `mass:/APOLLO/`, `host:/APOLLO/`, and the [Online Database](https://github.com/bucanero/apollo-saves) otherwise.
+The **Saves DB** menu lists the databases it finds, to pick one: `cdfs:/APOLLO/` (Apollo disc), `mass:/APOLLO/`, `host:/APOLLO/`, and the [Online Database](https://github.com/bucanero/apollo-saves). A local database is found by its `PS2/games.txt` or `PS1/games.txt` file. With no local database, the Online Database is opened directly.
 
 ### Font
 

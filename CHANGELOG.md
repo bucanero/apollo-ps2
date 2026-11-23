@@ -4,7 +4,7 @@ All notable changes to the `apollo-ps2` project will be documented in this file.
 
 ## [Unreleased]()
 
-## [v1.5.0](https://github.com/bucanero/apollo-ps2/releases/tag/v1.5.0) - 2026-00-00
+## [v1.5.0](https://github.com/bucanero/apollo-ps2/releases/tag/v1.5.0) - 2026-11-28
 
 ### Added
 
@@ -17,7 +17,8 @@ All notable changes to the `apollo-ps2` project will be documented in this file.
 * Debug Log is now an on/off setting, saved with the other settings
   - While on, Apollo logs to `mass:/apollo.log` from start-up, adding to the file (a new log starts when the option is turned on)
 * Saves Database (formerly Online Database)
-  - Offline database: uses the first one found on `cdfs:/APOLLO/` (Apollo disc), `mass:/APOLLO/` or `host:/APOLLO/`, and the Online Database otherwise
+  - Offline databases on `cdfs:/APOLLO/` (Apollo disc), `mass:/APOLLO/` or `host:/APOLLO/`
+  - Choose the source: every database found is listed with the Online Database, to pick one
   - Import downloaded saves straight to a Memory Card, or copy them to storage
   - Press `Triangle` on a save to see its full description
 * Apollo disc image (`apollo-ps2.iso`)

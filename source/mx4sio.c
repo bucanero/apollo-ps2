@@ -1,0 +1,139 @@
+/*
+ * MX4SIO: SD card adapter in Memory Card slot 2
+ *
+ * ps2sdk's mx4sio_bd.irx is a BDM block device driver, like usbmass_bd: the
+ * SD card is mounted by bdmfs_fatfs (loaded at start-up, with the USB stack)
+ * as one more "massN:" unit. This ps2sdk's bdmfs_fatfs only registers "mass"
+ * (no "mx4sio:" device), numbered in connection order, so the SD card's unit
+ * is found by asking each one for its block device driver name ("sdc").
+ *
+ * The driver is only loaded when the MX4SIO source is selected:
+ *  - by then a USB drive already got "mass0:", so "mass:/" stays the USB drive
+ *  - it takes Memory Card slot 2 for good (sio2man transfers to that port are
+ *    blocked until the next IOP reset): mc1: disappears while the app runs.
+ *    It isn't loaded if a Memory Card answers in slot 2.
+ *
+ * The driver checks for the card from a low priority IOP thread, once per
+ * second: after loading it, wait a few seconds for the card to be mounted.
+ */
+
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <loadfile.h>
+// The driver name is an ioctl2 on a fileXio handle, which posix calls can't send.
+// Only this file's own handles (opened, queried, closed here) use fileXio directly.
+#define NEWLIB_PORT_AWARE
+#include <fileXio_rpc.h>
+#include <usbhdfsd-common.h>
+
+#include "menu.h"
+#include "saves.h"
+#include "common.h"
+#include "mx4sio.h"
+
+extern const uint8_t _binary_mx4sio_bd_irx_start;
+extern const uint8_t _binary_mx4sio_bd_irx_size;
+
+#define MX4SIO_DRIVER_NAME	"sdc"
+#define MX4SIO_MAX_UNITS	10
+#define MX4SIO_WAIT_SECONDS	6
+
+enum mx4sio_state
+{
+	MX4SIO_NOT_LOADED,
+	MX4SIO_LOADED,
+	MX4SIO_SLOT2_MEMCARD,	// slot 2 holds a Memory Card: not loaded
+	MX4SIO_FAILED,			// the driver didn't load: don't retry
+};
+
+static int mx4sio_state = MX4SIO_NOT_LOADED;
+
+// "massN:/" of the SD card, if it's mounted
+static int find_sd_unit(char* path, size_t len)
+{
+	char dev[16], name[16];
+	int fd;
+
+	for (int i = 0; i < MX4SIO_MAX_UNITS; i++)
+	{
+		snprintf(dev, sizeof(dev), "mass%d:/", i);
+		if ((fd = fileXioDopen(dev)) < 0)
+			continue;
+
+		memset(name, 0, sizeof(name));
+		fileXioIoctl2(fd, USBMASS_IOCTL_GET_DRIVERNAME, NULL, 0, name, sizeof(name) - 1);
+		fileXioDclose(fd);
+
+		if (strcmp(name, MX4SIO_DRIVER_NAME) == 0)
+		{
+			snprintf(path, len, "%s", dev);
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
+static int load_driver(void)
+{
+	int id, ret;
+
+	// The driver would take over slot 2: keep a Memory Card there usable
+	if (dir_exists(MC1_PATH) == SUCCESS)
+	{
+		LOG("MX4SIO: Memory Card found in slot 2, driver not loaded");
+		return MX4SIO_SLOT2_MEMCARD;
+	}
+
+	id = SifExecModuleBuffer((void*) &_binary_mx4sio_bd_irx_start, (int) &_binary_mx4sio_bd_irx_size, 0, NULL, &ret);
+	if (id < 0 || ret == 1)
+	{
+		LOG("MX4SIO: failed to load mx4sio_bd (%d, %d)", id, ret);
+		return MX4SIO_FAILED;
+	}
+
+	LOG("MX4SIO: driver loaded");
+	return MX4SIO_LOADED;
+}
+
+int mx4sio_get_path(char* path, size_t len)
+{
+	int own_screen;
+
+	path[0] = 0;
+
+	if (mx4sio_state == MX4SIO_LOADED && find_sd_unit(path, len))
+		return 1;
+
+	own_screen = init_loading_screen("Waiting for the MX4SIO SD card...");
+
+	// a Memory Card may have been taken out of slot 2 since: check again
+	if (mx4sio_state == MX4SIO_NOT_LOADED || mx4sio_state == MX4SIO_SLOT2_MEMCARD)
+		mx4sio_state = load_driver();
+
+	if (mx4sio_state == MX4SIO_LOADED)
+	{
+		for (int i = 0; i < MX4SIO_WAIT_SECONDS * 4 && !find_sd_unit(path, len); i++)
+			usleep(250 * 1000);
+	}
+
+	if (own_screen)
+		stop_loading_screen();
+
+	if (mx4sio_state == MX4SIO_SLOT2_MEMCARD)
+	{
+		show_message("MX4SIO not available:\nthere's a Memory Card in slot 2");
+		return 0;
+	}
+
+	if (!path[0])
+	{
+		LOG("MX4SIO: no SD card found");
+		show_message("No MX4SIO SD card found in slot 2");
+		return 0;
+	}
+
+	LOG("MX4SIO: SD card mounted as %s", path);
+	return 1;
+}

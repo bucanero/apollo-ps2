@@ -12,10 +12,12 @@
 #include "music.h"
 #include "common.h"
 #include "icons.h"
+#include "mx4sio.h"
 
 
 char *strcasestr(const char *, const char *);
-static const char* ext_src[MAX_USB_DEVICES+1] = {USB_PATH, HOST_PATH, DISC_PATH, NULL};
+// New sources go last: apollo_config.storage (saved in SETTINGS.BIN) is an index into this list
+static const char* ext_src[MAX_USB_DEVICES+1] = {USB_PATH, HOST_PATH, DISC_PATH, MX4SIO_PATH, NULL};
 static const char* sort_opt[] = {"Disabled", "by Name", "by Title ID", "by Type", NULL};
 
 menu_option_t menu_options[] = {

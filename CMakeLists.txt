@@ -79,10 +79,11 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/mcimage_irx.o
   VERBATIM
 )
 
-# Network IOP modules (DEV9, NETMAN, SMAP), embedded from the ps2sdk build.
+# Network IOP modules (DEV9, NETMAN, SMAP) and the MX4SIO SD card driver,
+# embedded from the ps2sdk build.
 # They're linked from the build folder so the symbols are _binary_<name>_irx_*
 set(NET_IRX_OBJS)
-foreach(irx ps2dev9 netman smap)
+foreach(irx ps2dev9 netman smap mx4sio_bd)
   add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${irx}_irx.o
     COMMAND ${CMAKE_COMMAND} -E copy $ENV{PS2SDK}/iop/irx/${irx}.irx ${irx}.irx
     COMMAND ${CMAKE_LINKER} -r -b binary -o ${irx}_irx.o ${irx}.irx
@@ -191,6 +192,7 @@ add_executable(${PROJECT_NAME}
   source/libfont.c
   source/lzari.c
   source/main.c
+  source/mx4sio.c
   source/menu_hex.c
   source/menu_about.c
   source/menu_cheats.c

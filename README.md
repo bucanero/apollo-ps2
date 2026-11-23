@@ -3,6 +3,7 @@
 [![Downloads][img_downloads]][app_downloads] [![Release][img_latest]][app_latest] [![License][img_license]][app_license]
 [![Build app package](https://github.com/bucanero/apollo-ps2/actions/workflows/build.yml/badge.svg)](https://github.com/bucanero/apollo-ps2/actions/workflows/build.yml)
 [![Twitter](https://img.shields.io/twitter/follow/dparrino?label=Follow)](https://x.com/dparrino)
+[![Ask DeepWiki](https://img.shields.io/badge/Ask-DeepWiki-blue)](https://deepwiki.com/bucanero/apollo-ps2)
 
 **Apollo Save Tool** is an application to manage save-game files on the PlayStation 2.
 
@@ -10,7 +11,7 @@ This homebrew app allows you to download, unlock, patch, and manage save-game fi
 
 ![image](./docs/screenshots/screenshot-main.png)
 
-**Comments, ideas, suggestions?** You can [contact me](https://github.com/bucanero/) on [Twitter](https://twitter.com/dparrino) and on [my website](http://www.bucanero.com.ar/).
+**Comments, ideas, suggestions?** You can [contact me](https://github.com/bucanero/) on [Twitter](https://x.com/dparrino) and on [my website](http://www.bucanero.com.ar/).
 
 # Features
 

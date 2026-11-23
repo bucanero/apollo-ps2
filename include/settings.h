@@ -33,9 +33,9 @@ typedef struct __attribute__((packed))
     uint8_t doAni;
     uint8_t storage;
     uint8_t dbglog;
+    uint8_t video_mode;     // VIDEO_MODE_*
     uint32_t user_id;
     char save_db[256];
-    uint8_t video_mode;     // VIDEO_MODE_* (added after save_db: older SETTINGS.BIN files lack it)
 } app_config_t;
 
 enum video_mode_enum

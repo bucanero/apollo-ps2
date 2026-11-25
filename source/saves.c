@@ -1757,7 +1757,22 @@ static void read_vmc_files(const char* userPath, const char* folder, list_t *lis
 			continue;
 		}
 
-		item = _createSaveEntry(flag | SAVE_FLAG_VMC, dir->d_name);
+		// POPS keeps each game's VMCs in its own folder, always named SLOT0.VMC/SLOT1.VMC:
+		// show the game folder too ("POPS/<game>/SLOT0.VMC" -> "<game> - SLOT0.VMC")
+		if (strncmp(folder, IMP_POPS_PATH_USB, strlen(IMP_POPS_PATH_USB)) == 0 && strlen(folder) > strlen(IMP_POPS_PATH_USB))
+		{
+			char game[256], name[256];
+			char* sep;
+
+			snprintf(game, sizeof(game), "%s", folder);
+			game[strlen(game) - 1] = 0;		// trailing '/'
+			sep = strrchr(game, '/');
+			snprintf(name, sizeof(name), "%s - %s", sep ? sep + 1 : game, dir->d_name);
+			item = _createSaveEntry(flag | SAVE_FLAG_VMC, name);
+		}
+		else
+			item = _createSaveEntry(flag | SAVE_FLAG_VMC, dir->d_name);
+
 		item->type = FILE_TYPE_VMC;
 		item->path = strdup(psvPath);
 		item->title_id = strdup("VMC");

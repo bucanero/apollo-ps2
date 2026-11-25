@@ -556,7 +556,8 @@ int main(int argc, char *argv[])
 	http_init();
 	initPad();
 
-	// Load application settings (the video mode is needed before the renderer)
+	// Load application settings from the launch folder (the video mode is needed before the renderer)
+	set_settings_path((argc > 0) ? argv[0] : NULL);
 	load_app_settings(&apollo_config);
 	log_startup();
 	setVideoMode();

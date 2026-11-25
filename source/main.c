@@ -560,7 +560,8 @@ int main(int argc, char *argv[])
 	initMenuOptions();
 	LoadSounds();
 
-	// Load application settings
+	// Load application settings (from the folder the app was launched from)
+	set_settings_path((argc > 0) ? argv[0] : NULL);
 	load_app_settings(&apollo_config);
 	log_startup();
 

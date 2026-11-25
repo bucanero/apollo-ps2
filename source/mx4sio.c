@@ -37,7 +37,7 @@ extern const uint8_t _binary_mx4sio_bd_irx_size;
 
 #define MX4SIO_DRIVER_NAME	"sdc"
 #define MX4SIO_MAX_UNITS	10
-#define MX4SIO_WAIT_SECONDS	6
+#define MX4SIO_WAIT_SECONDS	10
 
 enum mx4sio_state
 {
@@ -48,35 +48,76 @@ enum mx4sio_state
 };
 
 static int mx4sio_state = MX4SIO_NOT_LOADED;
+static unsigned int units_before = 0;	// "massN:" units mounted before the driver was loaded
 
-// "massN:/" of the SD card, if it's mounted
-static int find_sd_unit(char* path, size_t len)
+/*
+ * Mounted "massN:" units (bit N), with their block device driver names
+ * ("usb", "sdc"...; empty if the unit doesn't answer the query)
+ */
+static unsigned int scan_units(char names[MX4SIO_MAX_UNITS][16])
 {
-	char dev[16], name[16];
+	char dev[16];
+	unsigned int units = 0;
 	int fd;
 
 	for (int i = 0; i < MX4SIO_MAX_UNITS; i++)
 	{
+		names[i][0] = 0;
 		snprintf(dev, sizeof(dev), "mass%d:/", i);
 		if ((fd = fileXioDopen(dev)) < 0)
 			continue;
 
-		memset(name, 0, sizeof(name));
-		fileXioIoctl2(fd, USBMASS_IOCTL_GET_DRIVERNAME, NULL, 0, name, sizeof(name) - 1);
+		units |= (1 << i);
+		memset(names[i], 0, sizeof(names[i]));
+		fileXioIoctl2(fd, USBMASS_IOCTL_GET_DRIVERNAME, NULL, 0, names[i], sizeof(names[i]) - 1);
 		fileXioDclose(fd);
-
-		if (strcmp(name, MX4SIO_DRIVER_NAME) == 0)
-		{
-			snprintf(path, len, "%s", dev);
-			return 1;
-		}
 	}
 
-	return 0;
+	return units;
+}
+
+static void log_units(unsigned int units, char names[MX4SIO_MAX_UNITS][16])
+{
+	if (!units)
+		LOG("MX4SIO: no mass units mounted");
+
+	for (int i = 0; i < MX4SIO_MAX_UNITS; i++)
+		if (units & (1 << i))
+			LOG("MX4SIO: mass%d: driver '%s'%s", i, names[i], (units_before & (1 << i)) ? "" : " (new)");
+}
+
+/*
+ * "massN:/" of the SD card, if it's mounted: the unit whose driver is "sdc",
+ * or else a unit that showed up after the driver was loaded (if the query
+ * isn't answered) and isn't a USB drive plugged in meanwhile
+ */
+static int find_sd_unit(char* path, size_t len, int log)
+{
+	char names[MX4SIO_MAX_UNITS][16];
+	unsigned int units = scan_units(names);
+	int found = -1;
+
+	for (int i = 0; i < MX4SIO_MAX_UNITS && found < 0; i++)
+		if ((units & (1 << i)) && strcmp(names[i], MX4SIO_DRIVER_NAME) == 0)
+			found = i;
+
+	for (int i = 0; i < MX4SIO_MAX_UNITS && found < 0; i++)
+		if ((units & ~units_before & (1 << i)) && strcmp(names[i], "usb") != 0)
+			found = i;
+
+	if (log)
+		log_units(units, names);
+
+	if (found < 0)
+		return 0;
+
+	snprintf(path, len, "mass%d:/", found);
+	return 1;
 }
 
 static int load_driver(void)
 {
+	char names[MX4SIO_MAX_UNITS][16];
 	int id, ret;
 
 	// The driver would take over slot 2: keep a Memory Card there usable
@@ -85,6 +126,9 @@ static int load_driver(void)
 		LOG("MX4SIO: Memory Card found in slot 2, driver not loaded");
 		return MX4SIO_SLOT2_MEMCARD;
 	}
+
+	units_before = scan_units(names);
+	LOG("MX4SIO: mass units before loading the driver: 0x%x", units_before);
 
 	id = SifExecModuleBuffer((void*) &_binary_mx4sio_bd_irx_start, (int) &_binary_mx4sio_bd_irx_size, 0, NULL, &ret);
 	if (id < 0 || ret == 1)
@@ -103,7 +147,7 @@ int mx4sio_get_path(char* path, size_t len)
 
 	path[0] = 0;
 
-	if (mx4sio_state == MX4SIO_LOADED && find_sd_unit(path, len))
+	if (mx4sio_state == MX4SIO_LOADED && find_sd_unit(path, len, 0))
 		return 1;
 
 	own_screen = init_loading_screen("Waiting for the MX4SIO SD card...");
@@ -114,8 +158,11 @@ int mx4sio_get_path(char* path, size_t len)
 
 	if (mx4sio_state == MX4SIO_LOADED)
 	{
-		for (int i = 0; i < MX4SIO_WAIT_SECONDS * 4 && !find_sd_unit(path, len); i++)
-			usleep(250 * 1000);
+		for (int i = 0; i < MX4SIO_WAIT_SECONDS * 2 && !find_sd_unit(path, len, 0); i++)
+			usleep(500 * 1000);
+
+		// what was found, to tell why the SD card wasn't (or which unit it is)
+		find_sd_unit(path, len, 1);
 	}
 
 	if (own_screen)

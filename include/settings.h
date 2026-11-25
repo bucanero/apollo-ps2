@@ -41,7 +41,7 @@ extern menu_option_t menu_options[];
 extern app_config_t apollo_config;
 
 void log_callback(int sel);
-void owner_callback(int sel);
+void storage_callback(int sel);
 void music_callback(int sel);
 void sort_callback(int sel);
 void ani_callback(int sel);

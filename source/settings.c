@@ -41,7 +41,7 @@ menu_option_t menu_options[] = {
 		.options = (char**) ext_src,
 		.type = APP_OPTION_LIST,
 		.value = &apollo_config.storage,
-		.callback = owner_callback
+		.callback = storage_callback
 	},
 	{ .name = "Check for Updates", 
 		.options = NULL, 
@@ -226,9 +226,18 @@ end_update:
 	free(buffer);
 }
 
-void owner_callback(int sel)
+void storage_callback(int sel)
 {
+	extern save_list_t usb_saves;
+
 	apollo_config.storage = sel;
+
+	// External Saves keeps its list: drop it, so the new source is read next time
+	if (usb_saves.list)
+	{
+		UnloadGameList(usb_saves.list);
+		usb_saves.list = NULL;
+	}
 }
 
 #define APOLLO_LOG_FILE		USB_PATH "apollo.log"

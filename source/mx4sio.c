@@ -1,11 +1,18 @@
 /*
  * MX4SIO: SD card adapter in Memory Card slot 2
  *
- * ps2sdk's mx4sio_bd.irx is a BDM block device driver, like usbmass_bd: the
- * SD card is mounted by bdmfs_fatfs (loaded at start-up, with the USB stack)
- * as one more "massN:" unit. This ps2sdk's bdmfs_fatfs only registers "mass"
- * (no "mx4sio:" device), numbered in connection order, so the SD card's unit
- * is found by asking each one for its block device driver name ("sdc").
+ * iop/mx4sio_bd.irx is ps2sdk's driver at commit edf475f4 (2023-02-02), with
+ * the SanDisk SD card fixes the ps2sdk we build with lacks:
+ *   https://github.com/ps2dev/ps2sdk/tree/edf475f45af9b80377a62a4797936d20efca6646/iop/sio/mx4sio_bd
+ * (see CMakeLists.txt for why that version).
+ *
+ * mx4sio_bd.irx is a BDM block device driver, like
+ * usbmass_bd: the SD card is mounted by bdmfs_fatfs (loaded at start-up, with
+ * the USB stack) as one more "massN:" unit. This ps2sdk's bdmfs_fatfs only
+ * registers "mass" (no "mx4sio:" device), numbered in connection order, so the
+ * SD card's unit is found by asking each one for its block device driver name
+ * ("sdc"), or, if that query isn't answered, as the unit that showed up after
+ * the driver was loaded.
  *
  * The driver is only loaded when the MX4SIO source is selected:
  *  - by then a USB drive already got "mass0:", so "mass:/" stays the USB drive
@@ -69,7 +76,9 @@ static unsigned int scan_units(char names[MX4SIO_MAX_UNITS][16])
 
 		units |= (1 << i);
 		memset(names[i], 0, sizeof(names[i]));
-		fileXioIoctl2(fd, USBMASS_IOCTL_GET_DRIVERNAME, NULL, 0, names[i], sizeof(names[i]) - 1);
+		// when the query isn't supported, the buffer holds stale RPC data: ignore it
+		if (fileXioIoctl2(fd, USBMASS_IOCTL_GET_DRIVERNAME, NULL, 0, names[i], sizeof(names[i]) - 1) < 0)
+			names[i][0] = 0;
 		fileXioDclose(fd);
 	}
 

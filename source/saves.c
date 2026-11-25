@@ -1759,7 +1759,7 @@ static void read_vmc_files(const char* userPath, const char* folder, list_t *lis
 
 		// POPS keeps each game's VMCs in its own folder, always named SLOT0.VMC/SLOT1.VMC:
 		// show the game folder too ("POPS/<game>/SLOT0.VMC" -> "<game> - SLOT0.VMC")
-		if (strncmp(folder, IMP_POPS_PATH_USB, strlen(IMP_POPS_PATH_USB)) == 0 && strlen(folder) > strlen(IMP_POPS_PATH_USB))
+		if ((flag & SAVE_FLAG_PS1) && strncmp(folder, IMP_POPS_PATH_USB, strlen(IMP_POPS_PATH_USB)) == 0 && strlen(folder) > strlen(IMP_POPS_PATH_USB))
 		{
 			char game[256], name[256];
 			char* sep;

@@ -27,367 +27,314 @@ msgstr "Non"
 msgid "Yes"
 msgstr "Oui"
 
-#: exec_cmd.c:52 exec_cmd.c:127 exec_cmd.c:155 exec_cmd.c:199 exec_cmd.c:1119
-#: exec_cmd.c:1142
-msgid "Error! Export folder is not available:"
-msgstr "Erreur ! Le dossier d'exportation n'est pas disponible :"
-
-#: exec_cmd.c:58 exec_cmd.c:84
+#: exec_cmd.c:67
 msgid "Error downloading save game from:"
 msgstr "Erreur lors du téléchargement de la sauvegarde depuis:"
 
-#: exec_cmd.c:63
-msgid "Save game successfully downloaded to:"
-msgstr "Sauvegarde téléchargée avec succès vers :"
-
-#: exec_cmd.c:65 exec_cmd.c:99
-msgid "Error extracting save game!"
-msgstr "Erreur lors de l'extraction de la sauvegarde!"
-
-#: exec_cmd.c:97
+#: exec_cmd.c:80
 msgid "Save game successfully copied to:"
 msgstr "Sauvegarde copiée avec succès vers :"
 
-#: exec_cmd.c:113
+#: exec_cmd.c:82
+msgid "Error extracting save game!"
+msgstr "Erreur lors de l'extraction de la sauvegarde!"
+
+#: exec_cmd.c:96
 msgid "Error extracting PSV data from:"
 msgstr "Erreur d'extraction des données PSV de :"
 
-#: exec_cmd.c:119 exec_cmd.c:565
-msgid "Importing save..."
-msgstr "Importation de la sauvegarde..."
-
-#: exec_cmd.c:125
+#: exec_cmd.c:108
 msgid "Save game successfully imported to:"
 msgstr "Sauvegarde importée avec succès vers :"
 
-#: exec_cmd.c:159
-msgid "Exporting save game..."
-msgstr "Exportation de la sauvegarde..."
+#: exec_cmd.c:110 exec_cmd.c:138 exec_cmd.c:182 exec_cmd.c:1102 exec_cmd.c:1125
+msgid "Error! Export folder is not available:"
+msgstr "Erreur ! Le dossier d'exportation n'est pas disponible :"
 
-#: exec_cmd.c:182
+#: exec_cmd.c:165
 msgid "Zip file successfully saved to:"
 msgstr "Fichier ZIP enregistré avec succès sous :"
 
-#: exec_cmd.c:193 exec_cmd.c:232
+#: exec_cmd.c:176 exec_cmd.c:215
 msgid "Copy operation cancelled!"
 msgstr "Opération de copie annulée !"
 
-#: exec_cmd.c:193 exec_cmd.c:232
+#: exec_cmd.c:176 exec_cmd.c:215
 msgid "Same source and destination."
 msgstr "Même source et même destination."
 
-#: exec_cmd.c:203
-msgid "Copying files..."
-msgstr "Copie des fichiers..."
-
-#: exec_cmd.c:213 exec_cmd.c:241 exec_cmd.c:1229
+#: exec_cmd.c:196 exec_cmd.c:224 exec_cmd.c:1212
 msgid "Files successfully copied to:"
 msgstr "Fichiers copiés avec succès vers :"
 
-#: exec_cmd.c:236 exec_cmd.c:1224
-msgid "Copying save game..."
-msgstr "Copie de la sauvegarde..."
-
-#: exec_cmd.c:243 exec_cmd.c:1231
+#: exec_cmd.c:226 exec_cmd.c:1214
 msgid "Error! Can't copy Save-game folder:"
 msgstr "Erreur! Impossible de copier le dossier de sauvegarde :"
 
-#: exec_cmd.c:255 exec_cmd.c:309 exec_cmd.c:629
-msgid "Copying all saves..."
-msgstr "Copie de toutes les sauvegardes..."
-
-#: exec_cmd.c:297 exec_cmd.c:324
+#: exec_cmd.c:280 exec_cmd.c:307
 #, c-format
 msgid "%d/%d Saves copied to Memory Card %d"
 msgstr "%d/%d sauvegardes copiées sur la carte mémoire %d"
 
-#: exec_cmd.c:336
-msgid "Exporting all VMC saves..."
-msgstr "Exportation des sauvegardes VMC..."
-
-#: exec_cmd.c:352 exec_cmd.c:1004
+#: exec_cmd.c:335 exec_cmd.c:987
 msgid "Saves exported to:"
 msgstr "Sauvegardes exportées vers :"
 
-#: exec_cmd.c:388
+#: exec_cmd.c:371
 msgid "All files extracted to:"
 msgstr "Tous les fichiers extraits vers :"
 
-#: exec_cmd.c:390
+#: exec_cmd.c:373
 #, c-format
 msgid "Error: %s couldn't be extracted"
 msgstr "Erreur : %s n'a pas pu être extrait"
 
-#: exec_cmd.c:607
+#: exec_cmd.c:590
 #, c-format
 msgid "Save successfully imported to %s"
 msgstr "Sauvegarde importée avec succès vers %s"
 
-#: exec_cmd.c:609
+#: exec_cmd.c:592
 msgid "Error: save couldn't be imported"
 msgstr "Erreur : la sauvegarde n'a pas pu être importée"
 
-#: exec_cmd.c:625
+#: exec_cmd.c:608
 msgid "Error! Folder is not available:"
 msgstr "Erreur ! Le dossier n'est pas disponible :"
 
-#: exec_cmd.c:658
+#: exec_cmd.c:641
 msgid "Saves copied to:"
 msgstr "Sauvegardes copiées vers:"
 
-#: exec_cmd.c:760
-msgid "Applying changes..."
-msgstr "Application des modifications..."
-
-#: exec_cmd.c:896 saves.c:270
+#: exec_cmd.c:879 saves.c:293
 msgid "Add copy protection (lock save)"
 msgstr "Activer la protection (verrouiller)"
 
-#: exec_cmd.c:896 saves.c:268
+#: exec_cmd.c:879 saves.c:291
 msgid "Remove copy protection (unlock save)"
 msgstr "Retirer la protection (déverrouiller)"
 
-#: exec_cmd.c:906
+#: exec_cmd.c:889
 #, c-format
 msgid "Error! Copy protection of %s couldn't be changed"
 msgstr "Erreur ! Impossible de modifier la protection de %s"
 
-#: exec_cmd.c:912
+#: exec_cmd.c:895
 msgid "Error! Cheat codes couldn't be applied"
 msgstr "Erreur! Les codes de Triche n'ont pas pu être appliqués"
 
-#: exec_cmd.c:914
+#: exec_cmd.c:897
 #, c-format
 msgid "Save %s successfully modified!"
 msgstr "Sauvegarde %s modifiée avec succès!"
 
-#: exec_cmd.c:926
+#: exec_cmd.c:909
 #, c-format
 msgid "Do you want to delete %s?"
 msgstr "Voulez-vous supprimer %s ?"
 
-#: exec_cmd.c:955
+#: exec_cmd.c:938
 msgid "Save successfully deleted:"
 msgstr "Sauvegarde supprimée avec succès :"
 
-#: exec_cmd.c:957
+#: exec_cmd.c:940
 msgid "Error! Couldn't delete save:"
 msgstr "Erreur ! Impossible de supprimer la Sauvegarde :"
 
-#: exec_cmd.c:972
-msgid "Exporting all saves..."
-msgstr "Exportation de toutes les sauvegardes..."
-
-#: exec_cmd.c:1022
-msgid "Exporting save..."
-msgstr "Exportation de la sauvegarde..."
-
-#: exec_cmd.c:1046 exec_cmd.c:1084 exec_cmd.c:1106
+#: exec_cmd.c:1029 exec_cmd.c:1067 exec_cmd.c:1089
 msgid "Save successfully exported to:"
 msgstr "Sauvegarde exportée avec succès vers :"
 
-#: exec_cmd.c:1048 exec_cmd.c:1086 exec_cmd.c:1108
+#: exec_cmd.c:1031 exec_cmd.c:1069 exec_cmd.c:1091
 msgid "Error exporting save:"
 msgstr "Erreur lors de l'exportation de la sauvegarde :"
 
-#: exec_cmd.c:1067
-msgid "Exporting save ..."
-msgstr "Exportation de la sauvegarde ..."
-
-#: exec_cmd.c:1126
+#: exec_cmd.c:1109
 msgid "Memory card successfully exported to:"
 msgstr "Carte Mémoire exportée avec succès vers :"
 
-#: exec_cmd.c:1128
+#: exec_cmd.c:1111
 msgid "Error! Failed to export PS1 memory card"
 msgstr "Erreur ! Échec de l'export de la carte mémoire PS1"
 
-#: exec_cmd.c:1156
+#: exec_cmd.c:1139
 msgid "Memory Card dumped to:"
 msgstr "Carte mémoire copiée vers :"
 
-#: exec_cmd.c:1156
+#: exec_cmd.c:1139
 msgid "Warning! Pages with ECC errors (saved as read):"
 msgstr "Attention ! Pages avec erreurs ECC (copiées telles quelles) :"
 
-#: exec_cmd.c:1158
+#: exec_cmd.c:1141
 msgid "Memory Card successfully dumped to:"
 msgstr "Carte mémoire copiée avec succès vers :"
 
-#: exec_cmd.c:1160
+#: exec_cmd.c:1143
 msgid "Error! Failed to dump"
 msgstr "Erreur ! Échec de la copie de"
 
-#: exec_cmd.c:1170
+#: exec_cmd.c:1153
 msgid "Error! Can't write image to"
 msgstr "Erreur ! Impossible d'écrire l'image sur"
 
-#: exec_cmd.c:1174
+#: exec_cmd.c:1157
 msgid "ALL data will be replaced by:"
 msgstr "TOUTES les données seront remplacées par :"
 
-#: exec_cmd.c:1174
+#: exec_cmd.c:1157
 msgid "This cannot be undone. Continue?"
 msgstr "Action irréversible. Continuer ?"
 
-#: exec_cmd.c:1179
+#: exec_cmd.c:1162
 #, c-format
 msgid "Memory Card image successfully written to mc%d:"
 msgstr "Image écrite avec succès sur la carte mémoire mc%d:"
 
-#: exec_cmd.c:1181
+#: exec_cmd.c:1164
 msgid "Error writing image to"
 msgstr "Erreur d'écriture de l'image sur"
 
-#: exec_cmd.c:1181
+#: exec_cmd.c:1164
 msgid "The Memory Card contents are now incomplete!"
 msgstr "Le contenu de la carte mémoire est incomplet !"
 
-#: exec_cmd.c:1188
-msgid "Importing save ..."
-msgstr "Importation de la sauvegarde ..."
-
-#: exec_cmd.c:1217
+#: exec_cmd.c:1200
 msgid "Successfully imported to VMC:"
 msgstr "Importée avec succès dans la VMC :"
 
-#: exec_cmd.c:1219
+#: exec_cmd.c:1202
 msgid "Error importing save:"
 msgstr "Erreur d'importation de la sauvegarde :"
 
-#: exec_cmd.c:1257 exec_cmd.c:1262
+#: exec_cmd.c:1240 exec_cmd.c:1245
 #, c-format
 msgid "Error! File %s couldn't be exported"
 msgstr "Erreur! Impossible d'exporter le fichier %s"
 
-#: exec_cmd.c:1259
+#: exec_cmd.c:1242
 msgid "File successfully exported to:"
 msgstr "Fichier exporté avec succès vers:"
 
-#: exec_cmd.c:1272
+#: exec_cmd.c:1255
 msgid "Error! Can't find save-game file:"
 msgstr "Erreur ! Fichier de sauvegarde introuvable :"
 
-#: exec_cmd.c:1282 exec_cmd.c:1287
+#: exec_cmd.c:1265 exec_cmd.c:1270
 #, c-format
 msgid "Error! File %s couldn't be imported"
 msgstr "Erreur! Impossible d'importer le fichier %s"
 
-#: exec_cmd.c:1284
+#: exec_cmd.c:1267
 msgid "File successfully imported to:"
 msgstr "Fichier importé avec succès vers :"
 
-#: exec_cmd.c:1295
+#: exec_cmd.c:1278
 msgid "Download URL"
 msgstr "URL de téléchargement"
 
-#: exec_cmd.c:1301
+#: exec_cmd.c:1284
 msgid "File successfully downloaded to:"
 msgstr "Fichier Téléchargé avec succès sur :"
 
-#: exec_cmd.c:1303
+#: exec_cmd.c:1286
 msgid "Error! File couldn't be downloaded"
 msgstr "Erreur! Le fichier n'a pas pu être Téléchargé"
 
-#: exec_cmd.c:1362
+#: exec_cmd.c:1346
 msgid "Save successfully imported:"
 msgstr "Sauvegarde importée avec succès :"
 
-#: exec_cmd.c:1364
+#: exec_cmd.c:1348
 msgid "Error! Couldn't import save:"
 msgstr "Erreur! Impossible d'importer la Sauvegarde :"
 
-#: http.c:160
-msgid "Connecting to the network..."
-msgstr "Connexion au réseau..."
-
-#: http.c:310
-msgid "Downloading..."
-msgstr "Téléchargement..."
-
-#: main.c:171 main.c:181 main.c:185 main.c:190 main.c:194
+#: main.c:172 main.c:182 main.c:186 main.c:191 main.c:195
 msgid "Back"
 msgstr "Retour"
 
-#: main.c:171 menu_cheats.c:256 menu_main.c:158
+#: main.c:172 menu_cheats.c:256 menu_main.c:158
 msgid "Details"
 msgstr "Détails"
 
-#: main.c:171 main.c:185
+#: main.c:172 main.c:186
 msgid "Refresh"
 msgstr "Rafraîchir"
 
-#: main.c:171 main.c:185 main.c:190 main.c:194
+#: main.c:172 main.c:186 main.c:191 main.c:195
 msgid "Select"
 msgstr "Sélectionner"
 
-#: main.c:175
+#: main.c:176
 msgid "Exit"
 msgstr "Quitter"
 
-#: main.c:175
+#: main.c:176
 msgid "Value Down"
 msgstr "Valeur baissée"
 
-#: main.c:175
+#: main.c:176
 msgid "Value Up"
 msgstr "Valeur augmentée"
 
-#: main.c:194
+#: main.c:195
 msgid "View Code"
 msgstr "Voir le Code"
 
-#: main.c:342
+#: main.c:351
 msgid "Memory Card 1"
 msgstr "Carte mémoire 1"
 
-#: main.c:342
+#: main.c:351
 msgid "Memory Card 2"
 msgstr "Carte mémoire 2"
 
-#: main.c:347
+#: main.c:356
 msgid "Select Memory Card"
 msgstr "Choisir la carte mémoire"
 
-#: main.c:424
+#: main.c:401
+msgid "Apollo Disc (cdfs:/)"
+msgstr "Disque Apollo (cdfs:/)"
+
+#: main.c:402
+msgid "USB Storage (mass:/)"
+msgstr "Stockage USB (mass:/)"
+
+#: main.c:403
+msgid "Host (host:/)"
+msgstr "Hôte (host:/)"
+
+#: main.c:418
+msgid "Online Database"
+msgstr "Base de données en ligne"
+
+#: main.c:423
+msgid "Select Save Database"
+msgstr "Choisir la base de sauvegardes"
+
+#: main.c:468
 msgid "MemCard Saves"
 msgstr "Sauvegardes carte mémoire"
 
-#: main.c:425
+#: main.c:469
 msgid "External Saves"
 msgstr "Sauvegardes externes"
 
-#: main.c:426 main.c:427
+#: main.c:470 main.c:471
 msgid "Virtual MemCard"
 msgstr "Carte mémoire virtuelle"
 
-#: main.c:428
+#: main.c:472
 msgid "Saves Database"
 msgstr "Base de sauvegardes"
 
-#: main.c:429
+#: main.c:473
 msgid "User Tools"
 msgstr "Outils utilisateur"
 
-#: main.c:593
+#: main.c:638
 msgid "Successfully installed local application data"
 msgstr "Données Application Locales installées avec succès"
-
-#: mc_image.c:228
-msgid "Dumping Memory Card..."
-msgstr "Copie de la carte mémoire..."
-
-#: mc_image.c:282
-msgid "Dumping PS1 Memory Card..."
-msgstr "Copie de la carte mémoire PS1..."
-
-#: mc_image.c:401
-msgid "Erasing Memory Card..."
-msgstr "Effacement de la carte mémoire..."
-
-#: mc_image.c:412
-msgid "Writing Memory Card image..."
-msgstr "Écriture de l'image de carte mémoire..."
 
 #: mc_image.c:457
 msgid "No Memory Card of the right type in the slot"
@@ -463,10 +410,6 @@ msgstr "Outils"
 msgid "Hex Editor"
 msgstr "Éditeur Hexadécimal"
 
-#: menu_main.c:79
-msgid "Loading saves..."
-msgstr "Chargement des sauvegardes..."
-
 #: menu_main.c:93
 msgid "No save-games found"
 msgstr "Aucune Sauvegarde Trouvée"
@@ -475,40 +418,40 @@ msgstr "Aucune Sauvegarde Trouvée"
 msgid "Error getting details"
 msgstr "Erreur de lecture des détails"
 
-#: menu_main.c:157 saves.c:2263 saves.c:2277 saves.c:2293
+#: menu_main.c:157 saves.c:2235 saves.c:2249 saves.c:2265
 msgid "File"
 msgstr "Fichier"
 
-#: menu_main.c:157 saves.c:2291 saves.c:2307
+#: menu_main.c:157 saves.c:2263 saves.c:2279
 msgid "Game"
 msgstr "Jeu"
 
-#: menu_main.c:157 saves.c:2264 saves.c:2292 saves.c:2308 saves.c:2322
+#: menu_main.c:157 saves.c:2236 saves.c:2264 saves.c:2280 saves.c:2294
 msgid "Title ID"
 msgstr "ID du titre"
 
-#: menu_main.c:380 menu_main.c:784
+#: menu_main.c:390 menu_main.c:801
 msgid "Patch view"
 msgstr "Vue du patch"
 
-#: menu_main.c:520
+#: menu_main.c:530
 msgid "No data found in folder:"
 msgstr "Aucune donnée trouvée dans le dossier :"
 
-#: menu_main.c:576
+#: menu_main.c:586
 msgid "Exit the app?"
 msgstr "Quitter l'application ?"
 
-#: menu_main.c:717 menu_main.c:725
+#: menu_main.c:734 menu_main.c:742
 #, c-format
 msgid "Save changes to %s?"
 msgstr "Enregistrer les Modifications dans %s ?"
 
-#: menu_main.c:722
+#: menu_main.c:739
 msgid "Error! Couldn't save changes to:"
 msgstr "Erreur ! Impossible d'enregistrer les modifications dans :"
 
-#: menu_main.c:822 menu_main.c:840
+#: menu_main.c:839 menu_main.c:857
 msgid "Unable to load"
 msgstr "Chargement impossible"
 
@@ -516,320 +459,328 @@ msgstr "Chargement impossible"
 msgid "Settings"
 msgstr "Paramètres"
 
-#: saves.c:264
+#: mx4sio.c:191
+msgid "MX4SIO not available:"
+msgstr "MX4SIO indisponible :"
+
+#: mx4sio.c:191
+msgid "there's a Memory Card in slot 2"
+msgstr "une carte mémoire est dans le port 2"
+
+#: mx4sio.c:198
+msgid "No MX4SIO SD card found in slot 2"
+msgstr "Aucune carte SD MX4SIO trouvée dans le port 2"
+
+#: saves.c:287
 msgid "Copy Protection"
 msgstr "Protection contre la copie"
 
-#: saves.c:280
+#: saves.c:303
 msgid "File Backup"
 msgstr "Sauvegarde des fichiers"
 
-#: saves.c:285
+#: saves.c:308
 msgid "Copy save files"
 msgstr "Copier les fichiers de sauvegarde"
 
-#: saves.c:288
+#: saves.c:311
 msgid "Copy Save to Mass Storage"
 msgstr "Copier vers le stockage de masse"
 
-#: saves.c:289 saves.c:1113
+#: saves.c:312 saves.c:1136
 msgid "Copy Save to Memory Card"
 msgstr "Copier vers la carte mémoire"
 
-#: saves.c:292
+#: saves.c:315
 msgid "Export save files to Zip"
 msgstr "Exporter les fichiers en Zip"
 
-#: saves.c:294
+#: saves.c:317
 msgid "Export Zip to Mass Storage"
 msgstr "Exporter le Zip vers le stockage de masse"
 
-#: saves.c:298
+#: saves.c:321
 msgid "Export single save files"
 msgstr "Exporter des fichiers individuels"
 
-#: saves.c:303
+#: saves.c:326
 msgid "Import single save files"
 msgstr "Importer des fichiers individuels"
 
-#: saves.c:308 saves.c:757
+#: saves.c:331 saves.c:780
 msgid "Hex Edit save game files"
 msgstr "Éditer les fichiers de sauvegarde en hexa"
 
-#: saves.c:351 saves.c:379 saves.c:961
+#: saves.c:374 saves.c:402 saves.c:984
 msgid "Save Game Backup"
 msgstr "Copie de la sauvegarde"
 
-#: saves.c:354
+#: saves.c:377
 msgid "Export save to .MCS format"
 msgstr "Exporter au format .MCS"
 
-#: saves.c:356
+#: saves.c:379
 msgid "Export .MCS to Storage"
 msgstr "Exporter le .MCS vers le stockage"
 
-#: saves.c:360
+#: saves.c:383
 msgid "Export save to .PSX format"
 msgstr "Exporter au format .PSX"
 
-#: saves.c:362
+#: saves.c:385
 msgid "Export .PSX to Storage"
 msgstr "Exporter le .PSX vers le stockage"
 
-#: saves.c:366 saves.c:388
+#: saves.c:389 saves.c:411
 msgid "Export save to .PSV format"
 msgstr "Exporter au format .PSV"
 
-#: saves.c:368 saves.c:390
+#: saves.c:391 saves.c:413
 msgid "Export .PSV to Storage"
 msgstr "Exporter le .PSV vers le stockage"
 
-#: saves.c:382
+#: saves.c:405
 msgid "Export save to .PSU format"
 msgstr "Exporter au format .PSU"
 
-#: saves.c:384
+#: saves.c:407
 msgid "Export .PSU to Storage"
 msgstr "Exporter le .PSU vers le stockage"
 
-#: saves.c:397
+#: saves.c:420
 msgid "Export save to .CBS format"
 msgstr "Exporter au format .CBS"
 
-#: saves.c:399
+#: saves.c:422
 msgid "Export .CBS to Storage"
 msgstr "Exporter le .CBS vers le stockage"
 
-#: saves.c:801 saves.c:874
+#: saves.c:824 saves.c:897
 msgid "Cheats"
 msgstr "Tricheries"
 
-#: saves.c:804 saves.c:877
+#: saves.c:827 saves.c:900
 msgid "View Raw Patch File"
 msgstr "Afficher le fichier de correctif brut"
 
-#: saves.c:847
+#: saves.c:870
 msgid "Save linked to MemCard ID"
 msgstr "Sauvegarde liée à l'ID de la carte"
 
-#: saves.c:852 saves.c:952 saves.c:1099
+#: saves.c:875 saves.c:975 saves.c:1122
 msgid "Apply Changes"
 msgstr "Appliquer les modifications"
 
-#: saves.c:855 saves.c:955 saves.c:1102 saves.c:1614
+#: saves.c:878 saves.c:978 saves.c:1125 saves.c:1570
 msgid "View Save Details"
 msgstr "Afficher les détails de Sauvegarde"
 
-#: saves.c:858 saves.c:958 saves.c:1105 saves.c:1622
+#: saves.c:881 saves.c:981 saves.c:1128 saves.c:1578
 msgid "Delete Save Game"
 msgstr "Supprimer la Sauvegarde"
 
-#: saves.c:964
+#: saves.c:987
 msgid "Export save game to .MCS format"
 msgstr "Exporter la sauvegarde au format .MCS"
 
-#: saves.c:966
+#: saves.c:989
 msgid "Copy .MCS Save to Storage"
 msgstr "Copier le .MCS vers le stockage"
 
-#: saves.c:970
+#: saves.c:993
 msgid "Export save game to .PSV format"
 msgstr "Exporter la sauvegarde au format .PSV"
 
-#: saves.c:972
+#: saves.c:995
 msgid "Copy .PSV Save to Storage"
 msgstr "Copier le .PSV vers le stockage"
 
-#: saves.c:976
+#: saves.c:999
 msgid "Export save game to .PSX format"
 msgstr "Exporter la sauvegarde au format .PSX"
 
-#: saves.c:978
+#: saves.c:1001
 msgid "Copy .PSX Save to Storage"
 msgstr "Copier le .PSX vers le stockage"
 
-#: saves.c:1108
+#: saves.c:1131
 msgid "Save Transfer"
 msgstr "Transfert de sauvegarde"
 
-#: saves.c:1111
+#: saves.c:1134
 msgid "Copy save game to Memory Card"
 msgstr "Copier la sauvegarde sur la carte mémoire"
 
-#: saves.c:1199
-msgid "Download to Mass Storage"
-msgstr "Télécharger vers le stockage de masse"
-
-#: saves.c:1252 saves.c:1617
+#: saves.c:1207 saves.c:1573
 msgid "Import to Memory Card"
 msgstr "Importer sur la carte mémoire"
 
-#: saves.c:1255 saves.c:1260
+#: saves.c:1210 saves.c:1215 saves.c:1218
 msgid "Copy to Storage"
 msgstr "Copier vers le stockage"
 
-#: saves.c:1280
+#: saves.c:1236
 msgid "Extract Archives (Zip)"
 msgstr "Extraire les archives (Zip)"
 
-#: saves.c:1307
+#: saves.c:1263
 msgid "Local Web Server (full system access)"
 msgstr "Serveur Web local (accès complet au système)"
 
-#: saves.c:1342
+#: saves.c:1298
 msgid "Extract"
 msgstr "Extraire"
 
-#: saves.c:1619
+#: saves.c:1575
 msgid "Import to MemCard"
 msgstr "Importer sur la carte"
 
-#: saves.c:1825 saves.c:1872 saves.c:2164
+#: saves.c:1796 saves.c:1843 saves.c:2136
 msgid "Bulk Save Management"
 msgstr "Gestion des Sauvegardes en masse"
 
-#: saves.c:1833 saves.c:2077 saves.c:2172
+#: saves.c:1804 saves.c:2049 saves.c:2144
 msgid "Copy selected Saves to Memory Card"
 msgstr "Copier la sélection sur la carte mémoire"
 
-#: saves.c:1835 saves.c:1840 saves.c:2079 saves.c:2083 saves.c:2174
-#: saves.c:2178
+#: saves.c:1806 saves.c:1811 saves.c:2051 saves.c:2055 saves.c:2146
+#: saves.c:2150
 msgid "Copy Saves to MemCard"
 msgstr "Copier sur la carte mémoire"
 
-#: saves.c:1838 saves.c:2081 saves.c:2176
+#: saves.c:1809 saves.c:2053 saves.c:2148
 msgid "Copy all Saves to Memory Card"
 msgstr "Tout copier sur la carte mémoire"
 
-#: saves.c:1880
+#: saves.c:1851
 msgid "Copy selected Saves to Backup Storage"
 msgstr "Copier les sauvegardes sélectionnées vers le stockage de sauvegarde"
 
-#: saves.c:1882 saves.c:1887 saves.c:1895 saves.c:1903
+#: saves.c:1853 saves.c:1858 saves.c:1866 saves.c:1874
 msgid "Copy Saves to Backup Storage"
 msgstr "Copier les sauvegardes vers le stockage de sauvegarde"
 
-#: saves.c:1885
+#: saves.c:1856
 msgid "Copy all Saves to Backup Storage"
 msgstr "Copier toutes les sauvegardes vers le stockage de sauvegarde"
 
-#: saves.c:1890
+#: saves.c:1861
 msgid ".PSU Export selected Saves to Backup Storage"
 msgstr "Export .PSU de la sélection vers le stockage"
 
-#: saves.c:1898
+#: saves.c:1869
 msgid ".PSU Export All Saves to Backup Storage"
 msgstr "Export .PSU de tout vers le stockage"
 
-#: saves.c:1909 saves.c:2190
+#: saves.c:1880 saves.c:2162
 msgid "Memory Card Image"
 msgstr "Image de carte mémoire"
 
-#: saves.c:1914
+#: saves.c:1885
 msgid "Dump Memory Card to .MCR image"
 msgstr "Copier la carte mémoire en image .MCR"
 
-#: saves.c:1916
+#: saves.c:1887
 msgid "Save .MCR image to Storage"
 msgstr "Enregistrer l'image .MCR sur le stockage"
 
-#: saves.c:1921
+#: saves.c:1892
 msgid "Dump Memory Card to .PS2 image (ECC)"
 msgstr "Copier la carte mémoire en image .PS2 (ECC)"
 
-#: saves.c:1923
+#: saves.c:1894
 msgid "Save .PS2 image to Storage"
 msgstr "Enregistrer l'image .PS2 sur le stockage"
 
-#: saves.c:1926
+#: saves.c:1897
 msgid "Dump Memory Card to .VMC image (raw)"
 msgstr "Copier la carte mémoire en image .VMC (brute)"
 
-#: saves.c:1928
+#: saves.c:1899
 msgid "Save .VMC image to Storage"
 msgstr "Enregistrer l'image .VMC sur le stockage"
 
-#: saves.c:2068
+#: saves.c:2040
 msgid "Memory Card Management"
 msgstr "Gestion de Carte Mémoire"
 
-#: saves.c:2086 saves.c:2181
+#: saves.c:2058 saves.c:2153
 msgid "Export selected Saves to Storage (.PSV)"
 msgstr "Exporter la sélection vers le stockage (.PSV)"
 
-#: saves.c:2088 saves.c:2092 saves.c:2183 saves.c:2187
+#: saves.c:2060 saves.c:2064 saves.c:2155 saves.c:2159
 msgid "Export Saves to Storage"
 msgstr "Exporter vers le stockage"
 
-#: saves.c:2090 saves.c:2185
+#: saves.c:2062 saves.c:2157
 msgid "Export all Saves to Storage (.PSV)"
 msgstr "Tout exporter vers le stockage (.PSV)"
 
-#: saves.c:2095 saves.c:2276
+#: saves.c:2067 saves.c:2248
 msgid "Virtual Memory Card"
 msgstr "Carte Mémoire Virtuelle"
 
-#: saves.c:2098
+#: saves.c:2070
 msgid "Export Memory Card to .VM1 format"
 msgstr "Exporter la carte mémoire au format .VM1"
 
-#: saves.c:2101
+#: saves.c:2073
 msgid "Save .VM1 Memory Card to Storage"
 msgstr "Enregistrer la carte .VM1 sur le stockage"
 
-#: saves.c:2104
+#: saves.c:2076
 msgid "Export Memory Card to .VMP format"
 msgstr "Exporter la carte mémoire au format .VMP"
 
-#: saves.c:2107
+#: saves.c:2079
 msgid "Save .VMP Memory Card to Storage"
 msgstr "Enregistrer la carte .VMP sur le stockage"
 
-#: saves.c:2111 saves.c:2199
+#: saves.c:2083 saves.c:2171
 msgid "Import Saves to Virtual Card"
 msgstr "Importer des sauvegardes vers la carte virtuelle"
 
-#: saves.c:2193
+#: saves.c:2165
 msgid "Write image to Memory Card (overwrites the card)"
 msgstr "Écrire l'image sur la carte mémoire (l'écrase)"
 
-#: saves.c:2195
+#: saves.c:2167
 msgid "Write image to MemCard"
 msgstr "Écrire l'image sur la carte"
 
-#: saves.c:2262
+#: saves.c:2234
 msgid "Packed PS1 Save"
 msgstr "Sauvegarde PS1 compressée"
 
-#: saves.c:2262
+#: saves.c:2234
 msgid "Packed PS2 Save"
 msgstr "Sauvegarde PS2 compressée"
 
-#: saves.c:2265 saves.c:2278 saves.c:2309
+#: saves.c:2237 saves.c:2250 saves.c:2281
 msgid "Folder"
 msgstr "Dossier"
 
-#: saves.c:2290
+#: saves.c:2262
 msgid "PS1 Save"
 msgstr "Sauvegarde PS1"
 
-#: saves.c:2306
+#: saves.c:2278
 msgid "PS2 Save"
 msgstr "Sauvegarde PS2"
 
-#: saves.c:2310
+#: saves.c:2282
 msgid "Icon"
 msgstr "Icône"
 
-#: saves.c:2320
+#: saves.c:2292
 msgid "Save"
 msgstr "Sauvegarde"
 
-#: saves.c:2321
+#: saves.c:2293
 msgid "Title"
 msgstr "Titre"
 
-#: saves.c:2323
+#: saves.c:2295
 msgid "Dir Name"
 msgstr "Nom du dossier"
 
@@ -948,18 +899,14 @@ msgstr "Mise à jour téléchargée vers :"
 msgid "Error! Can't download the update"
 msgstr "Erreur ! Impossible de télécharger la mise à jour"
 
-#: settings.c:285
+#: settings.c:294
 msgid "Debug Logging Disabled"
 msgstr "Journalisation de débogage Désactivée"
 
-#: settings.c:292
+#: settings.c:301
 msgid "Error! Can't create the log file:"
 msgstr "Erreur ! Impossible de créer le fichier journal :"
 
-#: settings.c:296
+#: settings.c:305
 msgid "Debug Logging Enabled!"
 msgstr "Journalisation de débogage Activée!"
-
-#: zip_util.c:200
-msgid "Extracting files..."
-msgstr "Extraction des fichiers..."

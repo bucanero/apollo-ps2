@@ -18,9 +18,7 @@
 char *strcasestr(const char *, const char *);
 // New sources go last: apollo_config.storage (saved in SETTINGS.BIN) is an index into this list
 static const char* ext_src[MAX_USB_DEVICES+1] = {USB_PATH, HOST_PATH, DISC_PATH, MX4SIO_PATH, NULL};
-// Marks text for translation (docs/translate.po) where _() can't be used
-// (static data): translate_settings() translates it at start-up
-#define _i18n(str)		(str)
+// Static text marked with _i18n(): translate_settings() translates it at start-up
 
 static const char* sort_opt[] = {_i18n("Disabled"), _i18n("by Name"), _i18n("by Title ID"), _i18n("by Type"), NULL};
 

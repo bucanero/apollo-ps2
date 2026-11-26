@@ -76,7 +76,7 @@ static int LoadUserSaves(save_list_t* save_list, int update_path)
 	if (update_path && save_list->UpdatePath)
 		save_list->UpdatePath(save_list->path);
 
-	init_loading_screen(_("Loading saves..."));
+	init_loading_screen("Loading saves...");
 
 	save_list->list = save_list->ReadList(save_list->path);
 	if (apollo_config.doSort == SORT_BY_NAME)

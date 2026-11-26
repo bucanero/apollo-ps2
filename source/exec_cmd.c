@@ -99,7 +99,7 @@ static void importDbSave(const save_entry_t* entry, const char* file, int dst, i
 
 	// Process the extracted PSV data
 	_set_dest_path(path, dst, "");
-	init_progress_bar(_("Importing save..."));
+	init_progress_bar("Importing save...");
 	ret = (entry->flags & SAVE_FLAG_PS1) ? importPS1psv_buffer(psv_data, psv_size, path) : importPSV_buffer(psv_data, psv_size, path);
 	free(psv_data);
 	end_progress_bar();
@@ -139,7 +139,7 @@ static void zipSave(const save_entry_t* entry, int dst)
 		return;
 	}
 
-	init_loading_screen(_("Exporting save game..."));
+	init_loading_screen("Exporting save game...");
 
 	fid = get_filename_id(exp_path);
 	asprintf(&export_file, "%s%08d.zip", exp_path, fid);
@@ -183,7 +183,7 @@ static void copySave(const save_entry_t* save, int dev)
 		return;
 	}
 
-	init_loading_screen(_("Copying files..."));
+	init_loading_screen("Copying files...");
 
 	asprintf(&copy_path, "%s%s/", exp_path, save->dir_name);
 
@@ -216,7 +216,7 @@ static void copySaveMC(const save_entry_t* save, int dev)
 		return;
 	}
 
-	init_loading_screen(_("Copying save game..."));
+	init_loading_screen("Copying save game...");
 	int ret = _copy_save_memcard(save, dev);
 	stop_loading_screen();
 
@@ -235,7 +235,7 @@ static void copyAllSavesMC(const save_entry_t* save, int dev, int all)
 	uint64_t progress = 0;
 	list_t *list = ((void**)save->dir_name)[0];
 
-	init_progress_bar(_("Copying all saves..."));
+	init_progress_bar("Copying all saves...");
 	_set_dest_path(mc_path, dev, "");
 
 	LOG("Copying all saves from '%s' to mc%d:/...", save->path, dev);
@@ -289,7 +289,7 @@ static void copyAllSavesVMC(const save_entry_t* save, int dev, int all)
 	uint64_t progress = 0;
 	list_t *list = ((void**)save->dir_name)[0];
 
-	init_progress_bar(_("Copying all saves..."));
+	init_progress_bar("Copying all saves...");
 	_set_dest_path(mc_path, dev, "");
 
 	LOG("Copying all saves from '%s' to mc%d:/...", save->path, dev);
@@ -316,7 +316,7 @@ static void exportAllSavesVMC(const save_entry_t* save, int dev, int all)
 	uint64_t progress = 0;
 	list_t *list = ((void**)save->dir_name)[0];
 
-	init_progress_bar(_("Exporting all VMC saves..."));
+	init_progress_bar("Exporting all VMC saves...");
 	_set_dest_path(outPath, dev, PS3_SAVES_PATH_USB);
 	mkdirs(outPath);
 
@@ -545,7 +545,7 @@ static void importSave(const save_entry_t* save, const char* mc_path)
 	int ret = 0;
 
 	LOG("Importing save game '%s'... {%s}", save->path, mc_path);
-	init_progress_bar(_("Importing save..."));
+	init_progress_bar("Importing save...");
 
 	switch (save->type)
 	{
@@ -609,7 +609,7 @@ static void copyAllSavesUSB(const save_entry_t* save, int dev, int all)
 		return;
 	}
 
-	init_progress_bar(_("Copying all saves..."));
+	init_progress_bar("Copying all saves...");
 
 	LOG("Copying all saves to '%s'...", dst_path);
 	for (node = list_head(list); (item = list_get(node)); node = list_next(node))
@@ -740,7 +740,7 @@ static int apply_cheat_patches(const save_entry_t* entry)
 	uint8_t key[16];
 	list_t* vmc_files = list_alloc();
 
-	init_loading_screen(_("Applying changes..."));
+	init_loading_screen("Applying changes...");
 
 	for (node = list_head(entry->codes); (code = list_get(node)); node = list_next(node))
 	{
@@ -952,7 +952,7 @@ static void exportAllSaves(const save_entry_t* save, int dev, int all)
 	uint64_t progress = 0;
 	list_t *list = ((void**)save->dir_name)[0];
 
-	init_progress_bar(_("Exporting all saves..."));
+	init_progress_bar("Exporting all saves...");
 	_set_dest_path(outPath, dev, (save->flags & SAVE_FLAG_PS1) ? PS1_SAVES_PATH_USB : PS2_SAVES_PATH_USB);
 	mkdirs(outPath);
 
@@ -1002,7 +1002,7 @@ static void export_ps2save(const save_entry_t* save, int type, int dst_id)
 		sprintf(strrchr(outPath, '/'), "/%s_%d-%02d-%02d_%02d%02d%02d.", save->title_id,
 			t.tm_year+1900, t.tm_mon+1, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec);
 	}
-	init_progress_bar(_("Exporting save..."));
+	init_progress_bar("Exporting save...");
 
 	switch (type)
 	{
@@ -1047,7 +1047,7 @@ static void export_vmcsave(const save_entry_t* save, int type, int dst_id)
 			t.tm_year+1900, t.tm_mon+1, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec);
 	}
 
-	init_progress_bar(_("Exporting save ..."));
+	init_progress_bar("Exporting save ...");
 	switch (type)
 	{
 	case FILE_TYPE_PSV:
@@ -1168,7 +1168,7 @@ static void import_save2vmc(const char* src, int type)
 {
 	int ret = 0;
 
-	init_progress_bar(_("Importing save ..."));
+	init_progress_bar("Importing save ...");
 	switch (type)
 	{
 	case FILE_TYPE_PSV:
@@ -1204,7 +1204,7 @@ static void import_save2vmc(const char* src, int type)
 
 static void copyVmcSave(const save_entry_t* save, const char* mc_path)
 {
-	init_progress_bar(_("Copying save game..."));
+	init_progress_bar("Copying save game...");
 	int ret = (dir_exists(mc_path) == SUCCESS) && importVMC(save->dir_name, mc_path);
 	end_progress_bar();
 

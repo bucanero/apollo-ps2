@@ -398,9 +398,9 @@ void update_db_path(char* path)
 		const char* dev;
 		const char* label;
 	} local_db[] = {
-		{ DISC_PATH, "Apollo Disc (cdfs:/)" },
-		{ USB_PATH,  "USB Storage (mass:/)" },
-		{ HOST_PATH, "Host (host:/)" },
+		{ DISC_PATH, _i18n("Apollo Disc (cdfs:/)") },
+		{ USB_PATH,  _i18n("USB Storage (mass:/)") },
+		{ HOST_PATH, _i18n("Host (host:/)") },
 	};
 	const char* labels[countof(local_db) + 2];
 	const char* paths[countof(local_db) + 1];
@@ -411,16 +411,16 @@ void update_db_path(char* path)
 		if (!has_local_db(local_db[i].dev))
 			continue;
 
-		labels[count] = local_db[i].label;
+		labels[count] = _(local_db[i].label);
 		paths[count++] = local_db[i].dev;
 	}
 
-	labels[count] = "Online Database";
+	labels[count] = _("Online Database");
 	paths[count++] = NULL;
 	labels[count] = NULL;
 
 	path[0] = 0;
-	sel = (count > 1) ? show_multi_dialog(labels, "Select Save Database") : 0;
+	sel = (count > 1) ? show_multi_dialog(labels, _("Select Save Database")) : 0;
 	if (sel < 0)
 		return;
 

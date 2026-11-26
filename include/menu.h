@@ -8,6 +8,10 @@
 #include <SDL2/SDL.h>
 #include <mini18n.h>
 
+// Marks text for translation (docs/translate.po) where _() can't be used
+// (static data): the code translates it with _() where it's used
+#define _i18n(str)		(str)
+
 #include "types.h"
 #include "settings.h"
 

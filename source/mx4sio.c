@@ -188,14 +188,14 @@ int mx4sio_get_path(char* path, size_t len)
 
 	if (mx4sio_state == MX4SIO_SLOT2_MEMCARD)
 	{
-		show_message("MX4SIO not available:\nthere's a Memory Card in slot 2");
+		show_message("%s\n%s", _("MX4SIO not available:"), _("there's a Memory Card in slot 2"));
 		return 0;
 	}
 
 	if (!path[0])
 	{
 		LOG("MX4SIO: no SD card found");
-		show_message("No MX4SIO SD card found in slot 2");
+		show_message(_("No MX4SIO SD card found in slot 2"));
 		return 0;
 	}
 

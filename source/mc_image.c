@@ -225,7 +225,7 @@ int mc_dump_ps2_image(int port, const char* path, int ecc, uint32_t* ecc_errors)
 	if ((fp = fopen(path, "wb")) == NULL)
 		return MC_IMG_ERR_FILE;
 
-	init_progress_bar(_("Dumping Memory Card..."));
+	init_progress_bar("Dumping Memory Card...");
 	for (block = 0; block < card.total_pages / MC_BLOCK_PAGES; block++)
 	{
 		if ((ret = read_card(port, block * MC_BLOCK_PAGES, MC_BLOCK_PAGES, MC_PAGE_SIZE, block_buf, ecc_errors)) != MC_IMG_OK)
@@ -279,7 +279,7 @@ int mc_dump_ps1_image(int port, const char* path)
 	if ((fp = fopen(path, "wb")) == NULL)
 		return MC_IMG_ERR_FILE;
 
-	init_progress_bar(_("Dumping PS1 Memory Card..."));
+	init_progress_bar("Dumping PS1 Memory Card...");
 	for (uint32_t frame = 0; frame < PS1_FRAMES; frame += step)
 	{
 		if ((ret = read_card(port, frame, step, PS1_FRAME_SIZE, block_buf, NULL)) != MC_IMG_OK)
@@ -398,7 +398,7 @@ int mc_restore_ps2_image(int port, const char* path)
 		return MC_IMG_ERR_FILE;
 
 	LOG("Restoring %s (%u pages, ecc=%d) to mc%d:", path, info.total_pages, info.ecc, port);
-	init_progress_bar(_("Erasing Memory Card..."));
+	init_progress_bar("Erasing Memory Card...");
 	ret = mc_invalidate_card(port);
 	end_progress_bar();
 	if (ret < 0)
@@ -409,7 +409,7 @@ int mc_restore_ps2_image(int port, const char* path)
 	}
 
 	ret = MC_IMG_OK;
-	init_progress_bar(_("Writing Memory Card image..."));
+	init_progress_bar("Writing Memory Card image...");
 	for (block = 0; block < info.total_pages / MC_BLOCK_PAGES; block++)
 	{
 		for (i = 0; i < MC_BLOCK_PAGES; i++)

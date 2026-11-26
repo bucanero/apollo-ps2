@@ -269,6 +269,7 @@ void update_progress_bar(uint64_t progress, const uint64_t total_size, const cha
 void end_progress_bar(void);
 #define show_message(...)	show_dialog(DIALOG_TYPE_OK, __VA_ARGS__)
 
+// The message (and init_progress_bar's title) is drawn with the ASCII-only mono font: don't translate it with _()
 int init_loading_screen(const char* msg);
 void stop_loading_screen(void);
 

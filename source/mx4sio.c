@@ -1,10 +1,14 @@
 /*
  * MX4SIO: SD card adapter in Memory Card slot 2
  *
- * iop/mx4sio_bd.irx is ps2sdk's driver at commit edf475f4 (2023-02-02), with
- * the SanDisk SD card fixes the ps2sdk we build with lacks:
+ * data/mx4sio_bd.irx is ps2sdk's iop/sio/mx4sio_bd at commit edf475f4
+ * (2023-02-02), unchanged, built with the ps2dev image this app is built with:
  *   https://github.com/ps2dev/ps2sdk/tree/edf475f45af9b80377a62a4797936d20efca6646/iop/sio/mx4sio_bd
- * (see CMakeLists.txt for why that version).
+ * Why that version:
+ *  - the mx4sio_bd.irx in that image's ps2sdk is older (2022-08), and SanDisk
+ *    SD cards don't answer it; edf475f4 has the SanDisk fixes (5217db87, edf475f4)
+ *  - newer versions use the 64-bit sector bdm interface (41b0d638) and newer
+ *    sio2man hooks, which that image's bdm.irx and sio2man don't support
  *
  * mx4sio_bd.irx is a BDM block device driver, like
  * usbmass_bd: the SD card is mounted by bdmfs_fatfs (loaded at start-up, with
@@ -39,8 +43,8 @@
 #include "common.h"
 #include "mx4sio.h"
 
-extern const uint8_t _binary_mx4sio_bd_irx_start;
-extern const uint8_t _binary_mx4sio_bd_irx_size;
+extern const uint8_t _binary_data_mx4sio_bd_irx_start;
+extern const uint8_t _binary_data_mx4sio_bd_irx_size;
 
 #define MX4SIO_DRIVER_NAME	"sdc"
 #define MX4SIO_MAX_UNITS	10
@@ -139,7 +143,7 @@ static int load_driver(void)
 	units_before = scan_units(names);
 	LOG("MX4SIO: mass units before loading the driver: 0x%x", units_before);
 
-	id = SifExecModuleBuffer((void*) &_binary_mx4sio_bd_irx_start, (int) &_binary_mx4sio_bd_irx_size, 0, NULL, &ret);
+	id = SifExecModuleBuffer((void*) &_binary_data_mx4sio_bd_irx_start, (int) &_binary_data_mx4sio_bd_irx_size, 0, NULL, &ret);
 	if (id < 0 || ret == 1)
 	{
 		LOG("MX4SIO: failed to load mx4sio_bd (%d, %d)", id, ret);

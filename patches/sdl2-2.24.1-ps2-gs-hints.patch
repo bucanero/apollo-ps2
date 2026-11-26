@@ -1,0 +1,79 @@
+diff --git a/include/SDL_hints.h b/include/SDL_hints.h
+index e7cddba..a5da051 100644
+--- a/include/SDL_hints.h
++++ b/include/SDL_hints.h
+@@ -2246,6 +2246,19 @@ extern "C" {
+ #define SDL_HINT_TRACKPAD_IS_TOUCH_ONLY "SDL_TRACKPAD_IS_TOUCH_ONLY"
+ 
+ 
++/**
++ * \brief Backport of the SDL2 PS2 GS hints (SDL2 commit 7b28fb29bd), read
++ *        when the PS2 renderer is created.
++ *
++ * SDL_HINT_PS2_GS_WIDTH / SDL_HINT_PS2_GS_HEIGHT: framebuffer size (default 640x448)
++ * SDL_HINT_PS2_GS_PROGRESSIVE: "1" for progressive output (default interlaced)
++ * SDL_HINT_PS2_GS_MODE: "NTSC" or "PAL" (default: the console's region, as gsKit detects it)
++ */
++#define SDL_HINT_PS2_GS_WIDTH    "SDL_PS2_GS_WIDTH"
++#define SDL_HINT_PS2_GS_HEIGHT    "SDL_PS2_GS_HEIGHT"
++#define SDL_HINT_PS2_GS_PROGRESSIVE    "SDL_PS2_GS_PROGRESSIVE"
++#define SDL_HINT_PS2_GS_MODE    "SDL_PS2_GS_MODE"
++
+ /**
+  *  \brief  An enumeration of hint priorities
+  */
+diff --git a/src/render/ps2/SDL_render_ps2.c b/src/render/ps2/SDL_render_ps2.c
+index b4c7c8f..a6865fd 100644
+--- a/src/render/ps2/SDL_render_ps2.c
++++ b/src/render/ps2/SDL_render_ps2.c
+@@ -751,8 +751,48 @@ PS2_CreateRenderer(SDL_Window * window, Uint32 flags)
+     
+     gsGlobal = gsKit_init_global_custom(RENDER_QUEUE_OS_POOLSIZE, RENDER_QUEUE_PER_POOLSIZE);
+ 
+-	gsGlobal->Mode = GS_MODE_NTSC;
+-    gsGlobal->Height = 448;
++    /* Backport of SDL2 commit 7b28fb29bd (PS2 GS mode hints) for Apollo:
++       without SDL_HINT_PS2_GS_MODE, keep the mode gsKit detected from the
++       console's BIOS region instead of forcing NTSC */
++    {
++        const char *hint;
++
++        // GS interlaced/progressive
++        if (SDL_GetHintBoolean(SDL_HINT_PS2_GS_PROGRESSIVE, SDL_FALSE)) {
++            gsGlobal->Interlace = GS_NONINTERLACED;
++        } else {
++            gsGlobal->Interlace = GS_INTERLACED;
++        }
++
++        // GS width/height
++        gsGlobal->Width = 0;
++        gsGlobal->Height = 0;
++        hint = SDL_GetHint(SDL_HINT_PS2_GS_WIDTH);
++        if (hint) {
++            gsGlobal->Width = SDL_atoi(hint);
++        }
++        hint = SDL_GetHint(SDL_HINT_PS2_GS_HEIGHT);
++        if (hint) {
++            gsGlobal->Height = SDL_atoi(hint);
++        }
++        if (gsGlobal->Width <= 0) {
++            gsGlobal->Width = 640;
++        }
++        if (gsGlobal->Height <= 0) {
++            gsGlobal->Height = 448;
++        }
++
++        // GS region
++        hint = SDL_GetHint(SDL_HINT_PS2_GS_MODE);
++        if (hint) {
++            if (SDL_strcasecmp(hint, "NTSC") == 0) {
++                gsGlobal->Mode = GS_MODE_NTSC;
++            }
++            if (SDL_strcasecmp(hint, "PAL") == 0) {
++                gsGlobal->Mode = GS_MODE_PAL;
++            }
++        }
++    }
+ 
+ 	gsGlobal->PSM  = GS_PSM_CT24;
+ 	gsGlobal->PSMZ = GS_PSMZ_16S;

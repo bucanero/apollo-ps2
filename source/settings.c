@@ -19,6 +19,7 @@ char *strcasestr(const char *, const char *);
 // New sources go last: apollo_config.storage (saved in SETTINGS.BIN) is an index into this list
 static const char* ext_src[MAX_USB_DEVICES+1] = {USB_PATH, HOST_PATH, DISC_PATH, MX4SIO_PATH, NULL};
 static const char* sort_opt[] = {"Disabled", "by Name", "by Title ID", "by Type", NULL};
+static const char* video_opt[] = {"Auto", "NTSC", "PAL", NULL};
 
 menu_option_t menu_options[] = {
 	{ .name = "\nBackground Music", 
@@ -44,6 +45,12 @@ menu_option_t menu_options[] = {
 		.type = APP_OPTION_LIST,
 		.value = &apollo_config.storage,
 		.callback = storage_callback
+	},
+	{ .name = "Video Mode (on restart)",
+		.options = (char**) video_opt,
+		.type = APP_OPTION_LIST,
+		.value = &apollo_config.video_mode,
+		.callback = video_callback
 	},
 	{ .name = "Check for Updates", 
 		.options = NULL, 
@@ -83,6 +90,12 @@ void music_callback(int sel)
 		music_play();
 	else
 		music_pause();
+}
+
+// the GS video mode is set when the renderer is created: applies on the next start
+void video_callback(int sel)
+{
+	apollo_config.video_mode = sel;
 }
 
 void sort_callback(int sel)
@@ -443,6 +456,9 @@ static int read_settings_file(const char* dir, app_config_t* config)
 	file_data->user_id = config->user_id;
 	memcpy(config, file_data, file_size);
 	free(file_data);
+
+	if (config->video_mode > VIDEO_MODE_PAL)
+		config->video_mode = VIDEO_MODE_AUTO;
 
 	LOG("Settings loaded from %s: UserID (%08x)", filePath, config->user_id);
 	return 1;

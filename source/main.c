@@ -138,8 +138,8 @@ save_list_t online_saves = {
 	.title = "Saves Database",
     .list = NULL,
     .path = "",
-    .ReadList = &ReadOfflineList,
-    .ReadCodes = &ReadOfflineSaves,
+    .ReadList = &ReadDatabaseList,
+    .ReadCodes = &ReadDatabaseSaves,
     .UpdatePath = &update_db_path,
 };
 

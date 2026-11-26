@@ -1126,16 +1126,6 @@ int ReadVmc2Codes(save_entry_t * save)
 	return list_count(save->codes);
 }
 
-/*
- * Function:		ReadOnlineSaves()
- * File:			saves.c
- * Project:			Apollo PS3
- * Description:		Downloads an entire NCL file into an array of code_entry
- * Arguments:
- *	filename:		File name ncl
- *	_count_count:	Pointer to int (set to the number of codes within the ncl)
- * Return:			Returns an array of code_entry, null if failed to load
- */
 // Downloads url+file to a cache path, unless it's cached and less than a day old
 static int _cache_online_file(const char* url, const char* file, const char* path, int show_progress)
 {
@@ -1148,57 +1138,7 @@ static int _cache_online_file(const char* url, const char* file, const char* pat
 	return (http_download(url, file, path, show_progress) || file_exists(path) == SUCCESS);
 }
 
-int ReadOnlineSaves(save_entry_t * game)
-{
-	code_entry_t* item;
-	char path[256];
-	snprintf(path, sizeof(path), APOLLO_LOCAL_CACHE "%s.txt", game->title_id);
-
-	if (file_exists(path) == SUCCESS && strcmp(apollo_config.save_db, ONLINE_URL) == 0)
-	{
-		struct stat stats;
-		stat(path, &stats);
-		// re-download if file is +1 day old
-		if ((stats.st_mtime + ONLINE_CACHE_TIMEOUT) < time(NULL))
-			http_download(game->path, "saves.txt", path, 1);
-	}
-	else
-	{
-		if (!http_download(game->path, "saves.txt", path, 1))
-			return 0;
-	}
-
-	char *data = readTextFile(path);
-	if (!data)
-		return 0;
-
-	game->codes = list_alloc();
-
-	for (char *ptr, *line = strtok(data, "\r\n"); line; line = strtok(NULL, "\r\n"))
-	{
-		// skip invalid lines
-		if ((ptr = strchr(line, '=')) == NULL)
-			continue;
-
-		*ptr++ = 0;
-		snprintf(path, sizeof(path), CHAR_ICON_ZIP " %s", ptr);
-		item = _createCmdCode(PATCH_COMMAND, path, CMD_CODE_NULL);
-		item->file = strdup(line);
-
-		item->options_count = 1;
-		item->options = _createExtOptions(1, "Download to Mass Storage", CMD_DOWNLOAD_USB);
-		list_append(game->codes, item);
-
-		LOG("[%s%s] %s", game->path, item->file, item->name + 1);
-	}
-
-	free(data);
-	LOG("Loaded %d saves", list_count(game->codes));
-
-	return (list_count(game->codes));
-}
-
-int ReadOfflineSaves(save_entry_t * game)
+int ReadDatabaseSaves(save_entry_t * game)
 {
 	code_entry_t* item;
 	option_value_t* optval;
@@ -1236,14 +1176,14 @@ int ReadOfflineSaves(save_entry_t * game)
 
 		optval = malloc(sizeof(option_value_t));
 		asprintf(&optval->name, "Copy to Storage (%s)", USB_PATH);
-		asprintf(&optval->value, "%c%c", CMD_DOWNLOAD_MC, STORAGE_MASS);
+		asprintf(&optval->value, "%c%c", CMD_DOWNLOAD_USB, STORAGE_MASS);
 		list_append(item->options[0].opts, optval);
 
 		optval = malloc(sizeof(option_value_t));
 		asprintf(&optval->name, "Copy to Storage (%s)", HOST_PATH);
-		asprintf(&optval->value, "%c%c", CMD_DOWNLOAD_MC, STORAGE_HOST);
+		asprintf(&optval->value, "%c%c", CMD_DOWNLOAD_USB, STORAGE_HOST);
 		list_append(item->options[0].opts, optval);
-		_appendMx4sioOption(item->options[0].opts, "Copy to Storage", CMD_DOWNLOAD_MC);
+		_appendMx4sioOption(item->options[0].opts, "Copy to Storage", CMD_DOWNLOAD_USB);
 		list_append(game->codes, item);
 
 		LOG("[%s%s] %s", game->path, item->file, item->name + 1);
@@ -2014,7 +1954,7 @@ list_t * ReadOnlineList(const char* urlPath)
 	return list;
 }
 
-list_t * ReadOfflineList(const char* sysPath)
+list_t * ReadDatabaseList(const char* sysPath)
 {
 	char base[256];
 	char path[256];

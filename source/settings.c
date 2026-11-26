@@ -12,10 +12,12 @@
 #include "music.h"
 #include "common.h"
 #include "icons.h"
+#include "mx4sio.h"
 
 
 char *strcasestr(const char *, const char *);
-static const char* ext_src[MAX_USB_DEVICES+1] = {USB_PATH, HOST_PATH, DISC_PATH, NULL};
+// New sources go last: apollo_config.storage (saved in SETTINGS.BIN) is an index into this list
+static const char* ext_src[MAX_USB_DEVICES+1] = {USB_PATH, HOST_PATH, DISC_PATH, MX4SIO_PATH, NULL};
 // Marks text for translation (docs/translate.po) where _() can't be used
 // (static data): translate_settings() translates it at start-up
 #define _i18n(str)		(str)
@@ -45,7 +47,7 @@ menu_option_t menu_options[] = {
 		.options = (char**) ext_src,
 		.type = APP_OPTION_LIST,
 		.value = &apollo_config.storage,
-		.callback = owner_callback
+		.callback = storage_callback
 	},
 	{ .name = _i18n("Check for Updates"), 
 		.options = NULL, 
@@ -244,9 +246,18 @@ end_update:
 	free(buffer);
 }
 
-void owner_callback(int sel)
+void storage_callback(int sel)
 {
+	extern save_list_t usb_saves;
+
 	apollo_config.storage = sel;
+
+	// External Saves keeps its list: drop it, so the new source is read next time
+	if (usb_saves.list)
+	{
+		UnloadGameList(usb_saves.list);
+		usb_saves.list = NULL;
+	}
 }
 
 #define APOLLO_LOG_FILE		USB_PATH "apollo.log"
@@ -296,27 +307,113 @@ void log_callback(int sel)
 	show_message("%s\n\n" APOLLO_LOG_FILE, _("Debug Logging Enabled!"));
 }
 
+/*
+ * Settings folder: where the app was launched from (argv[0])
+ *
+ * Launched from a Memory Card or USB drive, SETTINGS.BIN is kept next to the
+ * ELF. Anything else (disc, HDD, host, other devices, no argv[0]) uses the
+ * default Memory Card folder. The path is normalized as wLaunchELF does:
+ * '\' -> '/', "massN:"/"usb[N]:" -> "mass:", and a missing '/' after the
+ * device ("mc0:APPS/x.elf") is added.
+ */
+#define SETTINGS_DIR_DEFAULT	MC0_PATH "APOLLO-99PS2/"
+#define SETTINGS_FILE			"SETTINGS.BIN"
+
+static char settings_dir[256] = SETTINGS_DIR_DEFAULT;
+
+// "mass", "mass0".."mass9", "usb", "usb0".."usb9", followed by ':'; returns the device name length
+static int usb_device_len(const char* path)
+{
+	int len;
+
+	if (strncmp(path, "mass", 4) == 0)
+		len = 4;
+	else if (strncmp(path, "usb", 3) == 0)
+		len = 3;
+	else
+		return 0;
+
+	if (path[len] >= '0' && path[len] <= '9')
+		len++;
+
+	return (path[len] == ':') ? len : 0;
+}
+
+void set_settings_path(const char* argv0)
+{
+	char path[256];
+	const char* rest;
+	char* p;
+
+	snprintf(settings_dir, sizeof(settings_dir), "%s", SETTINGS_DIR_DEFAULT);
+
+	if (!argv0 || !argv0[0])
+	{
+		LOG("No launch path: settings in %s", settings_dir);
+		return;
+	}
+
+	snprintf(path, sizeof(path), "%s", argv0);
+	for (p = path; *p; p++)
+		if (*p == '\\')
+			*p = '/';
+
+	if ((strncmp(path, "mc0:", 4) == 0 || strncmp(path, "mc1:", 4) == 0))
+	{
+		rest = path + 4;
+		snprintf(settings_dir, sizeof(settings_dir), "%.4s/%s", path, rest + (*rest == '/'));
+	}
+	else if (usb_device_len(path))
+	{
+		rest = path + usb_device_len(path) + 1;
+		snprintf(settings_dir, sizeof(settings_dir), USB_PATH "%s", rest + (*rest == '/'));
+	}
+	else
+	{
+		LOG("Launched from %s: settings in %s", argv0, settings_dir);
+		return;
+	}
+
+	// keep the folder, drop the ELF name
+	p = strrchr(settings_dir, '/');
+	p[1] = 0;
+
+	LOG("Launched from %s: settings in %s", argv0, settings_dir);
+}
+
 // At start-up, when enabled: keeps adding to the log file, so the log of a
 // session that went wrong isn't lost by starting Apollo again
 void log_startup(void)
 {
 	if (apollo_config.dbglog && !log_to_file(0))
 		LOG("Debug log: can't open " APOLLO_LOG_FILE);
+
+	LOG("Settings folder: %s", settings_dir);
+}
+
+// The Memory Card save icon only goes in Apollo's own folder, not a shared one (APPS/, BOOT/...)
+static int settings_need_icons(void)
+{
+	size_t len = strlen(settings_dir);
+
+	return (strncmp(settings_dir, "mc", 2) == 0 && len >= 13 &&
+		strcmp(settings_dir + len - 13, "APOLLO-99PS2/") == 0);
 }
 
 int save_app_settings(app_config_t* config)
 {
 	char filePath[256];
 
-	snprintf(filePath, sizeof(filePath), "%s%s%s", MC0_PATH, "APOLLO-99PS2/", "icon.sys");
+	snprintf(filePath, sizeof(filePath), "%s%s", settings_dir, SETTINGS_FILE);
 	if (mkdirs(filePath) != SUCCESS)
 	{
-		LOG("sceSaveDataMount2 ERROR");
+		LOG("Error creating settings folder %s", settings_dir);
 		return 0;
 	}
 
-	LOG("Saving Settings...");
-	if (file_exists(filePath) != SUCCESS)
+	LOG("Saving Settings to %s...", filePath);
+	snprintf(filePath, sizeof(filePath), "%s%s", settings_dir, "icon.sys");
+	if (settings_need_icons() && file_exists(filePath) != SUCCESS)
 	{
 		uLong destLen = size_icon_sys;
 		Bytef *dest = malloc(destLen);
@@ -325,7 +422,7 @@ int save_app_settings(app_config_t* config)
 		write_buffer(filePath, dest, destLen);
 		free(dest);
 
-		snprintf(filePath, sizeof(filePath), "%s%s%s", MC0_PATH, "APOLLO-99PS2/", "icon.ico");
+		snprintf(filePath, sizeof(filePath), "%s%s", settings_dir, "icon.ico");
 		destLen = size_icon_ico;
 		dest = malloc(destLen);
 		uncompress(dest, &destLen, zicon_ico, sizeof(zicon_ico));
@@ -333,7 +430,7 @@ int save_app_settings(app_config_t* config)
 		free(dest);
 	}
 
-	snprintf(filePath, sizeof(filePath), "%s%s%s", MC0_PATH, "APOLLO-99PS2/", "SETTINGS.BIN");
+	snprintf(filePath, sizeof(filePath), "%s%s", settings_dir, SETTINGS_FILE);
 	if (write_buffer(filePath, (uint8_t*) config, sizeof(app_config_t)) < 0)
 	{
 		LOG("Error saving settings!");
@@ -343,31 +440,48 @@ int save_app_settings(app_config_t* config)
 	return 1;
 }
 
-int load_app_settings(app_config_t* config)
+// Reads SETTINGS.BIN from a folder into config; 0 if it's missing or not the right size
+static int read_settings_file(const char* dir, app_config_t* config)
 {
 	char filePath[256];
 	app_config_t* file_data;
 	size_t file_size;
 
-	config->user_id = 0;
+	snprintf(filePath, sizeof(filePath), "%s%s", dir, SETTINGS_FILE);
+	if (read_buffer(filePath, (uint8_t**) &file_data, &file_size) != SUCCESS)
+		return 0;
 
-	snprintf(filePath, sizeof(filePath), "%s%s%s", MC0_PATH, "APOLLO-99PS2/", "SETTINGS.BIN");
-
-	LOG("Loading Settings...");
-	if (read_buffer(filePath, (uint8_t**) &file_data, &file_size) == SUCCESS && file_size == sizeof(app_config_t))
+	if (file_size != sizeof(app_config_t))
 	{
-		file_data->user_id = config->user_id;
-		memcpy(config, file_data, file_size);
-
-		LOG("Settings loaded: UserID (%08x)", config->user_id);
+		LOG("Ignoring %s: wrong size (%d bytes)", filePath, (int) file_size);
 		free(file_data);
-	}
-	else
-	{
-		LOG("Settings not found, using defaults");
-		save_app_settings(config);
 		return 0;
 	}
 
+	file_data->user_id = config->user_id;
+	memcpy(config, file_data, file_size);
+	free(file_data);
+
+	LOG("Settings loaded from %s: UserID (%08x)", filePath, config->user_id);
 	return 1;
+}
+
+int load_app_settings(app_config_t* config)
+{
+	config->user_id = 0;
+
+	LOG("Loading Settings...");
+	if (read_settings_file(settings_dir, config))
+		return 1;
+
+	// First run from a new place: start from the default folder's settings, if any
+	if (strcmp(settings_dir, SETTINGS_DIR_DEFAULT) != 0 && read_settings_file(SETTINGS_DIR_DEFAULT, config))
+	{
+		save_app_settings(config);
+		return 1;
+	}
+
+	LOG("Settings not found, using defaults");
+	save_app_settings(config);
+	return 0;
 }

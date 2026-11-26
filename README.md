@@ -3,6 +3,7 @@
 [![Downloads][img_downloads]][app_downloads] [![Release][img_latest]][app_latest] [![License][img_license]][app_license]
 [![Build app package](https://github.com/bucanero/apollo-ps2/actions/workflows/build.yml/badge.svg)](https://github.com/bucanero/apollo-ps2/actions/workflows/build.yml)
 [![Twitter](https://img.shields.io/twitter/follow/dparrino?label=Follow)](https://x.com/dparrino)
+[![Ask DeepWiki](https://img.shields.io/badge/Ask-DeepWiki-blue)](https://deepwiki.com/bucanero/apollo-ps2)
 
 **Apollo Save Tool** is an application to manage save-game files on the PlayStation 2.
 
@@ -10,7 +11,7 @@ This homebrew app allows you to download, unlock, patch, and manage save-game fi
 
 ![image](./docs/screenshots/screenshot-main.png)
 
-**Comments, ideas, suggestions?** You can [contact me](https://github.com/bucanero/) on [Twitter](https://twitter.com/dparrino) and on [my website](http://www.bucanero.com.ar/).
+**Comments, ideas, suggestions?** You can [contact me](https://github.com/bucanero/) on [Twitter](https://x.com/dparrino) and on [my website](http://www.bucanero.com.ar/).
 
 # Features
 
@@ -57,6 +58,13 @@ This homebrew app allows you to download, unlock, patch, and manage save-game fi
 * **Online Database:** browse and download save-games from the [Apollo Save Database](https://github.com/bucanero/apollo-saves) over the PS2 network adapter.
   - Requires a PS2 Network Adapter (or a Slim PS2) and a network with DHCP.
   - The network is only started when a download is needed.
+
+## MX4SIO
+
+* **SD card support:** manage the saves and VMC images on an SD card in an MX4SIO adapter (Memory Card slot 2).
+  - Select `mx4sio:/` as the `External Saves Source` in Settings.
+  - The driver is only loaded when the MX4SIO source is used, and not if a Memory Card is in slot 2.
+  - While it's loaded, Memory Card slot 2 (`mc1:`) isn't available until Apollo is restarted.
 
 # Download
 
@@ -120,7 +128,7 @@ Python patch codes import their modules (`.py` files from the `python` folder of
 
 ### Saves database
 
-The **Saves DB** menu uses the first database it finds: `cdfs:/APOLLO/` (Apollo disc), `mass:/APOLLO/`, `host:/APOLLO/`, and the [Online Database](https://github.com/bucanero/apollo-saves) otherwise.
+The **Saves DB** menu lists the databases it finds, to pick one: `cdfs:/APOLLO/` (Apollo disc), `mass:/APOLLO/`, `host:/APOLLO/`, and the [Online Database](https://github.com/bucanero/apollo-saves). A local database is found by its `PS2/games.txt` or `PS1/games.txt` file. With no local database, the Online Database is opened directly.
 
 ### Font
 
@@ -138,9 +146,9 @@ The translations are built into the app (`data/langs/lang_xx.po`). A `lang_xx.po
 
 | PS2 | Folder |
 |-----|--------|
-| **External saves** | your saves must be stored on `<mass/host/cdfs>:/PS2/SAVEDATA/`. |
+| **External saves** | your saves must be stored on `<mass/host/cdfs/mx4sio>:/PS2/SAVEDATA/`. |
 | **Memory Card saves** | save-games will be scanned from `mc0:/` and `mc1:/`. |
-| **Virtual Memory Cards** | VMC images will be scanned from `<mass/host>:/VMC/` and `/PS2/VMC/`. |
+| **Virtual Memory Cards** | VMC images will be scanned from `<mass/host/mx4sio>:/VMC/` and `/PS2/VMC/`. |
 | **Exported saves** | `.PSU`/`.CBS` files are saved to `/PS2/SAVEDATA/`, `.PSV` files to `/PS3/EXPORT/PSV/`. |
 | **Memory Card images** | Memory Card dumps are saved to `/PS2/VMC/`. |
 
@@ -148,9 +156,9 @@ The translations are built into the app (`data/langs/lang_xx.po`). A `lang_xx.po
 
 | PS1 | Folder |
 |-----|--------|
-| **External saves** | your saves must be stored on `<mass/host/cdfs>:/PS1/SAVEDATA/`. |
+| **External saves** | your saves must be stored on `<mass/host/cdfs/mx4sio>:/PS1/SAVEDATA/`. |
 | **Memory Card saves** | save-games will be scanned from `mc0:/` and `mc1:/`. |
-| **Virtual Memory Cards** | VMC images will be scanned from `<mass/host>:/VMC/` , `/POPS/*`, and `/PS1/VMC/`. |
+| **Virtual Memory Cards** | VMC images will be scanned from `<mass/host/mx4sio>:/VMC/` , `/POPS/*`, and `/PS1/VMC/`. |
 | **Memory Card images** | PS1 Memory Card dumps are saved to `/PS1/VMC/`. |
 
 # Usage

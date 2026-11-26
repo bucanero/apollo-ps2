@@ -215,6 +215,7 @@ add_executable(${PROJECT_NAME}
   source/libfont.c
   source/lzari.c
   source/main.c
+  source/mx4sio.c
   source/menu_hex.c
   source/menu_about.c
   source/menu_cheats.c

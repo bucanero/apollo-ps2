@@ -10,6 +10,7 @@
 #include "utils.h"
 #include "ps1card.h"
 #include "mc_image.h"
+#include "mx4sio.h"
 
 static char host_buf[256];
 
@@ -33,6 +34,13 @@ static int _set_dest_path(char* path, int dest, const char* folder)
 		sprintf(path, "%s%s", HOST_PATH, folder);
 		break;
 
+	case STORAGE_MX4SIO:
+		// the SD card's "massN:/" unit (it tells the user if the card is gone)
+		if (!mx4sio_get_path(path, 32))
+			return 0;
+		strcat(path, folder);
+		break;
+
 	default:
 		path[0] = 0;
 		return 0;
@@ -41,33 +49,8 @@ static int _set_dest_path(char* path, int dest, const char* folder)
 	return 1;
 }
 
-static void downloadSave(const save_entry_t* entry, const char* file, int dst)
-{
-	char path[256];
-
-	_set_dest_path(path, dst, (entry->flags & SAVE_FLAG_PS1) ? PS1_SAVES_PATH_USB : PS2_SAVES_PATH_USB);
-
-	if (mkdirs(path) != SUCCESS)
-	{
-		show_message("%s\n%s", _("Error! Export folder is not available:"), path);
-		return;
-	}
-
-	if (!http_download(entry->path, file, APOLLO_LOCAL_CACHE "tmpsave.zip", 1))
-	{
-		show_message("%s\n%s%s", _("Error downloading save game from:"), entry->path, file);
-		return;
-	}
-
-	if (extract_zip(APOLLO_LOCAL_CACHE "tmpsave.zip", path))
-		show_message("%s\n%s", _("Save game successfully downloaded to:"), path);
-	else
-		show_message(_("Error extracting save game!"));
-
-	unlink_secure(APOLLO_LOCAL_CACHE "tmpsave.zip");
-}
-
-static void importDbSave(const save_entry_t* entry, const char* file, int dst)
+// Saves database entry (zip): extracted to storage (CMD_DOWNLOAD_USB) or imported to a Memory Card (CMD_DOWNLOAD_MC)
+static void importDbSave(const save_entry_t* entry, const char* file, int dst, int to_storage)
 {
 	uint8_t* psv_data;
 	uint32_t psv_size;
@@ -87,7 +70,7 @@ static void importDbSave(const save_entry_t* entry, const char* file, int dst)
 		strcpy(path, APOLLO_LOCAL_CACHE "tmpsave.zip");
 	}
 
-	if (dst != STORAGE_MC0 && dst != STORAGE_MC1)
+	if (to_storage)
 	{
 		char dst_path[256];
 
@@ -1315,8 +1298,9 @@ void execCodeCommand(code_entry_t* code, const char* codecmd)
 			code->activated = 0;
 			break;
 
+		case CMD_DOWNLOAD_USB:
 		case CMD_DOWNLOAD_MC:
-			importDbSave(selected_entry, code->file, codecmd[1]);
+			importDbSave(selected_entry, code->file, codecmd[1], codecmd[0] == CMD_DOWNLOAD_USB);
 			code->activated = 0;
 			break;
 

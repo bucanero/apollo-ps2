@@ -259,6 +259,7 @@ void drawSplashLogo(int m);
 void drawEndLogo(void);
 void drawDialogBackground(void);
 
+void set_settings_path(const char* argv0);
 int load_app_settings(app_config_t* config);
 int save_app_settings(app_config_t* config);
 

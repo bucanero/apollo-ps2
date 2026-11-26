@@ -4,7 +4,7 @@ All notable changes to the `apollo-ps2` project will be documented in this file.
 
 ## [Unreleased]()
 
-## [v1.5.0](https://github.com/bucanero/apollo-ps2/releases/tag/v1.5.0) - 2026-00-00
+## [v1.5.0](https://github.com/bucanero/apollo-ps2/releases/tag/v1.5.0) - 2026-11-28
 
 ### Added
 
@@ -21,7 +21,8 @@ All notable changes to the `apollo-ps2` project will be documented in this file.
 * Debug Log is now an on/off setting, saved with the other settings
   - While on, Apollo logs to `mass:/apollo.log` from start-up, adding to the file (a new log starts when the option is turned on)
 * Saves Database (formerly Online Database)
-  - Offline database: uses the first one found on `cdfs:/APOLLO/` (Apollo disc), `mass:/APOLLO/` or `host:/APOLLO/`, and the Online Database otherwise
+  - Offline databases on `cdfs:/APOLLO/` (Apollo disc), `mass:/APOLLO/` or `host:/APOLLO/`
+  - Choose the source: every database found is listed with the Online Database, to pick one
   - Import downloaded saves straight to a Memory Card, or copy them to storage
   - Press `Triangle` on a save to see its full description
 * Apollo disc image (`apollo-ps2.iso`)
@@ -45,6 +46,10 @@ All notable changes to the `apollo-ps2` project will be documented in this file.
   - Half-width katakana are shown as full-width
   - Optional font for full coverage (rarer kanji, symbols): `mass:/APOLLO/DATA/FONT.OTF`
 * 3D save icons: PS2 save icons are rendered from their 3D model, lit and coloured with the save's `icon.sys` settings
+* MX4SIO support: SD card adapter in Memory Card slot 2
+  - Select `mx4sio:/` as the `External Saves Source` (Settings) to manage the saves and VMC images on the SD card
+  - The driver is only loaded when the MX4SIO source is used, and not if a Memory Card is in slot 2
+  - While it's loaded, Memory Card slot 2 (`mc1:`) isn't available until Apollo is restarted
 
 ### Fixed
 

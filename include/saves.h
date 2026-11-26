@@ -48,6 +48,7 @@ enum storage_enum
     STORAGE_MC1,
     STORAGE_MASS,
     STORAGE_HOST,
+    STORAGE_MX4SIO,
 };
 
 enum save_sort_enum

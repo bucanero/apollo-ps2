@@ -10,6 +10,7 @@
 #include "utils.h"
 #include "ps1card.h"
 #include "mc_image.h"
+#include "mx4sio.h"
 
 static char host_buf[256];
 
@@ -31,6 +32,13 @@ static int _set_dest_path(char* path, int dest, const char* folder)
 
 	case STORAGE_HOST:
 		sprintf(path, "%s%s", HOST_PATH, folder);
+		break;
+
+	case STORAGE_MX4SIO:
+		// the SD card's "massN:/" unit (it tells the user if the card is gone)
+		if (!mx4sio_get_path(path, 32))
+			return 0;
+		strcat(path, folder);
 		break;
 
 	default:

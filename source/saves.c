@@ -8,6 +8,7 @@
 
 #include <zip.h>
 #include "saves.h"
+#include "mx4sio.h"
 #include "common.h"
 #include "settings.h"
 #include "utils.h"
@@ -118,12 +119,32 @@ static option_entry_t* _createMcOptions(int count, const char* name, char value)
 	asprintf(&optval->value, "%c%c", value, STORAGE_MC0);
 	list_append(options[0].opts, optval);
 
+	// the MX4SIO driver takes Memory Card slot 2 until the next IOP reset
+	if (mx4sio_is_loaded())
+		return options;
+
 	optval = malloc(sizeof(option_value_t));
 	asprintf(&optval->name, "%s (%s)", name, MC1_PATH);
 	asprintf(&optval->value, "%c%c", value, STORAGE_MC1);
 	list_append(options[0].opts, optval);
 
 	return options;
+}
+
+// The MX4SIO SD card is offered as a destination only once its driver is loaded
+// (MX4SIO selected as the External Saves source): loading it would take Memory
+// Card slot 2 away in the middle of a copy from mc1:
+static void _appendMx4sioOption(list_t* opts, const char* name, char value)
+{
+	option_value_t* optval;
+
+	if (!mx4sio_is_loaded())
+		return;
+
+	optval = malloc(sizeof(option_value_t));
+	asprintf(&optval->name, "%s (%s)", name, MX4SIO_PATH);
+	asprintf(&optval->value, "%c%c", value, STORAGE_MX4SIO);
+	list_append(opts, optval);
 }
 
 static option_entry_t* _createExtOptions(int count, const char* name, char value)
@@ -140,6 +161,8 @@ static option_entry_t* _createExtOptions(int count, const char* name, char value
 	asprintf(&optval->name, "%s (%s)", name, HOST_PATH);
 	asprintf(&optval->value, "%c%c", value, STORAGE_HOST);
 	list_append(options[0].opts, optval);
+
+	_appendMx4sioOption(options[0].opts, name, value);
 
 	return options;
 }
@@ -1128,7 +1151,6 @@ static int _cache_online_file(const char* url, const char* file, const char* pat
 int ReadOnlineSaves(save_entry_t * game)
 {
 	code_entry_t* item;
-	option_value_t* optval;
 	char path[256];
 	snprintf(path, sizeof(path), APOLLO_LOCAL_CACHE "%s.txt", game->title_id);
 
@@ -1164,14 +1186,7 @@ int ReadOnlineSaves(save_entry_t * game)
 		item->file = strdup(line);
 
 		item->options_count = 1;
-		item->options = _createMcOptions(1, "Download to Mass Storage", CMD_DOWNLOAD_USB);
-		optval = list_get_item(item->options[0].opts, 0);
-		memcpy(optval->name + 26, "mass:", 5);
-		optval->value[1] = STORAGE_MASS;
-
-		optval = list_get_item(item->options[0].opts, 1);
-		memcpy(optval->name + 26, "host:", 5);
-		optval->value[1] = STORAGE_HOST;
+		item->options = _createExtOptions(1, "Download to Mass Storage", CMD_DOWNLOAD_USB);
 		list_append(game->codes, item);
 
 		LOG("[%s%s] %s", game->path, item->file, item->name + 1);
@@ -1228,6 +1243,7 @@ int ReadOfflineSaves(save_entry_t * game)
 		asprintf(&optval->name, "Copy to Storage (%s)", HOST_PATH);
 		asprintf(&optval->value, "%c%c", CMD_DOWNLOAD_MC, STORAGE_HOST);
 		list_append(item->options[0].opts, optval);
+		_appendMx4sioOption(item->options[0].opts, "Copy to Storage", CMD_DOWNLOAD_MC);
 		list_append(game->codes, item);
 
 		LOG("[%s%s] %s", game->path, item->file, item->name + 1);

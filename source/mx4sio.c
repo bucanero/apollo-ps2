@@ -154,6 +154,11 @@ static int load_driver(void)
 	return MX4SIO_LOADED;
 }
 
+int mx4sio_is_loaded(void)
+{
+	return (mx4sio_state == MX4SIO_LOADED);
+}
+
 int mx4sio_get_path(char* path, size_t len)
 {
 	int own_screen;

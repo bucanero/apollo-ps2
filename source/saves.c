@@ -8,6 +8,7 @@
 
 #include <zip.h>
 #include "saves.h"
+#include "mx4sio.h"
 #include "common.h"
 #include "settings.h"
 #include "utils.h"
@@ -118,12 +119,32 @@ static option_entry_t* _createMcOptions(int count, const char* name, char value)
 	asprintf(&optval->value, "%c%c", value, STORAGE_MC0);
 	list_append(options[0].opts, optval);
 
+	// the MX4SIO driver takes Memory Card slot 2 until the next IOP reset
+	if (mx4sio_is_loaded())
+		return options;
+
 	optval = malloc(sizeof(option_value_t));
 	asprintf(&optval->name, "%s (%s)", name, MC1_PATH);
 	asprintf(&optval->value, "%c%c", value, STORAGE_MC1);
 	list_append(options[0].opts, optval);
 
 	return options;
+}
+
+// The MX4SIO SD card is offered as a destination only once its driver is loaded
+// (MX4SIO selected as the External Saves source): loading it would take Memory
+// Card slot 2 away in the middle of a copy from mc1:
+static void _appendMx4sioOption(list_t* opts, const char* name, char value)
+{
+	option_value_t* optval;
+
+	if (!mx4sio_is_loaded())
+		return;
+
+	optval = malloc(sizeof(option_value_t));
+	asprintf(&optval->name, "%s (%s)", name, MX4SIO_PATH);
+	asprintf(&optval->value, "%c%c", value, STORAGE_MX4SIO);
+	list_append(opts, optval);
 }
 
 static option_entry_t* _createExtOptions(int count, const char* name, char value)
@@ -140,6 +161,8 @@ static option_entry_t* _createExtOptions(int count, const char* name, char value
 	asprintf(&optval->name, "%s (%s)", name, HOST_PATH);
 	asprintf(&optval->value, "%c%c", value, STORAGE_HOST);
 	list_append(options[0].opts, optval);
+
+	_appendMx4sioOption(options[0].opts, name, value);
 
 	return options;
 }
@@ -1103,16 +1126,6 @@ int ReadVmc2Codes(save_entry_t * save)
 	return list_count(save->codes);
 }
 
-/*
- * Function:		ReadOnlineSaves()
- * File:			saves.c
- * Project:			Apollo PS3
- * Description:		Downloads an entire NCL file into an array of code_entry
- * Arguments:
- *	filename:		File name ncl
- *	_count_count:	Pointer to int (set to the number of codes within the ncl)
- * Return:			Returns an array of code_entry, null if failed to load
- */
 // Downloads url+file to a cache path, unless it's cached and less than a day old
 static int _cache_online_file(const char* url, const char* file, const char* path, int show_progress)
 {
@@ -1125,65 +1138,7 @@ static int _cache_online_file(const char* url, const char* file, const char* pat
 	return (http_download(url, file, path, show_progress) || file_exists(path) == SUCCESS);
 }
 
-int ReadOnlineSaves(save_entry_t * game)
-{
-	code_entry_t* item;
-	option_value_t* optval;
-	char path[256];
-	snprintf(path, sizeof(path), APOLLO_LOCAL_CACHE "%s.txt", game->title_id);
-
-	if (file_exists(path) == SUCCESS && strcmp(apollo_config.save_db, ONLINE_URL) == 0)
-	{
-		struct stat stats;
-		stat(path, &stats);
-		// re-download if file is +1 day old
-		if ((stats.st_mtime + ONLINE_CACHE_TIMEOUT) < time(NULL))
-			http_download(game->path, "saves.txt", path, 1);
-	}
-	else
-	{
-		if (!http_download(game->path, "saves.txt", path, 1))
-			return 0;
-	}
-
-	char *data = readTextFile(path);
-	if (!data)
-		return 0;
-
-	game->codes = list_alloc();
-
-	for (char *ptr, *line = strtok(data, "\r\n"); line; line = strtok(NULL, "\r\n"))
-	{
-		// skip invalid lines
-		if ((ptr = strchr(line, '=')) == NULL)
-			continue;
-
-		*ptr++ = 0;
-		snprintf(path, sizeof(path), CHAR_ICON_ZIP " %s", ptr);
-		item = _createCmdCode(PATCH_COMMAND, path, CMD_CODE_NULL);
-		item->file = strdup(line);
-
-		item->options_count = 1;
-		item->options = _createMcOptions(1, "Download to Mass Storage", CMD_DOWNLOAD_USB);
-		optval = list_get_item(item->options[0].opts, 0);
-		memcpy(optval->name + 26, "mass:", 5);
-		optval->value[1] = STORAGE_MASS;
-
-		optval = list_get_item(item->options[0].opts, 1);
-		memcpy(optval->name + 26, "host:", 5);
-		optval->value[1] = STORAGE_HOST;
-		list_append(game->codes, item);
-
-		LOG("[%s%s] %s", game->path, item->file, item->name + 1);
-	}
-
-	free(data);
-	LOG("Loaded %d saves", list_count(game->codes));
-
-	return (list_count(game->codes));
-}
-
-int ReadOfflineSaves(save_entry_t * game)
+int ReadDatabaseSaves(save_entry_t * game)
 {
 	code_entry_t* item;
 	option_value_t* optval;
@@ -1221,13 +1176,14 @@ int ReadOfflineSaves(save_entry_t * game)
 
 		optval = malloc(sizeof(option_value_t));
 		asprintf(&optval->name, "Copy to Storage (%s)", USB_PATH);
-		asprintf(&optval->value, "%c%c", CMD_DOWNLOAD_MC, STORAGE_MASS);
+		asprintf(&optval->value, "%c%c", CMD_DOWNLOAD_USB, STORAGE_MASS);
 		list_append(item->options[0].opts, optval);
 
 		optval = malloc(sizeof(option_value_t));
 		asprintf(&optval->name, "Copy to Storage (%s)", HOST_PATH);
-		asprintf(&optval->value, "%c%c", CMD_DOWNLOAD_MC, STORAGE_HOST);
+		asprintf(&optval->value, "%c%c", CMD_DOWNLOAD_USB, STORAGE_HOST);
 		list_append(item->options[0].opts, optval);
+		_appendMx4sioOption(item->options[0].opts, "Copy to Storage", CMD_DOWNLOAD_USB);
 		list_append(game->codes, item);
 
 		LOG("[%s%s] %s", game->path, item->file, item->name + 1);
@@ -1757,7 +1713,22 @@ static void read_vmc_files(const char* userPath, const char* folder, list_t *lis
 			continue;
 		}
 
-		item = _createSaveEntry(flag | SAVE_FLAG_VMC, dir->d_name);
+		// POPS keeps each game's VMCs in its own folder, always named SLOT0.VMC/SLOT1.VMC:
+		// show the game folder too ("POPS/<game>/SLOT0.VMC" -> "<game> - SLOT0.VMC")
+		if ((flag & SAVE_FLAG_PS1) && strncmp(folder, IMP_POPS_PATH_USB, strlen(IMP_POPS_PATH_USB)) == 0 && strlen(folder) > strlen(IMP_POPS_PATH_USB))
+		{
+			char game[256], name[256];
+			char* sep;
+
+			snprintf(game, sizeof(game), "%s", folder);
+			game[strlen(game) - 1] = 0;		// trailing '/'
+			sep = strrchr(game, '/');
+			snprintf(name, sizeof(name), "%s - %s", sep ? sep + 1 : game, dir->d_name);
+			item = _createSaveEntry(flag | SAVE_FLAG_VMC, name);
+		}
+		else
+			item = _createSaveEntry(flag | SAVE_FLAG_VMC, dir->d_name);
+
 		item->type = FILE_TYPE_VMC;
 		item->path = strdup(psvPath);
 		item->title_id = strdup("VMC");
@@ -1983,7 +1954,7 @@ list_t * ReadOnlineList(const char* urlPath)
 	return list;
 }
 
-list_t * ReadOfflineList(const char* sysPath)
+list_t * ReadDatabaseList(const char* sysPath)
 {
 	char base[256];
 	char path[256];

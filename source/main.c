@@ -138,8 +138,8 @@ save_list_t online_saves = {
 	.title = "Saves Database",
     .list = NULL,
     .path = "",
-    .ReadList = &ReadOfflineList,
-    .ReadCodes = &ReadOfflineSaves,
+    .ReadList = &ReadDatabaseList,
+    .ReadCodes = &ReadDatabaseSaves,
     .UpdatePath = &update_db_path,
 };
 
@@ -362,27 +362,62 @@ void update_vmc_path(char* path)
 	path[0] = 0;
 }
 
+// A local save database: APOLLO/PS1/games.txt or APOLLO/PS2/games.txt on that device
+static int has_local_db(const char* dev)
+{
+	char path[64];
+
+	snprintf(path, sizeof(path), "%s" APOLLO_PATH "PS2/games.txt", dev);
+	if (file_exists(path) == SUCCESS)
+		return 1;
+
+	snprintf(path, sizeof(path), "%s" APOLLO_PATH "PS1/games.txt", dev);
+	return (file_exists(path) == SUCCESS);
+}
+
+/*
+ * Save database source: the online database is always offered (the network is
+ * only brought up when it's picked), local ones when their games.txt is found.
+ * With more than one, the user picks; cancelling leaves the path empty.
+ */
 void update_db_path(char* path)
 {
-	if (file_exists(DISC_PATH APOLLO_PATH "PS2/games.txt") == SUCCESS)
+	static const struct {
+		const char* dev;
+		const char* label;
+	} local_db[] = {
+		{ DISC_PATH, "Apollo Disc (cdfs:/)" },
+		{ USB_PATH,  "USB Storage (mass:/)" },
+		{ HOST_PATH, "Host (host:/)" },
+	};
+	const char* labels[countof(local_db) + 2];
+	const char* paths[countof(local_db) + 1];
+	int count = 0, sel;
+
+	for (int i = 0; i < countof(local_db); i++)
 	{
-		strcpy(path, DISC_PATH APOLLO_PATH);
-		return;
+		if (!has_local_db(local_db[i].dev))
+			continue;
+
+		labels[count] = local_db[i].label;
+		paths[count++] = local_db[i].dev;
 	}
 
-	if (file_exists(USB_PATH APOLLO_PATH "PS2/games.txt") == SUCCESS)
-	{
-		strcpy(path, USB_PATH APOLLO_PATH);
-		return;
-	}
+	labels[count] = "Online Database";
+	paths[count++] = NULL;
+	labels[count] = NULL;
 
-	if (file_exists(HOST_PATH APOLLO_PATH "PS2/games.txt") == SUCCESS)
-	{
-		strcpy(path, HOST_PATH APOLLO_PATH);
+	path[0] = 0;
+	sel = (count > 1) ? show_multi_dialog(labels, "Select Save Database") : 0;
+	if (sel < 0)
 		return;
-	}
 
-	strcpy(path, apollo_config.save_db);
+	if (paths[sel])
+		sprintf(path, "%s" APOLLO_PATH, paths[sel]);
+	else
+		strcpy(path, apollo_config.save_db);
+
+	LOG("Save database: %s", path);
 }
 
 static void registerSpecialChars(void)

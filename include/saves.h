@@ -48,6 +48,7 @@ enum storage_enum
     STORAGE_MC1,
     STORAGE_MASS,
     STORAGE_HOST,
+    STORAGE_MX4SIO,
 };
 
 enum save_sort_enum
@@ -225,7 +226,7 @@ typedef struct
 list_t * ReadUsbList(const char* userPath);
 list_t * ReadUserList(const char* userPath);
 list_t * ReadOnlineList(const char* urlPath);
-list_t * ReadOfflineList(const char* urlPath);
+list_t * ReadDatabaseList(const char* urlPath);
 list_t * ReadBackupList(const char* userPath);
 list_t * ReadVmc1List(const char* userPath);
 list_t * ReadVmc2List(const char* userPath);
@@ -243,8 +244,7 @@ int ReadVmc2Codes(save_entry_t * game);
 
 int vmc_read_save_file(const save_entry_t* save, const char* filename, uint8_t** data, size_t* size);
 int vmc_write_save_file(const save_entry_t* save, const char* filename, const uint8_t* data, size_t size);
-int ReadOnlineSaves(save_entry_t * game);
-int ReadOfflineSaves(save_entry_t * game);
+int ReadDatabaseSaves(save_entry_t * game);
 int ReadBackupCodes(save_entry_t * bup);
 
 int network_up(void);

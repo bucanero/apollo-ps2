@@ -57,6 +57,13 @@ This homebrew app allows you to download, unlock, patch, and manage save-game fi
   - Requires a PS2 Network Adapter (or a Slim PS2) and a network with DHCP.
   - The network is only started when a download is needed.
 
+## MX4SIO
+
+* **SD card support:** manage the saves and VMC images on an SD card in an MX4SIO adapter (Memory Card slot 2).
+  - Select `mx4sio:/` as the `External Saves Source` in Settings.
+  - The driver is only loaded when the MX4SIO source is used, and not if a Memory Card is in slot 2.
+  - While it's loaded, Memory Card slot 2 (`mc1:`) isn't available until Apollo is restarted.
+
 # Download
 
 Get the [latest version here][app_latest].
@@ -131,9 +138,9 @@ For full coverage (rarer kanji, symbols like `①`) and smoother text, copy an O
 
 | PS2 | Folder |
 |-----|--------|
-| **External saves** | your saves must be stored on `<mass/host/cdfs>:/PS2/SAVEDATA/`. |
+| **External saves** | your saves must be stored on `<mass/host/cdfs/mx4sio>:/PS2/SAVEDATA/`. |
 | **Memory Card saves** | save-games will be scanned from `mc0:/` and `mc1:/`. |
-| **Virtual Memory Cards** | VMC images will be scanned from `<mass/host>:/VMC/` and `/PS2/VMC/`. |
+| **Virtual Memory Cards** | VMC images will be scanned from `<mass/host/mx4sio>:/VMC/` and `/PS2/VMC/`. |
 | **Exported saves** | `.PSU`/`.CBS` files are saved to `/PS2/SAVEDATA/`, `.PSV` files to `/PS3/EXPORT/PSV/`. |
 | **Memory Card images** | Memory Card dumps are saved to `/PS2/VMC/`. |
 
@@ -141,9 +148,9 @@ For full coverage (rarer kanji, symbols like `①`) and smoother text, copy an O
 
 | PS1 | Folder |
 |-----|--------|
-| **External saves** | your saves must be stored on `<mass/host/cdfs>:/PS1/SAVEDATA/`. |
+| **External saves** | your saves must be stored on `<mass/host/cdfs/mx4sio>:/PS1/SAVEDATA/`. |
 | **Memory Card saves** | save-games will be scanned from `mc0:/` and `mc1:/`. |
-| **Virtual Memory Cards** | VMC images will be scanned from `<mass/host>:/VMC/` , `/POPS/*`, and `/PS1/VMC/`. |
+| **Virtual Memory Cards** | VMC images will be scanned from `<mass/host/mx4sio>:/VMC/` , `/POPS/*`, and `/PS1/VMC/`. |
 | **Memory Card images** | PS1 Memory Card dumps are saved to `/PS1/VMC/`. |
 
 # Usage

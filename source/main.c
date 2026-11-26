@@ -17,6 +17,7 @@
 
 #include "saves.h"
 #include "ramcache.h"
+#include "mx4sio.h"
 #include "music.h"
 #include "utils.h"
 #include "common.h"
@@ -380,6 +381,14 @@ static void LoadSounds(void)
 void update_usb_path(char* path)
 {
 	sprintf(path, "%s", menu_options[3].options[apollo_config.storage]);
+
+	// the SD card is one of the "massN:" units
+	if (strcmp(path, MX4SIO_PATH) == 0 && !mx4sio_get_path(path, sizeof(((save_list_t*)0)->path)))
+	{
+		path[0] = 0;
+		return;
+	}
+
 	if (dir_exists(path) == SUCCESS)
 		return;
 

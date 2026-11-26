@@ -41,6 +41,10 @@ All notable changes to the `apollo-ps2` project will be documented in this file.
   - Half-width katakana are shown as full-width
   - Optional font for full coverage (rarer kanji, symbols): `mass:/APOLLO/DATA/FONT.OTF`
 * 3D save icons: PS2 save icons are rendered from their 3D model, lit and coloured with the save's `icon.sys` settings
+* MX4SIO support: SD card adapter in Memory Card slot 2
+  - Select `mx4sio:/` as the `External Saves Source` (Settings) to manage the saves and VMC images on the SD card
+  - The driver is only loaded when the MX4SIO source is used, and not if a Memory Card is in slot 2
+  - While it's loaded, Memory Card slot 2 (`mc1:`) isn't available until Apollo is restarted
 
 ### Fixed
 

@@ -184,9 +184,19 @@ static void SetMenu(int id)
 
 		case MENU_MAIN_SCREEN: //Main Menu
 		case MENU_USB_SAVES: //USB Saves Menu
-		case MENU_MEMCARD_SAVES: //HHD Saves Menu
 		case MENU_ONLINE_DB: //Cheats Online Menu
 		case MENU_USER_BACKUP: //Backup Menu
+			menu_textures[icon_png_file_index].size = 0;
+			break;
+
+		case MENU_MEMCARD_SAVES: //HHD Saves Menu
+			// Back to the main menu: drop the list, so coming back asks again
+			// which Memory Card to manage
+			if (id == MENU_MAIN_SCREEN)
+			{
+				UnloadGameList(hdd_saves.list);
+				hdd_saves.list = NULL;
+			}
 			menu_textures[icon_png_file_index].size = 0;
 			break;
 

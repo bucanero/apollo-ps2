@@ -79,26 +79,9 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/mcimage_irx.o
   VERBATIM
 )
 
-# MX4SIO SD card driver: iop/mx4sio_bd.irx is ps2sdk's iop/sio/mx4sio_bd at
-# commit edf475f4 (2023-02-02), unchanged, built with this ps2dev image:
-#   https://github.com/ps2dev/ps2sdk/tree/edf475f45af9b80377a62a4797936d20efca6646/iop/sio/mx4sio_bd
-# The mx4sio_bd.irx in this image's ps2sdk is older (2022-08), and SanDisk SD
-# cards don't answer it; edf475f4 has the SanDisk fixes (5217db87, edf475f4).
-# Newer versions use the 64-bit sector bdm interface (41b0d638) and the newer
-# sio2man hooks, which this image's bdm.irx and sio2man don't support.
-add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/mx4sio_bd_irx.o
-  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/iop/mx4sio_bd.irx mx4sio_bd.irx
-  COMMAND ${CMAKE_LINKER} -r -b binary -o mx4sio_bd_irx.o mx4sio_bd.irx
-  COMMAND ${CMAKE_OBJCOPY} --set-section-alignment .data=64 mx4sio_bd_irx.o
-  DEPENDS ${CMAKE_SOURCE_DIR}/iop/mx4sio_bd.irx
-  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-  COMMENT "Embedding IOP module mx4sio_bd.irx"
-  VERBATIM
-)
-
 # Network IOP modules (DEV9, NETMAN, SMAP), embedded from the ps2sdk build.
 # They're linked from the build folder so the symbols are _binary_<name>_irx_*
-set(NET_IRX_OBJS ${CMAKE_CURRENT_BINARY_DIR}/mx4sio_bd_irx.o)
+set(NET_IRX_OBJS)
 foreach(irx ps2dev9 netman smap)
   add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${irx}_irx.o
     COMMAND ${CMAKE_COMMAND} -E copy $ENV{PS2SDK}/iop/irx/${irx}.irx ${irx}.irx
